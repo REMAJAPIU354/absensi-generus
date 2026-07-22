@@ -22,7 +22,12 @@
     <div class="card-container max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
         <!-- Header & Tombol Admin -->
         <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600" id="statusAdminText">🔒 Mode Pengurus</span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600" id="statusAdminText">🔒 Mode Pengurus</span>
+                <span class="text-xs font-medium px-2 py-0.5 rounded text-emerald-700 bg-emerald-100 border border-emerald-200 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Active
+                </span>
+            </div>
             
             <button onclick="toggleAdminMode()" id="btnToggleAdmin" class="no-print bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
                 🔑 Masuk Mode Admin
@@ -30,7 +35,7 @@
         </div>
 
         <h1 class="text-2xl font-bold text-emerald-700 text-center">Absensi Ngaji Generus</h1>
-        <p class="text-slate-500 text-center text-sm mb-6">Pencatatan Kehadiran & Jurnal Pengajian Harian</p>
+        <p class="text-slate-500 text-center text-sm mb-6">Pencatatan Kehadiran & Jurnal Pengajian Realtime</p>
 
         <!-- Informasi Tanggal & Jurnal Materi Ngaji -->
         <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
@@ -56,7 +61,7 @@
             <!-- Jurnal Materi Ngaji Harian -->
             <div class="flex flex-col md:flex-row md:items-center gap-2 pt-2 border-t border-slate-200">
                 <label for="inputMateri" class="text-sm font-semibold text-slate-700 whitespace-nowrap">📖 Materi Ngaji Hari Ini:</label>
-                <input type="text" id="inputMateri" onchange="simpanMateri()" placeholder="Contoh: Al-Qur'an Surat 13 Ayat 1-5 / Jilid 2 Hal 10..." class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" id="inputMateri" onchange="simpanMateriCloud()" placeholder="Contoh: Al-Qur'an Surat 13 Ayat 1-5 / Jilid 2 Hal 10..." class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
         </div>
 
@@ -70,7 +75,7 @@
                 <div class="flex items-center gap-2">
                     <!-- Tombol Reset Semua Data -->
                     <button onclick="resetSemuaData()" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition border border-red-300 flex items-center gap-1">
-                        🗑️ Reset Data
+                        🗑️ Reset Database Cloud
                     </button>
 
                     <!-- Tombol Import Excel / CSV -->
@@ -128,17 +133,13 @@
                     </tr>
                 </thead>
                 <tbody id="tabelGenerus" class="divide-y text-slate-600">
-                    <!-- Data Generus dimasukkan lewat JS -->
+                    <!-- Data dimasukkan via JS -->
                 </tbody>
             </table>
         </div>
 
         <!-- Tombol Aksi (Sembunyi saat diprint) -->
         <div class="no-print mt-6 space-y-3">
-            <button onclick="simpanAbsensi()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg transition shadow">
-                Simpan Absensi Hari Ini
-            </button>
-            
             <div class="flex gap-2">
                 <button onclick="cetakLaporan()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-1">
                     🖨️ Cetak / Save PDF
@@ -150,39 +151,56 @@
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
-    <script>
-        let daftarGenerus = [];
-        let tanggalAktif = "";
-        let isAdmin = false;
-        
-        // PIN ADMIN SEMENTARA (Kamu bisa ganti '1234' dengan PIN pilihanmu)
+    <!-- FIREBASE SDK MODULAR -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        // Konfigurasi Firebase Generus
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
+            authDomain: "absensi-generus-db.firebaseapp.com",
+            projectId: "absensi-generus-db",
+            storageBucket: "absensi-generus-db.firebasestorage.app",
+            messagingSenderId: "350847945290",
+            appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
+            databaseURL: "https://absensi-generus-db-default-rtdb.firebaseio.com"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Global Variables
+        window.daftarGenerus = [];
+        window.tanggalAktif = "";
+        window.isAdmin = false;
         const PIN_ADMIN = "1234";
 
-        // 1. Fitur Toggle Mode Admin
-        function toggleAdminMode() {
-            if (!isAdmin) {
+        // 1. Toggle Mode Admin
+        window.toggleAdminMode = function() {
+            if (!window.isAdmin) {
                 const inputPIN = prompt("🔐 Masukkan PIN Admin untuk mengakses menu kelola data:");
                 if (inputPIN === PIN_ADMIN) {
-                    isAdmin = true;
+                    window.isAdmin = true;
                     alert("Akses Admin Berhasil Diberikan! 🔑");
                     updateTampilanAdmin();
                 } else if (inputPIN !== null) {
                     alert("❌ PIN Salah! Akses ditolak.");
                 }
             } else {
-                isAdmin = false;
+                window.isAdmin = false;
                 alert("Anda telah keluar dari Mode Admin.");
                 updateTampilanAdmin();
             }
-        }
+        };
 
         function updateTampilanAdmin() {
             const areaAdmin = document.getElementById("areaAdminFitur");
             const btnToggle = document.getElementById("btnToggleAdmin");
             const statusText = document.getElementById("statusAdminText");
 
-            if (isAdmin) {
+            if (window.isAdmin) {
                 areaAdmin.classList.remove("hidden");
                 btnToggle.innerText = "🔒 Keluar Admin";
                 btnToggle.className = "no-print bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm";
@@ -195,7 +213,7 @@
                 statusText.innerText = "🔒 Mode Pengurus";
                 statusText.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600";
             }
-            tampilkanGenerus(); // Refresh tabel untuk memunculkan/menyembunyikan tombol Hapus (✕)
+            window.tampilkanGenerus();
         }
 
         // 2. Inisialisasi Tanggal
@@ -203,60 +221,75 @@
             const today = new Date().toISOString().split('T')[0];
             const inputTgl = document.getElementById("inputTanggal");
             inputTgl.value = today;
-            tanggalAktif = today;
-            
-            muatDataTanggal(tanggalAktif);
+            window.tanggalAktif = today;
+            listenDataCloud(window.tanggalAktif);
         }
 
-        // 3. Muat Data Berdasarkan Tanggal
-        function muatDataTanggal(tanggal) {
-            const keyStorage = "dataGenerusNgaji_" + tanggal;
-            const dataTersimpan = localStorage.getItem(keyStorage);
-            
-            const materiTersimpan = localStorage.getItem("materiNgaji_" + tanggal) || "";
-            document.getElementById("inputMateri").value = materiTersimpan;
+        window.gantiTanggal = function() {
+            window.tanggalAktif = document.getElementById("inputTanggal").value;
+            listenDataCloud(window.tanggalAktif);
+        };
 
-            if (dataTersimpan) {
-                daftarGenerus = JSON.parse(dataTersimpan);
-            } else {
-                let masterData = JSON.parse(localStorage.getItem("masterDataGenerus")) || [];
-                
-                daftarGenerus = masterData.map((item, idx) => ({
-                    id: Date.now() + idx,
-                    nama: item.nama,
-                    kategori: item.kategori || "ACR",
-                    status: "",
-                    waktu: "",
-                    catatan: ""
-                }));
-            }
+        // 3. Listener Realtime Database Cloud
+        function listenDataCloud(tanggal) {
+            // Listener Absensi & Generus
+            const absensiRef = ref(db, 'absensi/' + tanggal);
+            onValue(absensiRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    window.daftarGenerus = Object.values(data);
+                } else {
+                    // Jika tanggal baru belum ada data, ambil dari Master Data
+                    ambilMasterDataCloud();
+                }
+                window.tampilkanGenerus();
+            });
 
-            tampilkanGenerus();
+            // Listener Materi Ngaji
+            const materiRef = ref(db, 'materi/' + tanggal);
+            onValue(materiRef, (snapshot) => {
+                document.getElementById("inputMateri").value = snapshot.val() || "";
+            });
         }
 
-        function gantiTanggal() {
-            tanggalAktif = document.getElementById("inputTanggal").value;
-            muatDataTanggal(tanggalAktif);
+        function ambilMasterDataCloud() {
+            const masterRef = ref(db, 'master_generus');
+            onValue(masterRef, (snapshot) => {
+                const master = snapshot.val();
+                if (master) {
+                    window.daftarGenerus = Object.values(master).map((item, idx) => ({
+                        id: item.id || (Date.now() + idx),
+                        nama: item.nama,
+                        kategori: item.kategori || "ACR",
+                        status: "",
+                        waktu: "",
+                        catatan: ""
+                    }));
+                } else {
+                    window.daftarGenerus = [];
+                }
+                window.tampilkanGenerus();
+            }, { onlyOnce: true });
         }
 
-        function simpanMateri() {
+        // 4. Simpan Materi ke Cloud
+        window.simpanMateriCloud = function() {
             const materi = document.getElementById("inputMateri").value;
-            localStorage.setItem("materiNgaji_" + tanggalAktif, materi);
-        }
+            set(ref(db, 'materi/' + window.tanggalAktif), materi);
+        };
 
-        // 4. Tampilkan Data ke Tabel
-        function tampilkanGenerus() {
+        // 5. Render Tabel
+        window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
             tbody.innerHTML = "";
 
             let nomor = 1;
-            daftarGenerus.forEach((generus, index) => {
+            window.daftarGenerus.forEach((generus, index) => {
                 if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
 
-                // Tombol Hapus (✕) hanya jika Mode Admin Aktif
-                const tombolHapus = isAdmin 
-                    ? `<button onclick="hapusGenerus(${index})" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus Data">✕</button>` 
+                const tombolHapus = window.isAdmin 
+                    ? `<button onclick="hapusGenerus('${generus.id}')" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus Data">✕</button>` 
                     : '';
 
                 tbody.innerHTML += `
@@ -267,7 +300,6 @@
                             <span class="inline-block bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 mt-0.5">${generus.kategori}</span>
                         </td>
                         <td class="p-3 text-center">
-                            <!-- Tombol Status (Web) -->
                             <div class="no-print flex flex-col items-center gap-1">
                                 <div class="flex justify-center gap-1">
                                     <button onclick="pilihStatus(${index}, 'Hadir')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">Hadir</button>
@@ -278,8 +310,6 @@
                                 </div>
                                 ${generus.waktu ? `<span class="text-[10px] text-slate-400">🕒 ${generus.waktu}</span>` : ''}
                             </div>
-
-                            <!-- Teks Status (Print) -->
                             <div class="hidden print:block font-semibold ${getStatusColor(generus.status)}">
                                 ${generus.status || 'Belum Absen'} ${generus.waktu ? `(${generus.waktu})` : ''}
                             </div>
@@ -292,7 +322,7 @@
             });
 
             updateRekap();
-        }
+        };
 
         function getStatusColor(status) {
             if (status === 'Hadir') return 'text-emerald-600';
@@ -302,12 +332,11 @@
             return 'text-slate-400';
         }
 
-        // 5. Update Rekap Jumlah
         function updateRekap() {
-            const hadir = daftarGenerus.filter(g => g.status === 'Hadir').length;
-            const izin = daftarGenerus.filter(g => g.status === 'Izin').length;
-            const sakit = daftarGenerus.filter(g => g.status === 'Sakit').length;
-            const alpa = daftarGenerus.filter(g => g.status === 'Alpa').length;
+            const hadir = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
+            const izin = window.daftarGenerus.filter(g => g.status === 'Izin').length;
+            const sakit = window.daftarGenerus.filter(g => g.status === 'Sakit').length;
+            const alpa = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
 
             document.getElementById("jumlahHadir").innerText = hadir;
             document.getElementById("jumlahIzin").innerText = izin;
@@ -315,8 +344,29 @@
             document.getElementById("jumlahAlpa").innerText = alpa;
         }
 
-        // 6. Tambah Generus Manual
-        function tambahGenerus() {
+        // 6. Pilih Status Kehadiran (Auto Simpan Ke Cloud)
+        window.pilihStatus = function(index, statusPilihan) {
+            const generus = window.daftarGenerus[index];
+            generus.status = statusPilihan;
+            
+            const now = new Date();
+            const jam = String(now.getHours()).padStart(2, '0');
+            const menit = String(now.getMinutes()).padStart(2, '0');
+            generus.waktu = `${jam}:${menit} WIB`;
+
+            // Push ke Firebase Realtime Database
+            set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
+        };
+
+        // 7. Update Catatan
+        window.updateCatatan = function(index, teks) {
+            const generus = window.daftarGenerus[index];
+            generus.catatan = teks;
+            set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
+        };
+
+        // 8. Tambah Generus Baru
+        window.tambahGenerus = function() {
             const inputNama = document.getElementById("inputNama");
             const inputKat = document.getElementById("inputKategori");
             const nama = inputNama.value.trim();
@@ -326,133 +376,77 @@
                 return;
             }
 
-            daftarGenerus.push({
-                id: Date.now(),
+            const idBaru = 'gen_' + Date.now();
+            const generusBaru = {
+                id: idBaru,
                 nama: nama,
                 kategori: inputKat.value,
                 status: "",
                 waktu: "",
                 catatan: ""
-            });
+            };
+
+            // Simpan ke Master & Tanggal Aktif
+            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: inputKat.value });
+            set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), generusBaru);
 
             inputNama.value = "";
-            simpanMasterData();
-            simpanKeLocalStorage();
-            tampilkanGenerus();
-        }
+        };
 
-        // 7. Import Data dari File CSV/Excel
-        function importCSV(event) {
+        // 9. Import File CSV
+        window.importCSV = function(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const isiTeks = e.target.result;
-                const baris = isiTeks.split("\n");
-                let jumlahBerhasil = 0;
+                const baris = e.target.result.split("\n");
+                let jumlah = 0;
 
                 baris.forEach((line, idx) => {
                     if (idx === 0 || line.trim() === "") return;
-
                     const kolom = line.split(",");
                     if (kolom.length >= 1) {
                         const nama = kolom[0].replace(/"/g, '').trim();
                         const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim().toUpperCase() : "ACR";
 
                         if (nama !== "") {
-                            const sudahAda = daftarGenerus.some(g => g.nama.toLowerCase() === nama.toLowerCase());
-                            if (!sudahAda) {
-                                daftarGenerus.push({
-                                    id: Date.now() + idx,
-                                    nama: nama,
-                                    kategori: kategori,
-                                    status: "",
-                                    waktu: "",
-                                    catatan: ""
-                                });
-                                jumlahBerhasil++;
-                            }
+                            const idBaru = 'gen_' + (Date.now() + idx);
+                            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori });
+                            set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), {
+                                id: idBaru, nama: nama, kategori: kategori, status: "", waktu: "", catatan: ""
+                            });
+                            jumlah++;
                         }
                     }
                 });
-
-                simpanMasterData();
-                simpanKeLocalStorage();
-                tampilkanGenerus();
-                alert(`Berhasil mengimpor ${jumlahBerhasil} nama generus baru!`);
+                alert(`Berhasil mengimpor ${jumlah} generus ke Database Cloud!`);
             };
-
             reader.readAsText(file);
-        }
+        };
 
-        // 8. Reset Semua Data
-        function resetSemuaData() {
-            if (confirm("⚠️ PERINGATAN ADMIN!\n\nYakin ingin menghapus SELURUH data generus dan absensi?\nTindakan ini akan mengosongkan semua memori aplikasi!")) {
-                localStorage.clear();
-                alert("Semua data berhasil dibersihkan!");
+        // 10. Hapus & Reset Data Cloud
+        window.hapusGenerus = function(id) {
+            if (confirm("⚠️ Yakin ingin menghapus nama ini dari database Cloud?")) {
+                remove(ref(db, `master_generus/${id}`));
+                remove(ref(db, `absensi/${window.tanggalAktif}/${id}`));
+            }
+        };
+
+        window.resetSemuaData = function() {
+            if (confirm("⚠️ PERINGATAN CRITICAL!\n\nYakin ingin menghapus SELURUH database di Cloud?")) {
+                remove(ref(db, '/'));
                 location.reload();
             }
-        }
+        };
 
-        // 9. Pilih Status Kehadiran
-        function pilihStatus(index, statusPilihan) {
-            daftarGenerus[index].status = statusPilihan;
-            
-            const now = new Date();
-            const jam = String(now.getHours()).padStart(2, '0');
-            const menit = String(now.getMinutes()).padStart(2, '0');
-            daftarGenerus[index].waktu = `${jam}:${menit} WIB`;
-
-            simpanKeLocalStorage();
-            tampilkanGenerus();
-        }
-
-        // 10. Update Catatan Manual
-        function updateCatatan(index, teks) {
-            daftarGenerus[index].catatan = teks;
-            simpanKeLocalStorage();
-        }
-
-        // 11. Hapus Generus
-        function hapusGenerus(index) {
-            const generus = daftarGenerus[index];
-            const konfirmasi = confirm(`⚠️ PERINGATAN HAPUS DATA!\n\nApakah Anda yakin ingin menghapus "${generus.nama}" (${generus.kategori}) dari daftar absensi?\n\nData yang dihapus tidak dapat dikembalikan!`);
-            
-            if (konfirmasi) {
-                daftarGenerus.splice(index, 1);
-                simpanMasterData();
-                simpanKeLocalStorage();
-                tampilkanGenerus();
-            }
-        }
-
-        // 12. Simpan Storage
-        function simpanKeLocalStorage() {
-            localStorage.setItem("dataGenerusNgaji_" + tanggalAktif, JSON.stringify(daftarGenerus));
-        }
-
-        function simpanMasterData() {
-            const masterData = daftarGenerus.map(g => ({ nama: g.nama, kategori: g.kategori }));
-            localStorage.setItem("masterDataGenerus", JSON.stringify(masterData));
-        }
-
-        function simpanAbsensi() {
-            simpanKeLocalStorage();
-            simpanMateri();
-            alert(`Data absensi tanggal ${tanggalAktif} berhasil tersimpan!`);
-        }
-
-        // 13. Cetak PDF & Export Excel
-        function cetakLaporan() {
-            window.print();
-        }
-
-        function exportExcel() {
+        // 11. Cetak & Export
+        window.cetakLaporan = function() { window.print(); };
+        window.exportExcel = function() {
             const materi = document.getElementById("inputMateri").value || "-";
-            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus\nTanggal: ${tanggalAktif}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Waktu,Catatan / Keterangan\n`;
+            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus\nTanggal: ${window.tanggalAktif}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Waktu,Catatan / Keterangan\n`;
 
-            daftarGenerus.forEach((generus, index) => {
+            window.daftarGenerus.forEach((generus, index) => {
                 let st = generus.status || "Belum Absen";
                 let wk = generus.waktu || "-";
                 let ct = generus.catatan ? generus.catatan.replace(/"/g, '""') : "-";
@@ -462,13 +456,13 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Absensi_Generus_${tanggalAktif}.csv`);
+            link.setAttribute("download", `Absensi_Generus_${window.tanggalAktif}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
+        };
 
-        // Jalankan Inisialisasi
+        // Start App
         initTanggal();
     </script>
 </body>
