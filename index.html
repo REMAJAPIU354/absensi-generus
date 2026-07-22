@@ -241,16 +241,39 @@
         };
 
         function listenDataCloud(tanggal) {
-            const absensiRef = ref(db, 'absensi/' + tanggal);
-            onValue(absensiRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    window.daftarGenerus = Object.values(data);
-                } else {
-                    ambilMasterDataCloud();
-                }
-                window.tampilkanGenerus();
+            // 1. Ambil seluruh Master Nama Generus lebih dulu
+            const masterRef = ref(db, 'master_generus');
+            onValue(masterRef, (masterSnap) => {
+                const masterData = masterSnap.val() || {};
+                
+                // 2. Ambil data status absensi tanggal aktif
+                const absensiRef = ref(db, 'absensi/' + tanggal);
+                onValue(absensiRef, (absensiSnap) => {
+                    const absensiData = absensiSnap.val() || {};
+                    
+                    // 3. Gabungkan Master Nama + Status Absensi Hari Ini
+                    window.daftarGenerus = Object.values(masterData).map((item) => {
+                        const statusHariIni = absensiData[item.id] || {};
+                        return {
+                            id: item.id,
+                            nama: item.nama,
+                            kategori: item.kategori || "ACR",
+                            status: statusHariIni.status || "",
+                            waktu: statusHariIni.waktu || "",
+                            catatan: statusHariIni.catatan || ""
+                        };
+                    });
+
+                    window.tampilkanGenerus();
+                });
             });
+
+            // Ambil materi ngaji harian
+            const materiRef = ref(db, 'materi/' + tanggal);
+            onValue(materiRef, (materiSnap) => {
+                document.getElementById("inputMateri").value = materiSnap.val() || "";
+            });
+        }
 
             const materiRef = ref(db, 'materi/' + tanggal);
             onValue(materiRef, (snapshot) => {
