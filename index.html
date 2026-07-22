@@ -241,6 +241,7 @@
         };
 
         function listenDataCloud(tanggal) {
+            function listenDataCloud(tanggal) {
             // 1. Ambil seluruh Master Nama Generus lebih dulu
             const masterRef = ref(db, 'master_generus');
             onValue(masterRef, (masterSnap) => {
@@ -273,6 +274,7 @@
             onValue(materiRef, (materiSnap) => {
                 document.getElementById("inputMateri").value = materiSnap.val() || "";
             });
+        }
         }
 
             const materiRef = ref(db, 'materi/' + tanggal);
