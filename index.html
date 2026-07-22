@@ -4,155 +4,166 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Absensi Ngaji Generus</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Style Khusus Print / Save PDF -->
     <style>
+        body { font-family: 'Inter', sans-serif; }
         @media print {
             .no-print { display: none !important; }
             body { background-color: white !important; padding: 0 !important; }
-            .card-container { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }
+            .card-container { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; border: none !important; }
             input, select, textarea { border: none !important; background: transparent !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-6 font-sans">
+<body class="bg-slate-100/80 min-h-screen p-2 sm:p-4 md:p-8 font-sans antialiased text-slate-800">
 
-    <div class="card-container max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
-        <!-- Header & Tombol Admin -->
-        <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600" id="statusAdminText">🔒 Mode Pengurus</span>
-                <span class="text-xs font-medium px-2 py-0.5 rounded text-emerald-700 bg-emerald-100 border border-emerald-200 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Active
-                </span>
+    <div class="card-container max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
+        
+        <!-- HEADER APPLIKASI -->
+        <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-5 sm:p-6 text-white relative">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20" id="statusAdminText">🔒 Mode Pengurus</span>
+                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full text-emerald-200 bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync
+                    </span>
+                </div>
+                
+                <button onclick="toggleAdminMode()" id="btnToggleAdmin" class="no-print bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
+                    🔑 Masuk Mode Admin
+                </button>
             </div>
-            
-            <button onclick="toggleAdminMode()" id="btnToggleAdmin" class="no-print bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
-                🔑 Masuk Mode Admin
-            </button>
+
+            <div class="text-center space-y-1">
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Absensi Ngaji Generus</h1>
+                <p class="text-emerald-100/80 text-xs sm:text-sm font-light">Pencatatan Kehadiran & Jurnal Pengajian Realtime</p>
+            </div>
         </div>
 
-        <h1 class="text-2xl font-bold text-emerald-700 text-center">Absensi Ngaji Generus</h1>
-        <p class="text-slate-500 text-center text-sm mb-6">Pencatatan Kehadiran & Jurnal Pengajian Realtime</p>
+        <div class="p-4 sm:p-6 space-y-6">
 
-        <!-- Informasi Tanggal & Jurnal Materi Ngaji -->
-        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <label for="inputTanggal" class="text-sm font-semibold text-slate-700">📅 Tanggal:</label>
-                    <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <!-- PANEL TANGGAL, FILTER, & JURNAL MATERI -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider">📅 Tanggal:</label>
+                        <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    </div>
+
+                    <!-- Filter Kategori -->
+                    <div class="no-print flex items-center gap-2">
+                        <label for="filterKategori" class="text-xs font-bold text-slate-600 uppercase tracking-wider">🔍 Filter:</label>
+                        <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                            <option value="Semua">Semua Kategori</option>
+                            <option value="ACR">ACR (6-12 thn)</option>
+                            <option value="APR">APR (13-15 thn)</option>
+                            <option value="AR">AR (16-18 thn)</option>
+                            <option value="GPN-A">GPN-A (19-22 thn)</option>
+                            <option value="GPN-B">GPN-B (23-30+ thn)</option>
+                        </select>
+                    </div>
                 </div>
-                <!-- Filter Kategori Usia -->
-                <div class="no-print flex items-center gap-2">
-                    <label for="filterKategori" class="text-sm font-semibold text-slate-700">🔍 Filter Kategori:</label>
-                    <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="Semua">Semua Kategori</option>
+
+                <!-- Jurnal Materi Ngaji -->
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-slate-200">
+                    <label for="inputMateri" class="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">📖 Materi Ngaji:</label>
+                    <input type="text" id="inputMateri" onchange="simpanMateriCloud()" placeholder="Contoh: Surat Al-Baqarah 1-10 / Jilid 2 Hal 12..." class="flex-1 border border-slate-300 rounded-lg px-3.5 py-1.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                </div>
+            </div>
+
+            <!-- PANEL ADMIN (HANYA AKTIF SAAT MODE ADMIN) -->
+            <div id="areaAdminFitur" class="hidden no-print bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-xl p-4 shadow-sm space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-amber-200/60 pb-2.5">
+                    <div class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> MENU KELOLA DATA ADMIN
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="resetAbsensiHariIni()" class="bg-white hover:bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-amber-300 shadow-sm flex items-center gap-1">
+                            🔄 Reset Status Absen
+                        </button>
+
+                        <button onclick="resetSemuaData()" class="bg-white hover:bg-red-50 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-red-200 shadow-sm flex items-center gap-1">
+                            🗑️ Reset Database
+                        </button>
+
+                        <label class="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1">
+                            📂 Import CSV / Excel
+                            <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inputNama" placeholder="Nama lengkap generus baru..." class="flex-1 border border-amber-200 rounded-lg px-3.5 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <select id="inputKategori" class="border border-amber-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
                         <option value="ACR">ACR (6-12 thn)</option>
                         <option value="APR">APR (13-15 thn)</option>
                         <option value="AR">AR (16-18 thn)</option>
                         <option value="GPN-A">GPN-A (19-22 thn)</option>
                         <option value="GPN-B">GPN-B (23-30+ thn)</option>
                     </select>
-                </div>
-            </div>
-
-            <!-- Jurnal Materi Ngaji Harian -->
-            <div class="flex flex-col md:flex-row md:items-center gap-2 pt-2 border-t border-slate-200">
-                <label for="inputMateri" class="text-sm font-semibold text-slate-700 whitespace-nowrap">📖 Materi Ngaji Hari Ini:</label>
-                <input type="text" id="inputMateri" onchange="simpanMateriCloud()" placeholder="Contoh: Al-Qur'an Surat 13 Ayat 1-5 / Jilid 2 Hal 10..." class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-        </div>
-
-        <!-- Form Tambah, Import Excel & Reset Data (HANYA MUNCUL DI MODE ADMIN) -->
-        <div id="areaAdminFitur" class="hidden no-print bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-6 space-y-3">
-            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-amber-200 pb-2">
-                <div class="text-xs font-bold text-amber-900 flex items-center gap-1">
-                    ⚡ MENU KELOLA DATA (MODE ADMIN ACTIVE)
-                </div>
-                
-                <div class="flex flex-wrap items-center gap-2">
-                    <!-- Tombol Reset Status Absensi Hari Ini -->
-                    <button onclick="resetAbsensiHariIni()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-medium px-2.5 py-1 rounded transition border border-amber-300 flex items-center gap-1">
-                        🔄 Reset Status Absen Hari Ini
+                    <button onclick="tambahGenerus()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-sm">
+                        + Tambah
                     </button>
-
-                    <!-- Tombol Reset Semua Database -->
-                    <button onclick="resetSemuaData()" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition border border-red-300 flex items-center gap-1">
-                        🗑️ Reset Semua Database
-                    </button>
-
-                    <!-- Tombol Import Excel / CSV -->
-                    <label class="cursor-pointer bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-medium px-2.5 py-1 rounded transition border border-emerald-300 flex items-center gap-1">
-                        📂 Import File Excel / CSV
-                        <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
-                    </label>
                 </div>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-2">
-                <input type="text" id="inputNama" placeholder="Nama lengkap generus..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <select id="inputKategori" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="ACR">ACR (6-12 thn)</option>
-                    <option value="APR">APR (13-15 thn)</option>
-                    <option value="AR">AR (16-18 thn)</option>
-                    <option value="GPN-A">GPN-A (19-22 thn)</option>
-                    <option value="GPN-B">GPN-B (23-30+ thn)</option>
-                </select>
-                <button onclick="tambahGenerus()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                    Simpan Baru
-                </button>
+            <!-- KARTU REKAP RINGKASAN KEHADIRAN -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hadir</div>
+                    <div id="jumlahHadir" class="text-2xl font-extrabold text-emerald-800 mt-0.5">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-amber-700 uppercase tracking-wider">Izin</div>
+                    <div id="jumlahIzin" class="text-2xl font-extrabold text-amber-800 mt-0.5">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Sakit</div>
+                    <div id="jumlahSakit" class="text-2xl font-extrabold text-blue-800 mt-0.5">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-red-700 uppercase tracking-wider">Alpa</div>
+                    <div id="jumlahAlpa" class="text-2xl font-extrabold text-red-800 mt-0.5">0</div>
+                </div>
             </div>
-        </div>
 
-        <!-- Kartu Rekap Ringkasan Jumlah -->
-        <div class="grid grid-cols-4 gap-2 mb-6">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
-                <div class="text-xs text-emerald-600 font-medium">Hadir</div>
-                <div id="jumlahHadir" class="text-xl font-bold text-emerald-700">0</div>
+            <!-- TABEL DAFTAR GENERUS -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-semibold text-xs uppercase tracking-wider">
+                                <th class="p-3.5 text-center w-12">No</th>
+                                <th class="p-3.5">Nama & Kategori</th>
+                                <th class="p-3.5 text-center">Status & Waktu</th>
+                                <th class="p-3.5">Catatan / Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelGenerus" class="divide-y divide-slate-100 bg-white">
+                            <!-- Data dimasukkan via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-                <div class="text-xs text-amber-600 font-medium">Izin</div>
-                <div id="jumlahIzin" class="text-xl font-bold text-amber-700">0</div>
-            </div>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                <div class="text-xs text-blue-600 font-medium">Sakit</div>
-                <div id="jumlahSakit" class="text-xl font-bold text-blue-700">0</div>
-            </div>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                <div class="text-xs text-red-600 font-medium">Alpa</div>
-                <div id="jumlahAlpa" class="text-xl font-bold text-red-700">0</div>
-            </div>
-        </div>
 
-        <!-- Tabel Daftar Absensi -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="border-b bg-slate-50 text-slate-700">
-                        <th class="p-3">No</th>
-                        <th class="p-3">Nama & Kategori</th>
-                        <th class="p-3 text-center">Status & Waktu</th>
-                        <th class="p-3">Catatan / Keterangan Izin</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelGenerus" class="divide-y text-slate-600">
-                    <!-- Data dimasukkan via JS -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Tombol Aksi (Sembunyi saat diprint) -->
-        <div class="no-print mt-6 space-y-3">
-            <div class="flex gap-2">
-                <button onclick="cetakLaporan()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-1">
-                    🖨️ Cetak / Save PDF
-                </button>
-                <button onclick="exportExcel()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-1">
-                    📊 Export Excel (.csv)
-                </button>
+            <!-- TOMBOL AKSI (PRINT & EXCEL) -->
+            <div class="no-print pt-2">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="cetakLaporan()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        🖨️ Cetak / Simpan PDF
+                    </button>
+                    <button onclick="exportExcel()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        📊 Export Excel (.csv)
+                    </button>
+                </div>
             </div>
+
         </div>
     </div>
 
@@ -161,7 +172,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Konfigurasi Firebase Generus
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
             authDomain: "absensi-generus-db.firebaseapp.com",
@@ -172,30 +182,27 @@
             databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
 
-        // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Global Variables
         window.daftarGenerus = [];
         window.tanggalAktif = "";
         window.isAdmin = false;
         const PIN_ADMIN = "1234";
 
-        // 1. Toggle Mode Admin
         window.toggleAdminMode = function() {
             if (!window.isAdmin) {
-                const inputPIN = prompt("🔐 Masukkan PIN Admin untuk mengakses menu kelola data:");
+                const inputPIN = prompt("🔐 Masukkan PIN Admin:");
                 if (inputPIN === PIN_ADMIN) {
                     window.isAdmin = true;
                     alert("Akses Admin Berhasil Diberikan! 🔑");
                     updateTampilanAdmin();
                 } else if (inputPIN !== null) {
-                    alert("❌ PIN Salah! Akses ditolak.");
+                    alert("❌ PIN Salah!");
                 }
             } else {
                 window.isAdmin = false;
-                alert("Anda telah keluar dari Mode Admin.");
+                alert("Keluar dari Mode Admin.");
                 updateTampilanAdmin();
             }
         };
@@ -208,24 +215,22 @@
             if (window.isAdmin) {
                 areaAdmin.classList.remove("hidden");
                 btnToggle.innerText = "🔒 Keluar Admin";
-                btnToggle.className = "no-print bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm";
+                btnToggle.className = "no-print bg-red-500/80 hover:bg-red-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition border border-red-300 shadow-sm flex items-center gap-1.5";
                 statusText.innerText = "🔓 Mode Admin Aktif";
-                statusText.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+                statusText.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-400 text-amber-950 border border-amber-300 shadow-sm";
             } else {
                 areaAdmin.classList.add("hidden");
                 btnToggle.innerText = "🔑 Masuk Mode Admin";
-                btnToggle.className = "no-print bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm";
+                btnToggle.className = "no-print bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm";
                 statusText.innerText = "🔒 Mode Pengurus";
-                statusText.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600";
+                statusText.className = "text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20";
             }
             window.tampilkanGenerus();
         }
 
-        // 2. Inisialisasi Tanggal
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
-            const inputTgl = document.getElementById("inputTanggal");
-            inputTgl.value = today;
+            document.getElementById("inputTanggal").value = today;
             window.tanggalAktif = today;
             listenDataCloud(window.tanggalAktif);
         }
@@ -235,7 +240,6 @@
             listenDataCloud(window.tanggalAktif);
         };
 
-        // 3. Listener Realtime Database Cloud
         function listenDataCloud(tanggal) {
             const absensiRef = ref(db, 'absensi/' + tanggal);
             onValue(absensiRef, (snapshot) => {
@@ -274,13 +278,11 @@
             }, { onlyOnce: true });
         }
 
-        // 4. Simpan Materi ke Cloud
         window.simpanMateriCloud = function() {
             const materi = document.getElementById("inputMateri").value;
             set(ref(db, 'materi/' + window.tanggalAktif), materi);
         };
 
-        // 5. Render Tabel
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
@@ -291,33 +293,33 @@
                 if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
 
                 const tombolHapus = window.isAdmin 
-                    ? `<button onclick="hapusGenerus('${generus.id}')" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus Data">✕</button>` 
+                    ? `<button onclick="hapusGenerus('${generus.id}')" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1.5 py-0.5 text-xs rounded hover:bg-red-50 transition" title="Hapus Data">✕</button>` 
                     : '';
 
                 tbody.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-medium">${nomor++}</td>
-                        <td class="p-3">
-                            <div class="font-medium text-slate-800">${generus.nama}</div>
-                            <span class="inline-block bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 mt-0.5">${generus.kategori}</span>
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-3.5 text-center font-semibold text-slate-400 text-xs">${nomor++}</td>
+                        <td class="p-3.5">
+                            <div class="font-semibold text-slate-800">${generus.nama}</div>
+                            <span class="inline-block bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 mt-1">${generus.kategori}</span>
                         </td>
-                        <td class="p-3 text-center">
+                        <td class="p-3.5 text-center">
                             <div class="no-print flex flex-col items-center gap-1">
                                 <div class="flex justify-center gap-1">
-                                    <button onclick="pilihStatus(${index}, 'Hadir')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">Hadir</button>
-                                    <button onclick="pilihStatus(${index}, 'Izin')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Izin' ? 'bg-amber-600 text-white ring-2 ring-amber-300' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}">Izin</button>
-                                    <button onclick="pilihStatus(${index}, 'Sakit')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white ring-2 ring-blue-300' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">Sakit</button>
-                                    <button onclick="pilihStatus(${index}, 'Alpa')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}">Alpa</button>
+                                    <button onclick="pilihStatus(${index}, 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
+                                    <button onclick="pilihStatus(${index}, 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
+                                    <button onclick="pilihStatus(${index}, 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
+                                    <button onclick="pilihStatus(${index}, 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
                                     ${tombolHapus}
                                 </div>
-                                ${generus.waktu ? `<span class="text-[10px] text-slate-400">🕒 ${generus.waktu}</span>` : ''}
+                                ${generus.waktu ? `<span class="text-[10px] font-medium text-slate-400 mt-0.5">🕒 ${generus.waktu}</span>` : ''}
                             </div>
-                            <div class="hidden print:block font-semibold ${getStatusColor(generus.status)}">
+                            <div class="hidden print:block font-bold ${getStatusColor(generus.status)}">
                                 ${generus.status || 'Belum Absen'} ${generus.waktu ? `(${generus.waktu})` : ''}
                             </div>
                         </td>
-                        <td class="p-3">
-                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatan(${index}, this.value)" placeholder="Isi catatan / alasan izin..." class="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <td class="p-3.5">
+                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatan(${index}, this.value)" placeholder="Tambah catatan..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-slate-50/50 focus:bg-white transition">
                         </td>
                     </tr>
                 `;
@@ -335,18 +337,12 @@
         }
 
         function updateRekap() {
-            const hadir = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
-            const izin = window.daftarGenerus.filter(g => g.status === 'Izin').length;
-            const sakit = window.daftarGenerus.filter(g => g.status === 'Sakit').length;
-            const alpa = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
-
-            document.getElementById("jumlahHadir").innerText = hadir;
-            document.getElementById("jumlahIzin").innerText = izin;
-            document.getElementById("jumlahSakit").innerText = sakit;
-            document.getElementById("jumlahAlpa").innerText = alpa;
+            document.getElementById("jumlahHadir").innerText = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
+            document.getElementById("jumlahIzin").innerText = window.daftarGenerus.filter(g => g.status === 'Izin').length;
+            document.getElementById("jumlahSakit").innerText = window.daftarGenerus.filter(g => g.status === 'Sakit').length;
+            document.getElementById("jumlahAlpa").innerText = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
         }
 
-        // 6. Pilih Status Kehadiran
         window.pilihStatus = function(index, statusPilihan) {
             const generus = window.daftarGenerus[index];
             generus.status = statusPilihan;
@@ -359,14 +355,12 @@
             set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
         };
 
-        // 7. Update Catatan
         window.updateCatatan = function(index, teks) {
             const generus = window.daftarGenerus[index];
             generus.catatan = teks;
             set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
         };
 
-        // 8. Tambah Generus Baru
         window.tambahGenerus = function() {
             const inputNama = document.getElementById("inputNama");
             const inputKat = document.getElementById("inputKategori");
@@ -378,14 +372,7 @@
             }
 
             const idBaru = 'gen_' + Date.now();
-            const generusBaru = {
-                id: idBaru,
-                nama: nama,
-                kategori: inputKat.value,
-                status: "",
-                waktu: "",
-                catatan: ""
-            };
+            const generusBaru = { id: idBaru, nama: nama, kategori: inputKat.value, status: "", waktu: "", catatan: "" };
 
             set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: inputKat.value });
             set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), generusBaru);
@@ -393,7 +380,6 @@
             inputNama.value = "";
         };
 
-        // 9. Import File CSV
         window.importCSV = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -425,30 +411,27 @@
             reader.readAsText(file);
         };
 
-        // 10. FITUR BARU: Reset Status Absensi Hari Ini Saja
         window.resetAbsensiHariIni = function() {
-            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi untuk tanggal (${window.tanggalAktif})?\n\n- Nama-nama generus AKAN TETAP AMAN.\n- Status Hadir/Izin/Sakit/Alpa pada tanggal ini akan dibersihkan.`)) {
+            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi untuk tanggal (${window.tanggalAktif})?`)) {
                 remove(ref(db, `absensi/${window.tanggalAktif}`));
-                alert(`Status absensi untuk tanggal ${window.tanggalAktif} berhasil dibersihkan!`);
+                alert(`Status absensi tanggal ${window.tanggalAktif} dibersihkan!`);
             }
         };
 
-        // 11. Hapus & Reset Semua Data Cloud
         window.hapusGenerus = function(id) {
-            if (confirm("⚠️ Yakin ingin menghapus nama ini dari database Cloud?")) {
+            if (confirm("⚠️ Yakin ingin menghapus nama ini?")) {
                 remove(ref(db, `master_generus/${id}`));
                 remove(ref(db, `absensi/${window.tanggalAktif}/${id}`));
             }
         };
 
         window.resetSemuaData = function() {
-            if (confirm("⚠️ PERINGATAN CRITICAL!\n\nYakin ingin menghapus SELURUH database di Cloud (Termasuk daftar nama)?")) {
+            if (confirm("⚠️ PERINGATAN CRITICAL!\n\nYakin ingin menghapus SELURUH database?")) {
                 remove(ref(db, '/'));
                 location.reload();
             }
         };
 
-        // 12. Cetak & Export
         window.cetakLaporan = function() { window.print(); };
         window.exportExcel = function() {
             const materi = document.getElementById("inputMateri").value || "-";
@@ -470,7 +453,6 @@
             document.body.removeChild(link);
         };
 
-        // Start App
         initTanggal();
     </script>
 </body>
