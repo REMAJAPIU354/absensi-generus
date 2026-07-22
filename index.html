@@ -8,8 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- SheetJS CDN (Full Version dengan Style Support) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -479,9 +479,62 @@
             document.body.removeChild(link);
         };
 
-        // 13. Download Rekap Multi-Sheet Excel Presisi Identik Template User
+        // Helper Kode Status
+        function getKodeAbsen(status) {
+            if (status === 'Hadir') return 'H';
+            if (status === 'Izin') return 'I';
+            if (status === 'Sakit') return 'S';
+            if (status === 'Alpa') return 'A';
+            return '';
+        }
+
+        // Helper Style Excel (Border & Background)
+        const thinBorder = {
+            top: { style: 'thin', color: { rgb: "CCCCCC" } },
+            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+            left: { style: 'thin', color: { rgb: "CCCCCC" } },
+            right: { style: 'thin', color: { rgb: "CCCCCC" } }
+        };
+
+        function beriGarisDanFormatTabel(sheet) {
+            const range = XLSX.utils.decode_range(sheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell_address = { c: C, r: R };
+                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!sheet[cell_ref]) sheet[cell_ref] = { t: 's', v: '' };
+
+                    sheet[cell_ref].s = sheet[cell_ref].s || {};
+                    sheet[cell_ref].s.border = thinBorder;
+
+                    // Header Style (Baris 1 & 2)
+                    if (R < 2) {
+                        sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } }; // Warna Hijau Emerald
+                        sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
+                        sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
+                    } else {
+                        // Perataan teks isi tabel
+                        sheet[cell_ref].s.font = { name: "Calibri", size: 11 };
+                        if (C === 0 || C >= 3) {
+                            sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
+                        } else {
+                            sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
+                        }
+
+                        // Baris Total
+                        const val = String(sheet[cell_ref].v || "");
+                        if (val.includes("Total")) {
+                            sheet[cell_ref].s.fill = { fgColor: { rgb: "E2E3E5" } }; // Grey
+                            sheet[cell_ref].s.font = { name: "Calibri", bold: true };
+                        }
+                    }
+                }
+            }
+        }
+
+        // 13. Download Rekap Multi-Sheet Excel dengan Garis Tabel Rapi
         window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel presisi template... Mohon tunggu sebentar.");
+            alert("Memproses data 3 Sheet Excel dengan Garis Tabel Rapi... Mohon tunggu sebentar.");
 
             const snapshotMaster = await get(ref(db, 'master_generus'));
             const masterData = snapshotMaster.val() || {};
@@ -498,27 +551,24 @@
 
             const wb = XLSX.utils.book_new();
 
-            // Maximum 6 tanggal per periode di template (Kolom D s.d I / C s.d J)
+            // Maksimal 6 tanggal pengajian per periode
             const dateHeaders = sortedDates.slice(0, 6);
 
             // ==========================================
             // SHEET 1: Absensi APR - GPN PIU
             // ==========================================
             const ws1Data = [];
-            
-            // Row 1 Header
             const r1 = ["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"];
             r1[9] = "Akumulasi Kehadiran";
             r1[10] = "Jumlah Pertemuan";
             r1[11] = "Presentase";
             ws1Data.push(r1);
 
-            // Row 2 Subheader
             const r2 = ["No", "Nama Lengkap", "Kategori"];
             dateHeaders.forEach((d, idx) => { r2[3 + idx] = d; });
             ws1Data.push(r2);
 
-            let currentRowIdx = 3; // Excel Row Index
+            let currentRowIdx = 3;
             const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
 
             katPIU.forEach(kat => {
@@ -532,14 +582,11 @@
 
                         dateHeaders.forEach((d, dIdx) => {
                             const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                            row[3 + dIdx] = (abs && abs.status === 'Hadir') ? "H" : "";
+                            row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                         });
 
-                        // Col J (Col 9): Rumus COUNTA
-                        row[9] = { f: `COUNTA(D${currentRowIdx}:I${currentRowIdx})` };
-                        // Col K (Col 10): Jumlah Pertemuan
+                        row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
                         row[10] = dateHeaders.length;
-                        // Col L (Col 11): Rumus Presentase
                         row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
 
                         ws1Data.push(row);
@@ -547,8 +594,6 @@
                     });
 
                     let endCatRow = currentRowIdx - 1;
-
-                    // Baris Total per Kategori
                     let totalRow = ["Total", "", ""];
                     totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
                     totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
@@ -562,6 +607,7 @@
             });
 
             const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+            beriGarisDanFormatTabel(ws1);
             XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
 
             // ==========================================
@@ -588,10 +634,10 @@
 
                 dateHeaders.forEach((d, dIdx) => {
                     const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                    row[3 + dIdx] = (abs && abs.status === 'Hadir') ? "H" : "";
+                    row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
 
-                row[9] = { f: `COUNTA(D${rowIdx2}:I${rowIdx2})` };
+                row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
                 row[10] = dateHeaders.length;
                 row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
 
@@ -607,6 +653,7 @@
             ws2Data.push(totalRowAR);
 
             const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+            beriGarisDanFormatTabel(ws2);
             XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
             // ==========================================
@@ -633,10 +680,10 @@
 
                 dateHeaders.forEach((d, dIdx) => {
                     const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                    row[2 + dIdx] = (abs && abs.status === 'Hadir') ? "H" : "";
+                    row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
 
-                row[10] = { f: `COUNTA(C${rowIdx3}:J${rowIdx3})` };
+                row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
                 row[11] = dateHeaders.length;
                 row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
 
@@ -652,9 +699,10 @@
             ws3Data.push(totalRowACR);
 
             const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+            beriGarisDanFormatTabel(ws3);
             XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
 
-            // Unduh file .xlsx resmi
+            // Unduh file .xlsx resmi dengan style
             XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
         };
 
