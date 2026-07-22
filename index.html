@@ -20,7 +20,15 @@
 <body class="bg-slate-100 min-h-screen p-4 md:p-6 font-sans">
 
     <div class="card-container max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
-        <!-- Header -->
+        <!-- Header & Tombol Admin -->
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600" id="statusAdminText">🔒 Mode Pengurus</span>
+            
+            <button onclick="toggleAdminMode()" id="btnToggleAdmin" class="no-print bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
+                🔑 Masuk Mode Admin
+            </button>
+        </div>
+
         <h1 class="text-2xl font-bold text-emerald-700 text-center">Absensi Ngaji Generus</h1>
         <p class="text-slate-500 text-center text-sm mb-6">Pencatatan Kehadiran & Jurnal Pengajian Harian</p>
 
@@ -52,10 +60,12 @@
             </div>
         </div>
 
-        <!-- Form Tambah, Import Excel & Reset Data -->
-        <div class="no-print bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 mb-6 space-y-3">
-            <div class="flex flex-wrap justify-between items-center gap-2">
-                <div class="text-xs font-semibold text-emerald-800">+ Tambah Generus Baru</div>
+        <!-- Form Tambah, Import Excel & Reset Data (HANYA MUNCUL DI MODE ADMIN) -->
+        <div id="areaAdminFitur" class="hidden no-print bg-amber-50/60 border border-amber-200 rounded-lg p-3 mb-6 space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-amber-200 pb-2">
+                <div class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                    ⚡ MENU KELOLA DATA (MODE ADMIN ACTIVE)
+                </div>
                 
                 <div class="flex items-center gap-2">
                     <!-- Tombol Reset Semua Data -->
@@ -81,7 +91,7 @@
                     <option value="GPN-B">GPN-B (23-30+ thn)</option>
                 </select>
                 <button onclick="tambahGenerus()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                    Simpan
+                    Simpan Baru
                 </button>
             </div>
         </div>
@@ -125,7 +135,7 @@
 
         <!-- Tombol Aksi (Sembunyi saat diprint) -->
         <div class="no-print mt-6 space-y-3">
-            <button onclick="simpanAbsensi()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg transition">
+            <button onclick="simpanAbsensi()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg transition shadow">
                 Simpan Absensi Hari Ini
             </button>
             
@@ -144,8 +154,51 @@
     <script>
         let daftarGenerus = [];
         let tanggalAktif = "";
+        let isAdmin = false;
+        
+        // PIN ADMIN SEMENTARA (Kamu bisa ganti '1234' dengan PIN pilihanmu)
+        const PIN_ADMIN = "1234";
 
-        // 1. Inisialisasi Tanggal
+        // 1. Fitur Toggle Mode Admin
+        function toggleAdminMode() {
+            if (!isAdmin) {
+                const inputPIN = prompt("🔐 Masukkan PIN Admin untuk mengakses menu kelola data:");
+                if (inputPIN === PIN_ADMIN) {
+                    isAdmin = true;
+                    alert("Akses Admin Berhasil Diberikan! 🔑");
+                    updateTampilanAdmin();
+                } else if (inputPIN !== null) {
+                    alert("❌ PIN Salah! Akses ditolak.");
+                }
+            } else {
+                isAdmin = false;
+                alert("Anda telah keluar dari Mode Admin.");
+                updateTampilanAdmin();
+            }
+        }
+
+        function updateTampilanAdmin() {
+            const areaAdmin = document.getElementById("areaAdminFitur");
+            const btnToggle = document.getElementById("btnToggleAdmin");
+            const statusText = document.getElementById("statusAdminText");
+
+            if (isAdmin) {
+                areaAdmin.classList.remove("hidden");
+                btnToggle.innerText = "🔒 Keluar Admin";
+                btnToggle.className = "no-print bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm";
+                statusText.innerText = "🔓 Mode Admin Aktif";
+                statusText.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+            } else {
+                areaAdmin.classList.add("hidden");
+                btnToggle.innerText = "🔑 Masuk Mode Admin";
+                btnToggle.className = "no-print bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm";
+                statusText.innerText = "🔒 Mode Pengurus";
+                statusText.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600";
+            }
+            tampilkanGenerus(); // Refresh tabel untuk memunculkan/menyembunyikan tombol Hapus (✕)
+        }
+
+        // 2. Inisialisasi Tanggal
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             const inputTgl = document.getElementById("inputTanggal");
@@ -155,7 +208,7 @@
             muatDataTanggal(tanggalAktif);
         }
 
-        // 2. Muat Data Berdasarkan Tanggal
+        // 3. Muat Data Berdasarkan Tanggal
         function muatDataTanggal(tanggal) {
             const keyStorage = "dataGenerusNgaji_" + tanggal;
             const dataTersimpan = localStorage.getItem(keyStorage);
@@ -191,7 +244,7 @@
             localStorage.setItem("materiNgaji_" + tanggalAktif, materi);
         }
 
-        // 3. Tampilkan Data ke Tabel
+        // 4. Tampilkan Data ke Tabel
         function tampilkanGenerus() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
@@ -200,6 +253,11 @@
             let nomor = 1;
             daftarGenerus.forEach((generus, index) => {
                 if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
+
+                // Tombol Hapus (✕) hanya jika Mode Admin Aktif
+                const tombolHapus = isAdmin 
+                    ? `<button onclick="hapusGenerus(${index})" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus Data">✕</button>` 
+                    : '';
 
                 tbody.innerHTML += `
                     <tr>
@@ -216,7 +274,7 @@
                                     <button onclick="pilihStatus(${index}, 'Izin')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Izin' ? 'bg-amber-600 text-white ring-2 ring-amber-300' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}">Izin</button>
                                     <button onclick="pilihStatus(${index}, 'Sakit')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white ring-2 ring-blue-300' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">Sakit</button>
                                     <button onclick="pilihStatus(${index}, 'Alpa')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}">Alpa</button>
-                                    <button onclick="hapusGenerus(${index})" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus">✕</button>
+                                    ${tombolHapus}
                                 </div>
                                 ${generus.waktu ? `<span class="text-[10px] text-slate-400">🕒 ${generus.waktu}</span>` : ''}
                             </div>
@@ -244,7 +302,7 @@
             return 'text-slate-400';
         }
 
-        // 4. Update Rekap Jumlah
+        // 5. Update Rekap Jumlah
         function updateRekap() {
             const hadir = daftarGenerus.filter(g => g.status === 'Hadir').length;
             const izin = daftarGenerus.filter(g => g.status === 'Izin').length;
@@ -257,7 +315,7 @@
             document.getElementById("jumlahAlpa").innerText = alpa;
         }
 
-        // 5. Tambah Generus Manual
+        // 6. Tambah Generus Manual
         function tambahGenerus() {
             const inputNama = document.getElementById("inputNama");
             const inputKat = document.getElementById("inputKategori");
@@ -283,7 +341,7 @@
             tampilkanGenerus();
         }
 
-        // 6. Import Data dari File CSV/Excel
+        // 7. Import Data dari File CSV/Excel
         function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -328,16 +386,16 @@
             reader.readAsText(file);
         }
 
-        // 7. Reset Semua Data
+        // 8. Reset Semua Data
         function resetSemuaData() {
-            if (confirm("Yakin ingin menghapus seluruh data generus dan absensi? Tindakan ini akan mengosongkan semua data!")) {
+            if (confirm("⚠️ PERINGATAN ADMIN!\n\nYakin ingin menghapus SELURUH data generus dan absensi?\nTindakan ini akan mengosongkan semua memori aplikasi!")) {
                 localStorage.clear();
                 alert("Semua data berhasil dibersihkan!");
                 location.reload();
             }
         }
 
-        // 8. Pilih Status Kehadiran
+        // 9. Pilih Status Kehadiran
         function pilihStatus(index, statusPilihan) {
             daftarGenerus[index].status = statusPilihan;
             
@@ -350,17 +408,15 @@
             tampilkanGenerus();
         }
 
-        // 9. Update Catatan Manual
+        // 10. Update Catatan Manual
         function updateCatatan(index, teks) {
             daftarGenerus[index].catatan = teks;
             simpanKeLocalStorage();
         }
 
-        // 10. Hapus Generus
+        // 11. Hapus Generus
         function hapusGenerus(index) {
             const generus = daftarGenerus[index];
-            
-            // Konfirmasi tegas sebelum menghapus
             const konfirmasi = confirm(`⚠️ PERINGATAN HAPUS DATA!\n\nApakah Anda yakin ingin menghapus "${generus.nama}" (${generus.kategori}) dari daftar absensi?\n\nData yang dihapus tidak dapat dikembalikan!`);
             
             if (konfirmasi) {
@@ -368,11 +424,10 @@
                 simpanMasterData();
                 simpanKeLocalStorage();
                 tampilkanGenerus();
-                alert(`Data ${generus.nama} berhasil dihapus.`);
             }
         }
 
-        // 11. Simpan Storage
+        // 12. Simpan Storage
         function simpanKeLocalStorage() {
             localStorage.setItem("dataGenerusNgaji_" + tanggalAktif, JSON.stringify(daftarGenerus));
         }
@@ -388,7 +443,7 @@
             alert(`Data absensi tanggal ${tanggalAktif} berhasil tersimpan!`);
         }
 
-        // 12. Cetak PDF & Export Excel
+        // 13. Cetak PDF & Export Excel
         function cetakLaporan() {
             window.print();
         }
