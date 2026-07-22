@@ -23,7 +23,7 @@
 
     <div class="card-container max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
         
-        <!-- HEADER APPLIKASI -->
+        <!-- HEADER APLIKASI -->
         <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-5 sm:p-6 text-white relative">
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
@@ -190,6 +190,7 @@
         window.isAdmin = false;
         const PIN_ADMIN = "1234";
 
+        // 1. Toggle Mode Admin
         window.toggleAdminMode = function() {
             if (!window.isAdmin) {
                 const inputPIN = prompt("🔐 Masukkan PIN Admin:");
@@ -228,6 +229,7 @@
             window.tampilkanGenerus();
         }
 
+        // 2. Inisialisasi Tanggal
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputTanggal").value = today;
@@ -240,19 +242,16 @@
             listenDataCloud(window.tanggalAktif);
         };
 
+        // 3. Listener Data Cloud (Master Nama + Absensi Hari Ini)
         function listenDataCloud(tanggal) {
-            function listenDataCloud(tanggal) {
-            // 1. Ambil seluruh Master Nama Generus lebih dulu
             const masterRef = ref(db, 'master_generus');
             onValue(masterRef, (masterSnap) => {
                 const masterData = masterSnap.val() || {};
                 
-                // 2. Ambil data status absensi tanggal aktif
                 const absensiRef = ref(db, 'absensi/' + tanggal);
                 onValue(absensiRef, (absensiSnap) => {
                     const absensiData = absensiSnap.val() || {};
                     
-                    // 3. Gabungkan Master Nama + Status Absensi Hari Ini
                     window.daftarGenerus = Object.values(masterData).map((item) => {
                         const statusHariIni = absensiData[item.id] || {};
                         return {
@@ -269,45 +268,19 @@
                 });
             });
 
-            // Ambil materi ngaji harian
             const materiRef = ref(db, 'materi/' + tanggal);
             onValue(materiRef, (materiSnap) => {
                 document.getElementById("inputMateri").value = materiSnap.val() || "";
             });
         }
-        }
 
-            const materiRef = ref(db, 'materi/' + tanggal);
-            onValue(materiRef, (snapshot) => {
-                document.getElementById("inputMateri").value = snapshot.val() || "";
-            });
-        }
-
-        function ambilMasterDataCloud() {
-            const masterRef = ref(db, 'master_generus');
-            onValue(masterRef, (snapshot) => {
-                const master = snapshot.val();
-                if (master) {
-                    window.daftarGenerus = Object.values(master).map((item, idx) => ({
-                        id: item.id || (Date.now() + idx),
-                        nama: item.nama,
-                        kategori: item.kategori || "ACR",
-                        status: "",
-                        waktu: "",
-                        catatan: ""
-                    }));
-                } else {
-                    window.daftarGenerus = [];
-                }
-                window.tampilkanGenerus();
-            }, { onlyOnce: true });
-        }
-
+        // 4. Simpan Materi
         window.simpanMateriCloud = function() {
             const materi = document.getElementById("inputMateri").value;
             set(ref(db, 'materi/' + window.tanggalAktif), materi);
         };
 
+        // 5. Render Tabel
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
@@ -331,10 +304,10 @@
                         <td class="p-3.5 text-center">
                             <div class="no-print flex flex-col items-center gap-1">
                                 <div class="flex justify-center gap-1">
-                                    <button onclick="pilihStatus(${index}, 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
-                                    <button onclick="pilihStatus(${index}, 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
-                                    <button onclick="pilihStatus(${index}, 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
-                                    <button onclick="pilihStatus(${index}, 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
+                                    <button onclick="pilihStatus('${generus.id}', 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
+                                    <button onclick="pilihStatus('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
+                                    <button onclick="pilihStatus('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
+                                    <button onclick="pilihStatus('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
                                     ${tombolHapus}
                                 </div>
                                 ${generus.waktu ? `<span class="text-[10px] font-medium text-slate-400 mt-0.5">🕒 ${generus.waktu}</span>` : ''}
@@ -344,7 +317,7 @@
                             </div>
                         </td>
                         <td class="p-3.5">
-                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatan(${index}, this.value)" placeholder="Tambah catatan..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-slate-50/50 focus:bg-white transition">
+                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatan('${generus.id}', this.value)" placeholder="Tambah catatan..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-slate-50/50 focus:bg-white transition">
                         </td>
                     </tr>
                 `;
@@ -368,24 +341,42 @@
             document.getElementById("jumlahAlpa").innerText = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
         }
 
-        window.pilihStatus = function(index, statusPilihan) {
-            const generus = window.daftarGenerus[index];
-            generus.status = statusPilihan;
-            
+        // 6. Pilih Status Kehadiran
+        window.pilihStatus = function(id, statusPilihan) {
+            const generus = window.daftarGenerus.find(g => g.id === id);
+            if(!generus) return;
+
             const now = new Date();
             const jam = String(now.getHours()).padStart(2, '0');
             const menit = String(now.getMinutes()).padStart(2, '0');
-            generus.waktu = `${jam}:${menit} WIB`;
+            const waktuFormat = `${jam}:${menit} WIB`;
 
-            set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
+            set(ref(db, `absensi/${window.tanggalAktif}/${id}`), {
+                id: generus.id,
+                nama: generus.nama,
+                kategori: generus.kategori,
+                status: statusPilihan,
+                waktu: waktuFormat,
+                catatan: generus.catatan || ""
+            });
         };
 
-        window.updateCatatan = function(index, teks) {
-            const generus = window.daftarGenerus[index];
-            generus.catatan = teks;
-            set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
+        // 7. Update Catatan
+        window.updateCatatan = function(id, teks) {
+            const generus = window.daftarGenerus.find(g => g.id === id);
+            if(!generus) return;
+
+            set(ref(db, `absensi/${window.tanggalAktif}/${id}`), {
+                id: generus.id,
+                nama: generus.nama,
+                kategori: generus.kategori,
+                status: generus.status || "",
+                waktu: generus.waktu || "",
+                catatan: teks
+            });
         };
 
+        // 8. Tambah Generus Baru
         window.tambahGenerus = function() {
             const inputNama = document.getElementById("inputNama");
             const inputKat = document.getElementById("inputKategori");
@@ -397,14 +388,11 @@
             }
 
             const idBaru = 'gen_' + Date.now();
-            const generusBaru = { id: idBaru, nama: nama, kategori: inputKat.value, status: "", waktu: "", catatan: "" };
-
             set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: inputKat.value });
-            set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), generusBaru);
-
             inputNama.value = "";
         };
 
+        // 9. Import File CSV
         window.importCSV = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -424,9 +412,6 @@
                         if (nama !== "") {
                             const idBaru = 'gen_' + (Date.now() + idx);
                             set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori });
-                            set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), {
-                                id: idBaru, nama: nama, kategori: kategori, status: "", waktu: "", catatan: ""
-                            });
                             jumlah++;
                         }
                     }
@@ -436,6 +421,7 @@
             reader.readAsText(file);
         };
 
+        // 10. Reset Absensi Hari Ini
         window.resetAbsensiHariIni = function() {
             if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi untuk tanggal (${window.tanggalAktif})?`)) {
                 remove(ref(db, `absensi/${window.tanggalAktif}`));
@@ -443,6 +429,7 @@
             }
         };
 
+        // 11. Hapus & Reset Database
         window.hapusGenerus = function(id) {
             if (confirm("⚠️ Yakin ingin menghapus nama ini?")) {
                 remove(ref(db, `master_generus/${id}`));
@@ -457,6 +444,7 @@
             }
         };
 
+        // 12. Cetak & Export
         window.cetakLaporan = function() { window.print(); };
         window.exportExcel = function() {
             const materi = document.getElementById("inputMateri").value || "-";
@@ -478,6 +466,7 @@
             document.body.removeChild(link);
         };
 
+        // Start Application
         initTanggal();
     </script>
 </body>
