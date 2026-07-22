@@ -156,7 +156,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Konfigurasi Firebase Generus
+        // Konfigurasi Firebase Generus (Updated Database URL Singapore)
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
             authDomain: "absensi-generus-db.firebaseapp.com",
@@ -164,9 +164,8 @@
             storageBucket: "absensi-generus-db.firebasestorage.app",
             messagingSenderId: "350847945290",
             appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
-            databaseURL: "https://absensi-generus-db-default-rtdb.firebaseio.com"
+            databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
-
         // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
