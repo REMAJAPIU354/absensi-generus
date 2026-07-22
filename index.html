@@ -72,10 +72,15 @@
                     ⚡ MENU KELOLA DATA (MODE ADMIN ACTIVE)
                 </div>
                 
-                <div class="flex items-center gap-2">
-                    <!-- Tombol Reset Semua Data -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Tombol Reset Status Absensi Hari Ini -->
+                    <button onclick="resetAbsensiHariIni()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-medium px-2.5 py-1 rounded transition border border-amber-300 flex items-center gap-1">
+                        🔄 Reset Status Absen Hari Ini
+                    </button>
+
+                    <!-- Tombol Reset Semua Database -->
                     <button onclick="resetSemuaData()" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition border border-red-300 flex items-center gap-1">
-                        🗑️ Reset Database Cloud
+                        🗑️ Reset Semua Database
                     </button>
 
                     <!-- Tombol Import Excel / CSV -->
@@ -156,7 +161,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Konfigurasi Firebase Generus (Updated Database URL Singapore)
+        // Konfigurasi Firebase Generus
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
             authDomain: "absensi-generus-db.firebaseapp.com",
@@ -166,6 +171,7 @@
             appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
             databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
+
         // Inisialisasi Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -231,20 +237,17 @@
 
         // 3. Listener Realtime Database Cloud
         function listenDataCloud(tanggal) {
-            // Listener Absensi & Generus
             const absensiRef = ref(db, 'absensi/' + tanggal);
             onValue(absensiRef, (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     window.daftarGenerus = Object.values(data);
                 } else {
-                    // Jika tanggal baru belum ada data, ambil dari Master Data
                     ambilMasterDataCloud();
                 }
                 window.tampilkanGenerus();
             });
 
-            // Listener Materi Ngaji
             const materiRef = ref(db, 'materi/' + tanggal);
             onValue(materiRef, (snapshot) => {
                 document.getElementById("inputMateri").value = snapshot.val() || "";
@@ -343,7 +346,7 @@
             document.getElementById("jumlahAlpa").innerText = alpa;
         }
 
-        // 6. Pilih Status Kehadiran (Auto Simpan Ke Cloud)
+        // 6. Pilih Status Kehadiran
         window.pilihStatus = function(index, statusPilihan) {
             const generus = window.daftarGenerus[index];
             generus.status = statusPilihan;
@@ -353,7 +356,6 @@
             const menit = String(now.getMinutes()).padStart(2, '0');
             generus.waktu = `${jam}:${menit} WIB`;
 
-            // Push ke Firebase Realtime Database
             set(ref(db, `absensi/${window.tanggalAktif}/${generus.id}`), generus);
         };
 
@@ -385,7 +387,6 @@
                 catatan: ""
             };
 
-            // Simpan ke Master & Tanggal Aktif
             set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: inputKat.value });
             set(ref(db, `absensi/${window.tanggalAktif}/${idBaru}`), generusBaru);
 
@@ -424,7 +425,15 @@
             reader.readAsText(file);
         };
 
-        // 10. Hapus & Reset Data Cloud
+        // 10. FITUR BARU: Reset Status Absensi Hari Ini Saja
+        window.resetAbsensiHariIni = function() {
+            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi untuk tanggal (${window.tanggalAktif})?\n\n- Nama-nama generus AKAN TETAP AMAN.\n- Status Hadir/Izin/Sakit/Alpa pada tanggal ini akan dibersihkan.`)) {
+                remove(ref(db, `absensi/${window.tanggalAktif}`));
+                alert(`Status absensi untuk tanggal ${window.tanggalAktif} berhasil dibersihkan!`);
+            }
+        };
+
+        // 11. Hapus & Reset Semua Data Cloud
         window.hapusGenerus = function(id) {
             if (confirm("⚠️ Yakin ingin menghapus nama ini dari database Cloud?")) {
                 remove(ref(db, `master_generus/${id}`));
@@ -433,13 +442,13 @@
         };
 
         window.resetSemuaData = function() {
-            if (confirm("⚠️ PERINGATAN CRITICAL!\n\nYakin ingin menghapus SELURUH database di Cloud?")) {
+            if (confirm("⚠️ PERINGATAN CRITICAL!\n\nYakin ingin menghapus SELURUH database di Cloud (Termasuk daftar nama)?")) {
                 remove(ref(db, '/'));
                 location.reload();
             }
         };
 
-        // 11. Cetak & Export
+        // 12. Cetak & Export
         window.cetakLaporan = function() { window.print(); };
         window.exportExcel = function() {
             const materi = document.getElementById("inputMateri").value || "-";
