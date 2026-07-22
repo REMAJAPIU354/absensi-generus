@@ -488,7 +488,7 @@
             return '';
         }
 
-        // Helper Style Excel (Border & Background)
+        // Helper Style Excel
         const thinBorder = {
             top: { style: 'thin', color: { rgb: "CCCCCC" } },
             bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
@@ -507,13 +507,11 @@
                     sheet[cell_ref].s = sheet[cell_ref].s || {};
                     sheet[cell_ref].s.border = thinBorder;
 
-                    // Header Style (Baris 1 & 2)
                     if (R < 2) {
-                        sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } }; // Warna Hijau Emerald
+                        sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } };
                         sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
                         sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
                     } else {
-                        // Perataan teks isi tabel
                         sheet[cell_ref].s.font = { name: "Calibri", size: 11 };
                         if (C === 0 || C >= 3) {
                             sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
@@ -521,10 +519,14 @@
                             sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
                         }
 
-                        // Baris Total
+                        // Format persen untuk kolom presentase
+                        if (sheet[cell_ref].f && sheet[cell_ref].f.includes("/")) {
+                            sheet[cell_ref].z = "0.0%";
+                        }
+
                         const val = String(sheet[cell_ref].v || "");
                         if (val.includes("Total")) {
-                            sheet[cell_ref].s.fill = { fgColor: { rgb: "E2E3E5" } }; // Grey
+                            sheet[cell_ref].s.fill = { fgColor: { rgb: "E2E3E5" } };
                             sheet[cell_ref].s.font = { name: "Calibri", bold: true };
                         }
                     }
@@ -532,9 +534,9 @@
             }
         }
 
-        // 13. Download Rekap Multi-Sheet Excel dengan Garis Tabel Rapi
+        // 13. Download Rekap Multi-Sheet Excel dengan Murni Hadir saja untuk Presentase
         window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel dengan Garis Tabel Rapi... Mohon tunggu sebentar.");
+            alert("Memproses data 3 Sheet Excel... Mohon tunggu sebentar.");
 
             const snapshotMaster = await get(ref(db, 'master_generus'));
             const masterData = snapshotMaster.val() || {};
@@ -551,7 +553,7 @@
 
             const wb = XLSX.utils.book_new();
 
-            // Maksimal 6 tanggal pengajian per periode
+            // Maksimal 6 tanggal pengajian per periode (Kolom D s.d I)
             const dateHeaders = sortedDates.slice(0, 6);
 
             // ==========================================
@@ -585,6 +587,7 @@
                             row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                         });
 
+                        // RUMUS HANYA MENGHITUNG "H" (HADIR)
                         row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
                         row[10] = dateHeaders.length;
                         row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
@@ -657,7 +660,7 @@
             XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
             // ==========================================
-            // SHEET 3: Absensi ACR
+            // SHEET 3: Absensi ACR (Range C s.d J)
             // ==========================================
             const ws3Data = [];
             const r3_1 = ["No", "Nama Lengkap", "Tanggal "];
@@ -683,6 +686,7 @@
                     row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
 
+                // Rumus COUNTIF khusus Sheet ACR (Kolom C s.d J)
                 row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
                 row[11] = dateHeaders.length;
                 row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
@@ -702,7 +706,7 @@
             beriGarisDanFormatTabel(ws3);
             XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
 
-            // Unduh file .xlsx resmi dengan style
+            // Unduh file .xlsx resmi
             XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
         };
 
