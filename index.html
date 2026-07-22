@@ -508,7 +508,6 @@
                     sheet[cell_ref].s.border = thinBorder;
 
                     if (R < 2) {
-                        // Header Style
                         sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } };
                         sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
                         sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
@@ -520,17 +519,16 @@
                             sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
                         }
 
-                        // FORCE FORMAT PERSENTASE UNTUK KOLOM PRESENTASE
-                        // Jika ada rumus pembagian ATAU berada di kolom paling kanan (Presentase)
-                        if (C === range.e.c || (sheet[cell_ref].f && (sheet[cell_ref].f.includes("/") || sheet[cell_ref].f.includes("AVERAGE")))) {
-                            sheet[cell_ref].z = "0.0%"; // Formats as 66.7%, 100.0%, 0.0%
-                            sheet[cell_ref].t = 'n';    // Set cell type as Number
+                        // FORMAT PERSENTASE 0% BULAT
+                        if (C === range.e.c || (sheet[cell_ref].f && sheet[cell_ref].f.includes("/"))) {
+                            sheet[cell_ref].z = "0%";
+                            sheet[cell_ref].t = 'n';
                         }
 
-                        // Format Bold & Warna untuk Baris Total
+                        // Warna Kuning Sesuai Gambar
                         const val = String(sheet[cell_ref].v || "");
                         if (val.includes("Total")) {
-                            sheet[cell_ref].s.fill = { fgColor: { rgb: "E2E3E5" } };
+                            sheet[cell_ref].s.fill = { fgColor: { rgb: "FFF200" } };
                             sheet[cell_ref].s.font = { name: "Calibri", bold: true };
                         }
                     }
@@ -538,9 +536,9 @@
             }
         }
 
-        // 13. Download Rekap Multi-Sheet Excel dengan Murni Hadir saja untuk Presentase
+        // 13. Download Rekap Multi-Sheet Excel Sesuai Tampilan Gambar User
         window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel... Mohon tunggu sebentar.");
+            alert("Memproses data 3 Sheet Excel persis template... Mohon tunggu sebentar.");
 
             const snapshotMaster = await get(ref(db, 'master_generus'));
             const masterData = snapshotMaster.val() || {};
@@ -557,7 +555,7 @@
 
             const wb = XLSX.utils.book_new();
 
-            // Maksimal 6 tanggal pengajian per periode (Kolom D s.d I)
+            // Maksimal 6 tanggal pengajian per periode
             const dateHeaders = sortedDates.slice(0, 6);
 
             // ==========================================
@@ -591,7 +589,6 @@
                             row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                         });
 
-                        // RUMUS HANYA MENGHITUNG "H" (HADIR)
                         row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
                         row[10] = dateHeaders.length;
                         row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
@@ -601,10 +598,12 @@
                     });
 
                     let endCatRow = currentRowIdx - 1;
+                    let totalRowIdx = currentRowIdx;
+
                     let totalRow = ["Total", "", ""];
                     totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
                     totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
-                    totalRow[11] = { f: `AVERAGE(L${startCatRow}:L${endCatRow})` };
+                    totalRow[11] = { f: `J${totalRowIdx}/K${totalRowIdx}` };
 
                     ws1Data.push(totalRow);
                     currentRowIdx++;
@@ -653,10 +652,11 @@
             });
 
             let endARRow = rowIdx2 - 1;
+            let totalARRowIdx = rowIdx2;
             let totalRowAR = ["Total Akumulasi Hadir & Presentase", "", ""];
             totalRowAR[9] = { f: `SUM(J${startARRow}:J${endARRow})` };
             totalRowAR[10] = { f: `SUM(K${startARRow}:K${endARRow})` };
-            totalRowAR[11] = { f: `AVERAGE(L${startARRow}:L${endARRow})` };
+            totalRowAR[11] = { f: `J${totalARRowIdx}/K${totalARRowIdx}` };
             ws2Data.push(totalRowAR);
 
             const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
@@ -664,7 +664,7 @@
             XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
             // ==========================================
-            // SHEET 3: Absensi ACR (Range C s.d J)
+            // SHEET 3: Absensi ACR
             // ==========================================
             const ws3Data = [];
             const r3_1 = ["No", "Nama Lengkap", "Tanggal "];
@@ -690,7 +690,6 @@
                     row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
 
-                // Rumus COUNTIF khusus Sheet ACR (Kolom C s.d J)
                 row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
                 row[11] = dateHeaders.length;
                 row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
@@ -700,10 +699,11 @@
             });
 
             let endACRRow = rowIdx3 - 1;
+            let totalACRRowIdx = rowIdx3;
             let totalRowACR = ["Total Akumulasi Hadir & Presentase", ""];
             totalRowACR[10] = { f: `SUM(K${startACRRow}:K${endACRRow})` };
             totalRowACR[11] = { f: `SUM(L${startACRRow}:L${endACRRow})` };
-            totalRowACR[12] = { f: `AVERAGE(M${startACRRow}:M${endACRRow})` };
+            totalRowACR[12] = { f: `K${totalACRRowIdx}/L${totalACRRowIdx}` };
             ws3Data.push(totalRowACR);
 
             const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
