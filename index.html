@@ -508,6 +508,7 @@
                     sheet[cell_ref].s.border = thinBorder;
 
                     if (R < 2) {
+                        // Header Style
                         sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } };
                         sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
                         sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
@@ -519,11 +520,14 @@
                             sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
                         }
 
-                        // Format persen untuk kolom presentase
-                        if (sheet[cell_ref].f && sheet[cell_ref].f.includes("/")) {
-                            sheet[cell_ref].z = "0.0%";
+                        // FORCE FORMAT PERSENTASE UNTUK KOLOM PRESENTASE
+                        // Jika ada rumus pembagian ATAU berada di kolom paling kanan (Presentase)
+                        if (C === range.e.c || (sheet[cell_ref].f && (sheet[cell_ref].f.includes("/") || sheet[cell_ref].f.includes("AVERAGE")))) {
+                            sheet[cell_ref].z = "0.0%"; // Formats as 66.7%, 100.0%, 0.0%
+                            sheet[cell_ref].t = 'n';    // Set cell type as Number
                         }
 
+                        // Format Bold & Warna untuk Baris Total
                         const val = String(sheet[cell_ref].v || "");
                         if (val.includes("Total")) {
                             sheet[cell_ref].s.fill = { fgColor: { rgb: "E2E3E5" } };
