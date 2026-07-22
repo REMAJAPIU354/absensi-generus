@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS CDN (Untuk Export Excel Multi-Sheet .xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -62,6 +64,7 @@
                             <option value="ACR">ACR (6-12 thn)</option>
                             <option value="APR">APR (13-15 thn)</option>
                             <option value="AR">AR (16-18 thn)</option>
+                            <option value="AR Intensif">AR Intensif</option>
                             <option value="GPN-A">GPN-A (19-22 thn)</option>
                             <option value="GPN-B">GPN-B (23-30+ thn)</option>
                         </select>
@@ -83,8 +86,12 @@
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="downloadRekapMultiSheetExcel()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1">
+                            📊 Download Rekap Bulanan (3 Sheet Excel)
+                        </button>
+
                         <button onclick="resetAbsensiHariIni()" class="bg-white hover:bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-amber-300 shadow-sm flex items-center gap-1">
-                            🔄 Reset Status Absen
+                            🔄 Reset Status Absen Hari Ini
                         </button>
 
                         <button onclick="resetSemuaData()" class="bg-white hover:bg-red-50 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-red-200 shadow-sm flex items-center gap-1">
@@ -104,6 +111,7 @@
                         <option value="ACR">ACR (6-12 thn)</option>
                         <option value="APR">APR (13-15 thn)</option>
                         <option value="AR">AR (16-18 thn)</option>
+                        <option value="AR Intensif">AR Intensif</option>
                         <option value="GPN-A">GPN-A (19-22 thn)</option>
                         <option value="GPN-B">GPN-B (23-30+ thn)</option>
                     </select>
@@ -152,14 +160,14 @@
                 </div>
             </div>
 
-            <!-- TOMBOL AKSI (PRINT & EXCEL) -->
+            <!-- TOMBOL AKSI (PRINT & EXCEL HARIAN) -->
             <div class="no-print pt-2">
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button onclick="cetakLaporan()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
                         🖨️ Cetak / Simpan PDF
                     </button>
-                    <button onclick="exportExcel()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
-                        📊 Export Excel (.csv)
+                    <button onclick="exportExcelHarian()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        📊 Export Excel Harian (.csv)
                     </button>
                 </div>
             </div>
@@ -170,7 +178,7 @@
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -242,7 +250,7 @@
             listenDataCloud(window.tanggalAktif);
         };
 
-        // 3. Listener Data Cloud (Master Nama + Absensi Hari Ini)
+        // 3. Listener Data Cloud
         function listenDataCloud(tanggal) {
             const masterRef = ref(db, 'master_generus');
             onValue(masterRef, (masterSnap) => {
@@ -287,7 +295,7 @@
             tbody.innerHTML = "";
 
             let nomor = 1;
-            window.daftarGenerus.forEach((generus, index) => {
+            window.daftarGenerus.forEach((generus) => {
                 if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
 
                 const tombolHapus = window.isAdmin 
@@ -444,26 +452,102 @@
             }
         };
 
-        // 12. Cetak & Export
+        // 12. Cetak & Export Harian
         window.cetakLaporan = function() { window.print(); };
-        window.exportExcel = function() {
-            const materi = document.getElementById("inputMateri").value || "-";
-            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus\nTanggal: ${window.tanggalAktif}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Waktu,Catatan / Keterangan\n`;
 
-            window.daftarGenerus.forEach((generus, index) => {
+        window.exportExcelHarian = function() {
+            const materi = document.getElementById("inputMateri").value || "-";
+            const filterKat = document.getElementById("filterKategori").value;
+            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus (Harian)\nTanggal: ${window.tanggalAktif}\nKategori: ${filterKat}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Waktu,Catatan / Keterangan\n`;
+
+            let no = 1;
+            window.daftarGenerus.forEach((generus) => {
+                if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
+
                 let st = generus.status || "Belum Absen";
                 let wk = generus.waktu || "-";
                 let ct = generus.catatan ? generus.catatan.replace(/"/g, '""') : "-";
-                csvContent += `${index + 1},"${generus.nama}",${generus.kategori},${st},${wk},"${ct}"\n`;
+                csvContent += `${no++},"${generus.nama}",${generus.kategori},${st},${wk},"${ct}"\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Absensi_Generus_${window.tanggalAktif}.csv`);
+            link.setAttribute("download", `Absensi_Generus_${window.tanggalAktif}_${filterKat}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        };
+
+        // 13. Download Rekap Multi-Sheet Excel (.xlsx) 3 Sheet
+        window.downloadRekapMultiSheetExcel = async function() {
+            alert("Memproses data 3 Sheet Excel... Mohon tunggu sebentar.");
+
+            const snapshotMaster = await get(ref(db, 'master_generus'));
+            const masterData = snapshotMaster.val() || {};
+            const listGenerus = Object.values(masterData);
+
+            if (listGenerus.length === 0) {
+                alert("Data master generus masih kosong!");
+                return;
+            }
+
+            const snapshotAbsensi = await get(ref(db, 'absensi'));
+            const allAbsensi = snapshotAbsensi.val() || {};
+            const sortedDates = Object.keys(allAbsensi).sort();
+
+            const wb = XLSX.utils.book_new();
+
+            // Fungsi Helper untuk Membuat Matriks Data per Sheet
+            function buatDataMatriks(kategoriList) {
+                const sheetRows = [];
+                sheetRows.push(["No", "Nama Lengkap", "Kategori", ...sortedDates, "Akumulasi Kehadiran", "Jumlah Pertemuan", "Presentase"]);
+
+                kategoriList.forEach(kat => {
+                    const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
+                    if (anggota.length > 0) {
+                        let no = 1;
+                        anggota.forEach(g => {
+                            let row = [no++, g.nama, kat];
+                            let totalHadir = 0;
+
+                            sortedDates.forEach(d => {
+                                const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                                if (abs && abs.status === 'Hadir') {
+                                    row.push("H");
+                                    totalHadir++;
+                                } else {
+                                    row.push("");
+                                }
+                            });
+
+                            let totalPertemuan = sortedDates.length;
+                            let persen = totalPertemuan > 0 ? ((totalHadir / totalPertemuan) * 100).toFixed(2) + "%" : "0%";
+
+                            row.push(totalHadir, totalPertemuan, persen);
+                            sheetRows.push(row);
+                        });
+                        sheetRows.push([]); // Baris kosong antar kategori
+                    }
+                });
+
+                return XLSX.utils.aoa_to_sheet(sheetRows);
+            }
+
+            // Sheet 1: Absensi APR - GPN PIU
+            const ws1 = buatDataMatriks(["APR", "AR", "GPN-A", "GPN-B"]);
+            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
+
+            // Sheet 2: Absensi AR Intensif
+            const ws2 = buatDataMatriks(["AR Intensif"]);
+            XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
+
+            // Sheet 3: Absensi ACR
+            const ws3 = buatDataMatriks(["ACR"]);
+            XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
+
+            // Unduh file .xlsx resmi
+            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU_3Sheet.xlsx`);
         };
 
         // Start Application
