@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Ngaji Generus</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Style Khusus Print / Save PDF -->
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white !important; padding: 0 !important; }
+            .card-container { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }
+            input, select, textarea { border: none !important; background: transparent !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-6 font-sans">
+
+    <div class="card-container max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <!-- Header -->
+        <h1 class="text-2xl font-bold text-emerald-700 text-center">Absensi Ngaji Generus</h1>
+        <p class="text-slate-500 text-center text-sm mb-6">Pencatatan Kehadiran & Jurnal Pengajian Harian</p>
+
+        <!-- Informasi Tanggal & Jurnal Materi Ngaji -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 space-y-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <label for="inputTanggal" class="text-sm font-semibold text-slate-700">📅 Tanggal:</label>
+                    <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <!-- Filter Kategori Usia -->
+                <div class="no-print flex items-center gap-2">
+                    <label for="filterKategori" class="text-sm font-semibold text-slate-700">🔍 Filter Kategori:</label>
+                    <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="Semua">Semua Kategori</option>
+                        <option value="ACR">ACR (6-12 thn)</option>
+                        <option value="APR">APR (13-15 thn)</option>
+                        <option value="AR">AR (16-18 thn)</option>
+                        <option value="GPN-A">GPN-A (19-22 thn)</option>
+                        <option value="GPN-B">GPN-B (23-30+ thn)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Jurnal Materi Ngaji Harian -->
+            <div class="flex flex-col md:flex-row md:items-center gap-2 pt-2 border-t border-slate-200">
+                <label for="inputMateri" class="text-sm font-semibold text-slate-700 whitespace-nowrap">📖 Materi Ngaji Hari Ini:</label>
+                <input type="text" id="inputMateri" onchange="simpanMateri()" placeholder="Contoh: Al-Qur'an Surat 13 Ayat 1-5 / Jilid 2 Hal 10..." class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+        </div>
+
+        <!-- Form Tambah, Import Excel & Reset Data -->
+        <div class="no-print bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 mb-6 space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="text-xs font-semibold text-emerald-800">+ Tambah Generus Baru</div>
+                
+                <div class="flex items-center gap-2">
+                    <!-- Tombol Reset Semua Data -->
+                    <button onclick="resetSemuaData()" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-2.5 py-1 rounded transition border border-red-300 flex items-center gap-1">
+                        🗑️ Reset Data
+                    </button>
+
+                    <!-- Tombol Import Excel / CSV -->
+                    <label class="cursor-pointer bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-medium px-2.5 py-1 rounded transition border border-emerald-300 flex items-center gap-1">
+                        📂 Import File Excel / CSV
+                        <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-2">
+                <input type="text" id="inputNama" placeholder="Nama lengkap generus..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <select id="inputKategori" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <option value="ACR">ACR (6-12 thn)</option>
+                    <option value="APR">APR (13-15 thn)</option>
+                    <option value="AR">AR (16-18 thn)</option>
+                    <option value="GPN-A">GPN-A (19-22 thn)</option>
+                    <option value="GPN-B">GPN-B (23-30+ thn)</option>
+                </select>
+                <button onclick="tambahGenerus()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    Simpan
+                </button>
+            </div>
+        </div>
+
+        <!-- Kartu Rekap Ringkasan Jumlah -->
+        <div class="grid grid-cols-4 gap-2 mb-6">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-center">
+                <div class="text-xs text-emerald-600 font-medium">Hadir</div>
+                <div id="jumlahHadir" class="text-xl font-bold text-emerald-700">0</div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+                <div class="text-xs text-amber-600 font-medium">Izin</div>
+                <div id="jumlahIzin" class="text-xl font-bold text-amber-700">0</div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                <div class="text-xs text-blue-600 font-medium">Sakit</div>
+                <div id="jumlahSakit" class="text-xl font-bold text-blue-700">0</div>
+            </div>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                <div class="text-xs text-red-600 font-medium">Alpa</div>
+                <div id="jumlahAlpa" class="text-xl font-bold text-red-700">0</div>
+            </div>
+        </div>
+
+        <!-- Tabel Daftar Absensi -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="border-b bg-slate-50 text-slate-700">
+                        <th class="p-3">No</th>
+                        <th class="p-3">Nama & Kategori</th>
+                        <th class="p-3 text-center">Status & Waktu</th>
+                        <th class="p-3">Catatan / Keterangan Izin</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelGenerus" class="divide-y text-slate-600">
+                    <!-- Data Generus dimasukkan lewat JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tombol Aksi (Sembunyi saat diprint) -->
+        <div class="no-print mt-6 space-y-3">
+            <button onclick="simpanAbsensi()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg transition">
+                Simpan Absensi Hari Ini
+            </button>
+            
+            <div class="flex gap-2">
+                <button onclick="cetakLaporan()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-1">
+                    🖨️ Cetak / Save PDF
+                </button>
+                <button onclick="exportExcel()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded-lg transition text-sm flex items-center justify-center gap-1">
+                    📊 Export Excel (.csv)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        let daftarGenerus = [];
+        let tanggalAktif = "";
+
+        // 1. Inisialisasi Tanggal
+        function initTanggal() {
+            const today = new Date().toISOString().split('T')[0];
+            const inputTgl = document.getElementById("inputTanggal");
+            inputTgl.value = today;
+            tanggalAktif = today;
+            
+            muatDataTanggal(tanggalAktif);
+        }
+
+        // 2. Muat Data Berdasarkan Tanggal
+        function muatDataTanggal(tanggal) {
+            const keyStorage = "dataGenerusNgaji_" + tanggal;
+            const dataTersimpan = localStorage.getItem(keyStorage);
+            
+            const materiTersimpan = localStorage.getItem("materiNgaji_" + tanggal) || "";
+            document.getElementById("inputMateri").value = materiTersimpan;
+
+            if (dataTersimpan) {
+                daftarGenerus = JSON.parse(dataTersimpan);
+            } else {
+                let masterData = JSON.parse(localStorage.getItem("masterDataGenerus")) || [];
+                
+                daftarGenerus = masterData.map((item, idx) => ({
+                    id: Date.now() + idx,
+                    nama: item.nama,
+                    kategori: item.kategori || "ACR",
+                    status: "",
+                    waktu: "",
+                    catatan: ""
+                }));
+            }
+
+            tampilkanGenerus();
+        }
+
+        function gantiTanggal() {
+            tanggalAktif = document.getElementById("inputTanggal").value;
+            muatDataTanggal(tanggalAktif);
+        }
+
+        function simpanMateri() {
+            const materi = document.getElementById("inputMateri").value;
+            localStorage.setItem("materiNgaji_" + tanggalAktif, materi);
+        }
+
+        // 3. Tampilkan Data ke Tabel
+        function tampilkanGenerus() {
+            const tbody = document.getElementById("tabelGenerus");
+            const filterKat = document.getElementById("filterKategori").value;
+            tbody.innerHTML = "";
+
+            let nomor = 1;
+            daftarGenerus.forEach((generus, index) => {
+                if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-medium">${nomor++}</td>
+                        <td class="p-3">
+                            <div class="font-medium text-slate-800">${generus.nama}</div>
+                            <span class="inline-block bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 mt-0.5">${generus.kategori}</span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <!-- Tombol Status (Web) -->
+                            <div class="no-print flex flex-col items-center gap-1">
+                                <div class="flex justify-center gap-1">
+                                    <button onclick="pilihStatus(${index}, 'Hadir')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white ring-2 ring-emerald-300' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">Hadir</button>
+                                    <button onclick="pilihStatus(${index}, 'Izin')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Izin' ? 'bg-amber-600 text-white ring-2 ring-amber-300' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}">Izin</button>
+                                    <button onclick="pilihStatus(${index}, 'Sakit')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white ring-2 ring-blue-300' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}">Sakit</button>
+                                    <button onclick="pilihStatus(${index}, 'Alpa')" class="px-2 py-1 rounded text-xs transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-red-100 text-red-700 hover:bg-red-200'}">Alpa</button>
+                                    <button onclick="hapusGenerus(${index})" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1 text-xs" title="Hapus">✕</button>
+                                </div>
+                                ${generus.waktu ? `<span class="text-[10px] text-slate-400">🕒 ${generus.waktu}</span>` : ''}
+                            </div>
+
+                            <!-- Teks Status (Print) -->
+                            <div class="hidden print:block font-semibold ${getStatusColor(generus.status)}">
+                                ${generus.status || 'Belum Absen'} ${generus.waktu ? `(${generus.waktu})` : ''}
+                            </div>
+                        </td>
+                        <td class="p-3">
+                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatan(${index}, this.value)" placeholder="Isi catatan / alasan izin..." class="w-full border border-slate-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </td>
+                    </tr>
+                `;
+            });
+
+            updateRekap();
+        }
+
+        function getStatusColor(status) {
+            if (status === 'Hadir') return 'text-emerald-600';
+            if (status === 'Izin') return 'text-amber-600';
+            if (status === 'Sakit') return 'text-blue-600';
+            if (status === 'Alpa') return 'text-red-600';
+            return 'text-slate-400';
+        }
+
+        // 4. Update Rekap Jumlah
+        function updateRekap() {
+            const hadir = daftarGenerus.filter(g => g.status === 'Hadir').length;
+            const izin = daftarGenerus.filter(g => g.status === 'Izin').length;
+            const sakit = daftarGenerus.filter(g => g.status === 'Sakit').length;
+            const alpa = daftarGenerus.filter(g => g.status === 'Alpa').length;
+
+            document.getElementById("jumlahHadir").innerText = hadir;
+            document.getElementById("jumlahIzin").innerText = izin;
+            document.getElementById("jumlahSakit").innerText = sakit;
+            document.getElementById("jumlahAlpa").innerText = alpa;
+        }
+
+        // 5. Tambah Generus Manual
+        function tambahGenerus() {
+            const inputNama = document.getElementById("inputNama");
+            const inputKat = document.getElementById("inputKategori");
+            const nama = inputNama.value.trim();
+
+            if (nama === "") {
+                alert("Silakan masukkan nama Generus!");
+                return;
+            }
+
+            daftarGenerus.push({
+                id: Date.now(),
+                nama: nama,
+                kategori: inputKat.value,
+                status: "",
+                waktu: "",
+                catatan: ""
+            });
+
+            inputNama.value = "";
+            simpanMasterData();
+            simpanKeLocalStorage();
+            tampilkanGenerus();
+        }
+
+        // 6. Import Data dari File CSV/Excel
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const isiTeks = e.target.result;
+                const baris = isiTeks.split("\n");
+                let jumlahBerhasil = 0;
+
+                baris.forEach((line, idx) => {
+                    if (idx === 0 || line.trim() === "") return;
+
+                    const kolom = line.split(",");
+                    if (kolom.length >= 1) {
+                        const nama = kolom[0].replace(/"/g, '').trim();
+                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim().toUpperCase() : "ACR";
+
+                        if (nama !== "") {
+                            const sudahAda = daftarGenerus.some(g => g.nama.toLowerCase() === nama.toLowerCase());
+                            if (!sudahAda) {
+                                daftarGenerus.push({
+                                    id: Date.now() + idx,
+                                    nama: nama,
+                                    kategori: kategori,
+                                    status: "",
+                                    waktu: "",
+                                    catatan: ""
+                                });
+                                jumlahBerhasil++;
+                            }
+                        }
+                    }
+                });
+
+                simpanMasterData();
+                simpanKeLocalStorage();
+                tampilkanGenerus();
+                alert(`Berhasil mengimpor ${jumlahBerhasil} nama generus baru!`);
+            };
+
+            reader.readAsText(file);
+        }
+
+        // 7. Reset Semua Data
+        function resetSemuaData() {
+            if (confirm("Yakin ingin menghapus seluruh data generus dan absensi? Tindakan ini akan mengosongkan semua data!")) {
+                localStorage.clear();
+                alert("Semua data berhasil dibersihkan!");
+                location.reload();
+            }
+        }
+
+        // 8. Pilih Status Kehadiran
+        function pilihStatus(index, statusPilihan) {
+            daftarGenerus[index].status = statusPilihan;
+            
+            const now = new Date();
+            const jam = String(now.getHours()).padStart(2, '0');
+            const menit = String(now.getMinutes()).padStart(2, '0');
+            daftarGenerus[index].waktu = `${jam}:${menit} WIB`;
+
+            simpanKeLocalStorage();
+            tampilkanGenerus();
+        }
+
+        // 9. Update Catatan Manual
+        function updateCatatan(index, teks) {
+            daftarGenerus[index].catatan = teks;
+            simpanKeLocalStorage();
+        }
+
+        // 10. Hapus Generus
+        function hapusGenerus(index) {
+            const generus = daftarGenerus[index];
+            
+            // Konfirmasi tegas sebelum menghapus
+            const konfirmasi = confirm(`⚠️ PERINGATAN HAPUS DATA!\n\nApakah Anda yakin ingin menghapus "${generus.nama}" (${generus.kategori}) dari daftar absensi?\n\nData yang dihapus tidak dapat dikembalikan!`);
+            
+            if (konfirmasi) {
+                daftarGenerus.splice(index, 1);
+                simpanMasterData();
+                simpanKeLocalStorage();
+                tampilkanGenerus();
+                alert(`Data ${generus.nama} berhasil dihapus.`);
+            }
+        }
+
+        // 11. Simpan Storage
+        function simpanKeLocalStorage() {
+            localStorage.setItem("dataGenerusNgaji_" + tanggalAktif, JSON.stringify(daftarGenerus));
+        }
+
+        function simpanMasterData() {
+            const masterData = daftarGenerus.map(g => ({ nama: g.nama, kategori: g.kategori }));
+            localStorage.setItem("masterDataGenerus", JSON.stringify(masterData));
+        }
+
+        function simpanAbsensi() {
+            simpanKeLocalStorage();
+            simpanMateri();
+            alert(`Data absensi tanggal ${tanggalAktif} berhasil tersimpan!`);
+        }
+
+        // 12. Cetak PDF & Export Excel
+        function cetakLaporan() {
+            window.print();
+        }
+
+        function exportExcel() {
+            const materi = document.getElementById("inputMateri").value || "-";
+            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus\nTanggal: ${tanggalAktif}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Waktu,Catatan / Keterangan\n`;
+
+            daftarGenerus.forEach((generus, index) => {
+                let st = generus.status || "Belum Absen";
+                let wk = generus.waktu || "-";
+                let ct = generus.catatan ? generus.catatan.replace(/"/g, '""') : "-";
+                csvContent += `${index + 1},"${generus.nama}",${generus.kategori},${st},${wk},"${ct}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Absensi_Generus_${tanggalAktif}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Jalankan Inisialisasi
+        initTanggal();
+    </script>
+</body>
+</html>
