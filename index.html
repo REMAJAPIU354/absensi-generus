@@ -480,8 +480,9 @@
         };
 
         // 13. Download Rekap Multi-Sheet Excel (.xlsx) 3 Sheet
+        // Download Rekap Multi-Sheet Excel (.xlsx) Sesuai Template Baru
         window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel... Mohon tunggu sebentar.");
+            alert("Memproses data 3 Sheet Excel sesuai template... Mohon tunggu sebentar.");
 
             const snapshotMaster = await get(ref(db, 'master_generus'));
             const masterData = snapshotMaster.val() || {};
@@ -498,56 +499,141 @@
 
             const wb = XLSX.utils.book_new();
 
-            // Fungsi Helper untuk Membuat Matriks Data per Sheet
-            function buatDataMatriks(kategoriList) {
-                const sheetRows = [];
-                sheetRows.push(["No", "Nama Lengkap", "Kategori", ...sortedDates, "Akumulasi Kehadiran", "Jumlah Pertemuan", "Presentase"]);
+            // Format tanggal header (DD-Mon)
+            const dateHeaders = sortedDates.map(d => {
+                const dateObj = new Date(d);
+                return dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+            });
 
-                kategoriList.forEach(kat => {
-                    const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
-                    if (anggota.length > 0) {
-                        let no = 1;
-                        anggota.forEach(g => {
-                            let row = [no++, g.nama, kat];
-                            let totalHadir = 0;
+            // ----------------------------------------------------
+            // SHEET 1: Absensi APR - GPN PIU
+            // ----------------------------------------------------
+            const ws1Data = [];
+            ws1Data.push(["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"]);
+            ws1Data.push(["No", "Nama Lengkap", "Kategori", ...dateHeaders, "", "", "Akumulasi Kehadiran", "Jumlah Pertemuan", "Presentase"]);
 
-                            sortedDates.forEach(d => {
-                                const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                                if (abs && abs.status === 'Hadir') {
-                                    row.push("H");
-                                    totalHadir++;
-                                } else {
-                                    row.push("");
-                                }
-                            });
+            const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
+            katPIU.forEach(kat => {
+                const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
+                if (anggota.length > 0) {
+                    let no = 1;
+                    let totalSatuKategori = 0;
+                    
+                    anggota.forEach(g => {
+                        let row = [no++, g.nama, kat];
+                        let totalHadir = 0;
 
-                            let totalPertemuan = sortedDates.length;
-                            let persen = totalPertemuan > 0 ? ((totalHadir / totalPertemuan) * 100).toFixed(2) + "%" : "0%";
-
-                            row.push(totalHadir, totalPertemuan, persen);
-                            sheetRows.push(row);
+                        sortedDates.forEach(d => {
+                            const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                            if (abs && abs.status === 'Hadir') {
+                                row.push("H");
+                                totalHadir++;
+                            } else {
+                                row.push("");
+                            }
                         });
-                        sheetRows.push([]); // Baris kosong antar kategori
+
+                        let totalPertemuan = sortedDates.length;
+                        let persen = totalPertemuan > 0 ? (totalHadir / totalPertemuan) : 0;
+                        
+                        row.push("", "", totalHadir, totalPertemuan, (persen * 100).toFixed(1) + "%");
+                        ws1Data.push(row);
+                        totalSatuKategori += totalHadir;
+                    });
+
+                    // Baris Total per Kategori
+                    let totalPertemuanKat = anggota.length * sortedDates.length;
+                    let totalPersenKat = totalPertemuanKat > 0 ? (totalSatuKategori / totalPertemuanKat) : 0;
+                    ws1Data.push(["Total", "", "", ...Array(sortedDates.length).fill(""), "", "", totalSatuKategori, totalPertemuanKat, (totalPersenKat * 100).toFixed(1) + "%"]);
+                    ws1Data.push([]); // Jarak antar kategori
+                }
+            });
+
+            const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
+
+            // ----------------------------------------------------
+            // SHEET 2: Absensi AR Intensif
+            // ----------------------------------------------------
+            const ws2Data = [];
+            ws2Data.push(["Absensi AR Intensif", "", "", "Tanggal Hadir"]);
+            ws2Data.push(["No", "Nama Lengkap", "Kategori", ...dateHeaders, "", "", "Akumulasi Kehadiran", "Jumlah Pertemuan", "Presentase"]);
+
+            const anggotaARIntensif = listGenerus.filter(g => g.kategori === "AR Intensif" || g.kategori === "AR");
+            let noAR = 1;
+            let totalHadirAR = 0;
+
+            anggotaARIntensif.forEach(g => {
+                let row = [noAR++, g.nama, "AR Intensif"];
+                let totalHadir = 0;
+
+                sortedDates.forEach(d => {
+                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                    if (abs && abs.status === 'Hadir') {
+                        row.push("H");
+                        totalHadir++;
+                    } else {
+                        row.push("");
                     }
                 });
 
-                return XLSX.utils.aoa_to_sheet(sheetRows);
-            }
+                let totalPertemuan = sortedDates.length;
+                let persen = totalPertemuan > 0 ? (totalHadir / totalPertemuan) : 0;
 
-            // Sheet 1: Absensi APR - GPN PIU
-            const ws1 = buatDataMatriks(["APR", "AR", "GPN-A", "GPN-B"]);
-            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
+                row.push("", "", totalHadir, totalPertemuan, (persen * 100).toFixed(1) + "%");
+                ws2Data.push(row);
+                totalHadirAR += totalHadir;
+            });
 
-            // Sheet 2: Absensi AR Intensif
-            const ws2 = buatDataMatriks(["AR Intensif"]);
+            let totalPertemuanAR = anggotaARIntensif.length * sortedDates.length;
+            let totalPersenAR = totalPertemuanAR > 0 ? (totalHadirAR / totalPertemuanAR) : 0;
+            ws2Data.push(["Total Akumulasi Hadir & Presentase", "", "", ...Array(sortedDates.length).fill(""), "", "", totalHadirAR, totalPertemuanAR, (totalPersenAR * 100).toFixed(1) + "%"]);
+
+            const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
             XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
-            // Sheet 3: Absensi ACR
-            const ws3 = buatDataMatriks(["ACR"]);
+            // ----------------------------------------------------
+            // SHEET 3: Absensi ACR
+            // ----------------------------------------------------
+            const ws3Data = [];
+            ws3Data.push(["No", "Nama Lengkap", "Tanggal"]);
+            ws3Data.push(["", "", ...dateHeaders, "", "", "", "", "Akumulasi Hadir", "Jumlah Pertemuan", "Presentase"]);
+
+            const anggotaACR = listGenerus.filter(g => (g.kategori || "ACR") === "ACR");
+            let noACR = 1;
+            let totalHadirACR = 0;
+
+            anggotaACR.forEach(g => {
+                let row = [noACR++, g.nama];
+                let totalHadir = 0;
+
+                sortedDates.forEach(d => {
+                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                    if (abs && abs.status === 'Hadir') {
+                        row.push("H");
+                        totalHadir++;
+                    } else {
+                        row.push("");
+                    }
+                });
+
+                let totalPertemuan = sortedDates.length;
+                let persen = totalPertemuan > 0 ? (totalHadir / totalPertemuan) : 0;
+
+                row.push("", "", "", "", totalHadir, totalPertemuan, (persen * 100).toFixed(1) + "%");
+                ws3Data.push(row);
+                totalHadirACR += totalHadir;
+            });
+
+            let totalPertemuanACR = anggotaACR.length * sortedDates.length;
+            let totalPersenACR = totalPertemuanACR > 0 ? (totalHadirACR / totalPertemuanACR) : 0;
+            ws3Data.push(["Total Akumulasi Hadir & Presentase", "", ...Array(sortedDates.length).fill(""), "", "", "", "", totalHadirACR, totalPertemuanACR, (totalPersenACR * 100).toFixed(1) + "%"]);
+
+            const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
             XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
 
             // Unduh file .xlsx resmi
-            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU_3Sheet.xlsx`);
+            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
         };
 
         // Start Application
