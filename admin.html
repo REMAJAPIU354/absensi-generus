@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Super Admin - Absensi Generus</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        
+        <!-- HEADER ADMIN -->
+        <div class="bg-gradient-to-r from-amber-700 via-amber-600 to-orange-700 p-5 text-white flex justify-between items-center">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold">⚙️ Panel Super Admin</h1>
+                <p class="text-amber-100 text-xs">Pusat Kelola Data Generus & Laporan Absensi</p>
+            </div>
+            <a href="index.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-2 rounded-lg border border-white/20 transition">
+                🏠 Ke Halaman Utama
+            </a>
+        </div>
+
+        <!-- FORM LOGIN PIN ADMIN -->
+        <div id="boxLoginAdmin" class="p-8 text-center space-y-4 max-w-md mx-auto">
+            <span class="text-4xl">🔐</span>
+            <h2 class="font-bold text-slate-800 text-lg">Masukkan PIN Admin</h2>
+            <p class="text-xs text-slate-500">Silakan masukkan PIN untuk membuka fitur admin.</p>
+            <input type="password" id="inputPinAdmin" placeholder="Ketik PIN Admin..." class="w-full text-center border border-slate-300 rounded-lg p-2.5 text-lg font-bold tracking-widest focus:ring-2 focus:ring-amber-500 outline-none">
+            <button onclick="verifikasiPin()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg transition shadow-md">
+                Buka Panel Admin
+            </button>
+        </div>
+
+        <!-- KONTEN UTAMA ADMIN (TERSEMBUNYI SEBELUM LOGIN) -->
+        <div id="kontenAdminUtama" class="hidden p-5 sm:p-6 space-y-8">
+
+            <!-- 1. FORM PENAMBAHAN GENERUS BARU -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    ➕ Tambah Generus Baru
+                </h3>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inputNamaBaru" placeholder="Nama lengkap generus..." class="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <select id="inputKatBaru" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <option value="ACR">ACR (6-12 thn)</option>
+                        <option value="APR">APR (13-15 thn)</option>
+                        <option value="AR">AR (16-18 thn)</option>
+                        <option value="AR Intensif">AR Intensif</option>
+                        <option value="GPN-A">GPN-A (19-22 thn)</option>
+                        <option value="GPN-B">GPN-B (23-30+ thn)</option>
+                    </select>
+                    <button onclick="tambahGenerus()" class="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-sm">
+                        + Tambah Nama
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. KELOLA FILE DATA (IMPORT CSV & DOWNLOAD EXCEL) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    📊 Kelola File Data & Laporan
+                </h3>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="downloadRekapMultiSheetExcel()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
+                        📊 Download Rekap Bulanan (3 Sheet Excel)
+                    </button>
+
+                    <label class="flex-1 cursor-pointer bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
+                        📂 Import Master Generus (.csv)
+                        <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. TABEL DAFTAR MASTER GENERUS (BISA HAPUS NAMA) -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                <div class="bg-slate-100 px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between items-center">
+                    <span>Daftar Master Generus Terdaftar</span>
+                    <span id="totalGenerusCount" class="text-amber-700 font-bold">0 Anak</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase">
+                                <th class="p-3 text-center w-12">No</th>
+                                <th class="p-3">Nama Lengkap</th>
+                                <th class="p-3 text-center">Kategori</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelMasterAdmin" class="divide-y divide-slate-100">
+                            <!-- Data JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. ZONA BAHAYA (DANGER ZONE) -->
+            <div class="bg-red-50/60 border border-red-200 rounded-xl p-4 sm:p-5 space-y-3">
+                <h3 class="font-bold text-red-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    ⚠️ Zona Bahaya / Reset Database
+                </h3>
+                <p class="text-xs text-red-600">Aksi di bawah ini bersifat permanen. Mohon berhati-hati.</p>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="resetAbsensiHariIni()" class="flex-1 bg-white hover:bg-red-100 text-red-700 border border-red-300 font-semibold py-2.5 rounded-lg text-xs transition shadow-sm">
+                        🔄 Bersihkan Status Absen Hari Ini
+                    </button>
+                    <button onclick="resetSemuaDataDengarPengamanan()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-xs transition shadow-md">
+                        🗑️ RESET TOTAL DATABASE
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK MODULAR -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
+            authDomain: "absensi-generus-db.firebaseapp.com",
+            projectId: "absensi-generus-db",
+            storageBucket: "absensi-generus-db.firebasestorage.app",
+            messagingSenderId: "350847945290",
+            appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
+            databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const PIN_ADMIN = "1234";
+
+        window.verifikasiPin = function() {
+            const input = document.getElementById("inputPinAdmin").value;
+            if (input === PIN_ADMIN) {
+                document.getElementById("boxLoginAdmin").classList.add("hidden");
+                document.getElementById("kontenAdminUtama").classList.remove("hidden");
+                muatMasterGenerusAdmin();
+            } else {
+                alert("❌ PIN Salah!");
+            }
+        };
+
+        function muatMasterGenerusAdmin() {
+            const masterRef = ref(db, 'master_generus');
+            onValue(masterRef, (snap) => {
+                const data = snap.val() || {};
+                const list = Object.values(data);
+                const tbody = document.getElementById("tabelMasterAdmin");
+                document.getElementById("totalGenerusCount").innerText = `${list.length} Anak`;
+                tbody.innerHTML = "";
+
+                if (list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data generus di database.</td></tr>`;
+                    return;
+                }
+
+                let no = 1;
+                list.forEach((item) => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
+                            <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span></td>
+                            <td class="p-3 text-center">
+                                <button onclick="hapusGenerus('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-200 transition">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        window.tambahGenerus = function() {
+            const nama = document.getElementById("inputNamaBaru").value.trim();
+            const kat = document.getElementById("inputKatBaru").value;
+
+            if (nama === "") {
+                alert("Silakan masukkan nama generus!");
+                return;
+            }
+
+            const idBaru = 'gen_' + Date.now();
+            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: kat });
+            document.getElementById("inputNamaBaru").value = "";
+            alert(`✅ ${nama} berhasil ditambahkan!`);
+        };
+
+        window.hapusGenerus = function(id) {
+            if (confirm("⚠️ Yakin ingin menghapus generus ini dari database?")) {
+                remove(ref(db, `master_generus/${id}`));
+            }
+        };
+
+        window.importCSV = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const baris = e.target.result.split("\n");
+                let jumlah = 0;
+
+                baris.forEach((line, idx) => {
+                    if (idx === 0 || line.trim() === "") return;
+                    const kolom = line.split(",");
+                    if (kolom.length >= 1) {
+                        const nama = kolom[0].replace(/"/g, '').trim();
+                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim().toUpperCase() : "ACR";
+
+                        if (nama !== "") {
+                            const idBaru = 'gen_' + (Date.now() + idx);
+                            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori });
+                            jumlah++;
+                        }
+                    }
+                });
+                alert(`Berhasil mengimpor ${jumlah} generus ke Database Cloud!`);
+            };
+            reader.readAsText(file);
+        };
+
+        window.resetAbsensiHariIni = function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi di Cloud untuk hari ini (${today})?`)) {
+                remove(ref(db, `absensi/${today}`));
+                alert(`Status absensi tanggal ${today} dibersihkan!`);
+            }
+        };
+
+        window.resetSemuaDataDengarPengamanan = function() {
+            const konfirmasiTeks = prompt("⚠️ PERINGATAN CRITICAL!\n\nSeluruh data generus dan absensi akan dihapus total.\n\nKetik kata \"HAPUS\" untuk melanjutkan:");
+            
+            if (konfirmasiTeks === "HAPUS") {
+                remove(ref(db, '/'));
+                alert("Database berhasil dibersihkan total.");
+                location.reload();
+            } else if (konfirmasiTeks !== null) {
+                alert("❌ Kata konfirmasi salah! Proses reset dibatalkan.");
+            }
+        };
+
+        // EXCEL MULTI-SHEET GENERATOR
+        const thinBorder = {
+            top: { style: 'thin', color: { rgb: "CCCCCC" } },
+            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+            left: { style: 'thin', color: { rgb: "CCCCCC" } },
+            right: { style: 'thin', color: { rgb: "CCCCCC" } }
+        };
+
+        function beriGarisDanFormatTabel(sheet) {
+            const range = XLSX.utils.decode_range(sheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell_address = { c: C, r: R };
+                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!sheet[cell_ref]) sheet[cell_ref] = { t: 's', v: '' };
+
+                    sheet[cell_ref].s = sheet[cell_ref].s || {};
+                    sheet[cell_ref].s.border = thinBorder;
+
+                    if (R < 2) {
+                        sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } };
+                        sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
+                        sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
+                    } else {
+                        sheet[cell_ref].s.font = { name: "Calibri", size: 11 };
+                        if (C === 0 || C >= 3) {
+                            sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
+                        } else {
+                            sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
+                        }
+
+                        if (C === range.e.c || (sheet[cell_ref].f && sheet[cell_ref].f.includes("/"))) {
+                            sheet[cell_ref].z = "0%";
+                            sheet[cell_ref].t = 'n';
+                        }
+
+                        const val = String(sheet[cell_ref].v || "");
+                        if (val.includes("Total")) {
+                            sheet[cell_ref].s.fill = { fgColor: { rgb: "FFF200" } };
+                            sheet[cell_ref].s.font = { name: "Calibri", bold: true };
+                        }
+                    }
+                }
+            }
+        }
+
+        window.downloadRekapMultiSheetExcel = async function() {
+            alert("Memproses data 3 Sheet Excel persis template... Mohon tunggu sebentar.");
+
+            const snapshotMaster = await get(ref(db, 'master_generus'));
+            const masterData = snapshotMaster.val() || {};
+            const listGenerus = Object.values(masterData);
+
+            if (listGenerus.length === 0) {
+                alert("Data master generus masih kosong!");
+                return;
+            }
+
+            const snapshotAbsensi = await get(ref(db, 'absensi'));
+            const allAbsensi = snapshotAbsensi.val() || {};
+            const sortedDates = Object.keys(allAbsensi).sort();
+
+            const wb = XLSX.utils.book_new();
+            const dateHeaders = sortedDates.slice(0, 6);
+
+            function getKodeAbsen(status) {
+                if (status === 'Hadir') return 'H';
+                if (status === 'Izin') return 'I';
+                if (status === 'Sakit') return 'S';
+                if (status === 'Alpa') return 'A';
+                return '';
+            }
+
+            // SHEET 1: Absensi APR - GPN PIU
+            const ws1Data = [];
+            const r1 = ["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"];
+            r1[9] = "Akumulasi Kehadiran";
+            r1[10] = "Jumlah Pertemuan";
+            r1[11] = "Presentase";
+            ws1Data.push(r1);
+
+            const r2 = ["No", "Nama Lengkap", "Kategori"];
+            dateHeaders.forEach((d, idx) => { r2[3 + idx] = d; });
+            ws1Data.push(r2);
+
+            let currentRowIdx = 3;
+            const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
+
+            katPIU.forEach(kat => {
+                const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
+                if (anggota.length > 0) {
+                    let no = 1;
+                    let startCatRow = currentRowIdx;
+
+                    anggota.forEach(g => {
+                        let row = [no++, g.nama, kat];
+                        dateHeaders.forEach((d, dIdx) => {
+                            const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                            row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                        });
+                        row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
+                        row[10] = dateHeaders.length;
+                        row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
+                        ws1Data.push(row);
+                        currentRowIdx++;
+                    });
+
+                    let endCatRow = currentRowIdx - 1;
+                    let totalRowIdx = currentRowIdx;
+                    let totalRow = ["Total", "", ""];
+                    totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
+                    totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
+                    totalRow[11] = { f: `J${totalRowIdx}/K${totalRowIdx}` };
+                    ws1Data.push(totalRow);
+                    currentRowIdx++;
+                    ws1Data.push([]);
+                    currentRowIdx++;
+                }
+            });
+
+            const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+            beriGarisDanFormatTabel(ws1);
+            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
+
+            // SHEET 2: Absensi AR Intensif
+            const ws2Data = [];
+            const r2_1 = ["Absensi AR Intensif", "", "", "Tanggal Hadir"];
+            r2_1[9] = "Akumulasi Kehadiran";
+            r2_1[10] = "Jumlah Pertemuan";
+            r2_1[11] = "Presentase";
+            ws2Data.push(r2_1);
+
+            const r2_2 = ["No", "Nama Lengkap", "Kategori"];
+            dateHeaders.forEach((d, idx) => { r2_2[3 + idx] = d; });
+            ws2Data.push(r2_2);
+
+            let rowIdx2 = 3;
+            const anggotaAR = listGenerus.filter(g => g.kategori === "AR Intensif" || g.kategori === "AR");
+            let startARRow = rowIdx2;
+            let noAR = 1;
+
+            anggotaAR.forEach(g => {
+                let row = [noAR++, g.nama, "AR Intensif"];
+                dateHeaders.forEach((d, dIdx) => {
+                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                    row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                });
+                row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
+                row[10] = dateHeaders.length;
+                row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
+                ws2Data.push(row);
+                rowIdx2++;
+            });
+
+            let endARRow = rowIdx2 - 1;
+            let totalARRowIdx = rowIdx2;
+            let totalRowAR = ["Total Akumulasi Hadir & Presentase", "", ""];
+            totalRowAR[9] = { f: `SUM(J${startARRow}:J${endARRow})` };
+            totalRowAR[10] = { f: `SUM(K${startARRow}:K${endARRow})` };
+            totalRowAR[11] = { f: `J${totalARRowIdx}/K${totalARRowIdx}` };
+            ws2Data.push(totalRowAR);
+
+            const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+            beriGarisDanFormatTabel(ws2);
+            XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
+
+            // SHEET 3: Absensi ACR
+            const ws3Data = [];
+            const r3_1 = ["No", "Nama Lengkap", "Tanggal "];
+            r3_1[10] = "Akumulasi Hadir";
+            r3_1[11] = "Jumlah Pertemuan";
+            r3_1[12] = "Presentase";
+            ws3Data.push(r3_1);
+
+            const r3_2 = ["", ""];
+            dateHeaders.forEach((d, idx) => { r3_2[2 + idx] = d; });
+            ws3Data.push(r3_2);
+
+            let rowIdx3 = 3;
+            const anggotaACR = listGenerus.filter(g => (g.kategori || "ACR") === "ACR");
+            let startACRRow = rowIdx3;
+            let noACR = 1;
+
+            anggotaACR.forEach(g => {
+                let row = [noACR++, g.nama];
+                dateHeaders.forEach((d, dIdx) => {
+                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                    row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                });
+                row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
+                row[11] = dateHeaders.length;
+                row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
+                ws3Data.push(row);
+                rowIdx3++;
+            });
+
+            let endACRRow = rowIdx3 - 1;
+            let totalACRRowIdx = rowIdx3;
+            let totalRowACR = ["Total Akumulasi Hadir & Presentase", ""];
+            totalRowACR[10] = { f: `SUM(K${startACRRow}:K${endACRRow})` };
+            totalRowACR[11] = { f: `SUM(L${startACRRow}:L${endACRRow})` };
+            totalRowACR[12] = { f: `K${totalACRRowIdx}/L${totalACRRowIdx}` };
+            ws3Data.push(totalRowACR);
+
+            const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+            beriGarisDanFormatTabel(ws3);
+            XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
+
+            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
+        };
+    </script>
+</body>
+</html>
