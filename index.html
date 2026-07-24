@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS CDN (Full Version dengan Style Support) -->
+    <!-- SheetJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     
     <style>
@@ -144,7 +144,7 @@
             <!-- TABEL FORM INPUT UTAMA -->
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 <div class="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-700 flex justify-between items-center">
-                    <span>Form Pengisian Absensi Tanggal Aktif</span>
+                    <span>Form Pengisian Absensi Hari Ini</span>
                     <span class="text-emerald-700 font-medium">Klik Simpan di bawah setelah selesai</span>
                 </div>
                 <div class="overflow-x-auto">
@@ -180,9 +180,7 @@
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- FITUR BARU: TABEL RIWAYAT / CEK TANGGAL LALU -->
-            <!-- ========================================== -->
+            <!-- SEKSI TABEL RIWAYAT TANGGAL LAIN -->
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 mt-8">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                     <div>
@@ -200,12 +198,10 @@
                     </div>
                 </div>
 
-                <!-- Info Materi di Tanggal Terpilih -->
                 <div id="infoMateriRiwayat" class="text-xs font-medium text-slate-600 bg-emerald-50/60 border border-emerald-200/60 rounded-lg px-3 py-2 hidden">
                     📖 Materi Ngaji: <span id="teksMateriRiwayat" class="font-bold text-emerald-900"></span>
                 </div>
 
-                <!-- Tabel Riwayat -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
@@ -294,7 +290,7 @@
             window.tampilkanGenerus();
         }
 
-        // 2. Inisialisasi Tanggal
+        // 2. Inisialisasi Tanggal & Listener Realtime
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputTanggal").value = today;
@@ -308,12 +304,13 @@
             window.resetFormLokal();
         };
 
-        // 3. Listener Master Generus Cloud
+        // 3. Listener Master Generus Cloud (SANGAT DIREVISI & AMAN)
         function listenMasterCloud() {
             const masterRef = ref(db, 'master_generus');
             onValue(masterRef, (masterSnap) => {
                 const masterData = masterSnap.val() || {};
                 
+                // Mengambil seluruh data dari Firebase tanpa ada yang terlewat
                 window.daftarGenerus = Object.values(masterData).map((item) => {
                     return {
                         id: item.id,
@@ -333,11 +330,17 @@
             });
         }
 
-        // 4. Render Tabel Form Input Utama
+        // 4. Render Tabel Form Utama
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
             tbody.innerHTML = "";
+
+            if (!window.daftarGenerus || window.daftarGenerus.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data nama generus. Masukkan nama di Mode Admin atau Import CSV.</td></tr>`;
+                updateRekapDraft();
+                return;
+            }
 
             let nomor = 1;
             window.daftarGenerus.forEach((generus) => {
@@ -399,7 +402,7 @@
             }
         };
 
-        // 5. TOMBOL UTAMA: SIMPAN ABSENSI KE CLOUD & BERSIHKAN FORM
+        // 5. TOMBOL UTAMA SIMPAN
         window.simpanAbsensiKeCloud = async function() {
             const generusDiisi = window.daftarGenerus.filter(g => g.status !== "");
 
@@ -445,9 +448,7 @@
             window.tampilkanGenerus();
         };
 
-        // ==========================================
-        // 6. FUNGSI MENAMPILKAN TABEL RIWAYAT TANGGAL LAIN
-        // ==========================================
+        // 6. FUNGSI TABEL RIWAYAT
         window.muatTabelRiwayat = async function() {
             const tglPilih = document.getElementById("inputTanggalRiwayat").value;
             const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
@@ -461,14 +462,12 @@
 
             tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs">Memuat data riwayat...</td></tr>`;
 
-            // Ambil data absensi dan materi dari tanggal tersebut
             const snapshotAbsen = await get(ref(db, `absensi/${tglPilih}`));
             const dataAbsen = snapshotAbsen.val() || {};
 
             const snapshotMateri = await get(ref(db, `materi/${tglPilih}`));
             const materiTeks = snapshotMateri.val() || "Tidak ada catatan materi";
 
-            // Tampilkan materi
             infoMateriDiv.classList.remove("hidden");
             teksMateriSpan.innerText = materiTeks;
 
@@ -518,7 +517,7 @@
             inputNama.value = "";
         };
 
-        // 8. Import File CSV
+        // 8. Import CSV
         window.importCSV = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -661,7 +660,6 @@
             const wb = XLSX.utils.book_new();
             const dateHeaders = sortedDates.slice(0, 6);
 
-            // Helper Kode Status
             function getKodeAbsen(status) {
                 if (status === 'Hadir') return 'H';
                 if (status === 'Izin') return 'I';
