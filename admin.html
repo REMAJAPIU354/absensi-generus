@@ -38,7 +38,7 @@
             </button>
         </div>
 
-        <!-- KONTEN UTAMA ADMIN (TERSEMBUNYI SEBELUM LOGIN) -->
+        <!-- KONTEN UTAMA ADMIN -->
         <div id="kontenAdminUtama" class="hidden p-5 sm:p-6 space-y-8">
 
             <!-- 1. FORM PENAMBAHAN GENERUS BARU -->
@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            <!-- 3. TABEL DAFTAR MASTER GENERUS (BISA HAPUS NAMA) -->
+            <!-- 3. TABEL DAFTAR MASTER GENERUS -->
             <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
                 <div class="bg-slate-100 px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between items-center">
                     <span>Daftar Master Generus Terdaftar</span>
@@ -102,7 +102,7 @@
                 </div>
             </div>
 
-            <!-- 4. ZONA BAHAYA (DANGER ZONE) -->
+            <!-- 4. ZONA BAHAYA -->
             <div class="bg-red-50/60 border border-red-200 rounded-xl p-4 sm:p-5 space-y-3">
                 <h3 class="font-bold text-red-800 text-sm uppercase tracking-wider flex items-center gap-2">
                     ⚠️ Zona Bahaya / Reset Database
@@ -235,7 +235,8 @@
         window.resetAbsensiHariIni = function() {
             const today = new Date().toISOString().split('T')[0];
             if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi di Cloud untuk hari ini (${today})?`)) {
-                remove(ref(db, `absensi/${today}`));
+                remove(ref(db, `absensi/${today}_Sore`));
+                remove(ref(db, `absensi/${today}_Malam`));
                 alert(`Status absensi tanggal ${today} dibersihkan!`);
             }
         };
@@ -312,10 +313,9 @@
 
             const snapshotAbsensi = await get(ref(db, 'absensi'));
             const allAbsensi = snapshotAbsensi.val() || {};
-            const sortedDates = Object.keys(allAbsensi).sort();
+            const rawKeys = Object.keys(allAbsensi).sort();
 
             const wb = XLSX.utils.book_new();
-            const dateHeaders = sortedDates.slice(0, 6);
 
             function getKodeAbsen(status) {
                 if (status === 'Hadir') return 'H';
@@ -334,7 +334,8 @@
             ws1Data.push(r1);
 
             const r2 = ["No", "Nama Lengkap", "Kategori"];
-            dateHeaders.forEach((d, idx) => { r2[3 + idx] = d; });
+            const datesSheet1 = rawKeys.slice(0, 6);
+            datesSheet1.forEach((dKey, idx) => { r2[3 + idx] = dKey.split('_')[0]; });
             ws1Data.push(r2);
 
             let currentRowIdx = 3;
@@ -348,12 +349,12 @@
 
                     anggota.forEach(g => {
                         let row = [no++, g.nama, kat];
-                        dateHeaders.forEach((d, dIdx) => {
-                            const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                        datesSheet1.forEach((dKey, dIdx) => {
+                            const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
                             row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                         });
                         row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
-                        row[10] = dateHeaders.length;
+                        row[10] = datesSheet1.length;
                         row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
                         ws1Data.push(row);
                         currentRowIdx++;
@@ -376,7 +377,7 @@
             beriGarisDanFormatTabel(ws1);
             XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
 
-            // SHEET 2: Absensi AR Intensif
+            // SHEET 2: Absensi AR Intensif (Hanya menyaring tanggal Senin, Rabu, atau Jumat)
             const ws2Data = [];
             const r2_1 = ["Absensi AR Intensif", "", "", "Tanggal Hadir"];
             r2_1[9] = "Akumulasi Kehadiran";
@@ -384,8 +385,15 @@
             r2_1[11] = "Presentase";
             ws2Data.push(r2_1);
 
+            const datesARIntensif = rawKeys.filter(key => {
+                const tglStr = key.split('_')[0];
+                const d = new Date(tglStr);
+                const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
+                return dayName === "Senin" || dayName === "Rabu" || dayName === "Jumat";
+            }).slice(0, 6);
+
             const r2_2 = ["No", "Nama Lengkap", "Kategori"];
-            dateHeaders.forEach((d, idx) => { r2_2[3 + idx] = d; });
+            datesARIntensif.forEach((dKey, idx) => { r2_2[3 + idx] = dKey.split('_')[0]; });
             ws2Data.push(r2_2);
 
             let rowIdx2 = 3;
@@ -395,12 +403,12 @@
 
             anggotaAR.forEach(g => {
                 let row = [noAR++, g.nama, "AR Intensif"];
-                dateHeaders.forEach((d, dIdx) => {
-                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                datesARIntensif.forEach((dKey, dIdx) => {
+                    const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
                     row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
                 row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
-                row[10] = dateHeaders.length;
+                row[10] = datesARIntensif.length;
                 row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
                 ws2Data.push(row);
                 rowIdx2++;
@@ -418,16 +426,20 @@
             beriGarisDanFormatTabel(ws2);
             XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
-            // SHEET 3: Absensi ACR
+            // SHEET 3: Absensi ACR (Sesi Sore & Malam)
             const ws3Data = [];
-            const r3_1 = ["No", "Nama Lengkap", "Tanggal "];
+            const r3_1 = ["No", "Nama Lengkap", "Tanggal & Sesi"];
             r3_1[10] = "Akumulasi Hadir";
             r3_1[11] = "Jumlah Pertemuan";
             r3_1[12] = "Presentase";
             ws3Data.push(r3_1);
 
+            const datesACR = rawKeys.slice(0, 8);
             const r3_2 = ["", ""];
-            dateHeaders.forEach((d, idx) => { r3_2[2 + idx] = d; });
+            datesACR.forEach((dKey, idx) => { 
+                const parts = dKey.split('_');
+                r3_2[2 + idx] = `${parts[0]} (${parts[1] || 'Sore'})`; 
+            });
             ws3Data.push(r3_2);
 
             let rowIdx3 = 3;
@@ -437,12 +449,12 @@
 
             anggotaACR.forEach(g => {
                 let row = [noACR++, g.nama];
-                dateHeaders.forEach((d, dIdx) => {
-                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
+                datesACR.forEach((dKey, dIdx) => {
+                    const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
                     row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
                 row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
-                row[11] = dateHeaders.length;
+                row[11] = datesACR.length;
                 row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
                 ws3Data.push(row);
                 rowIdx3++;
