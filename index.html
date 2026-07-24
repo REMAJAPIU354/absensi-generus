@@ -84,25 +84,21 @@
                 </div>
             </div>
 
-            <!-- KARTU REKAP RINGKASAN KEHADIRAN HARIAN -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/80 rounded-xl p-3.5 text-center shadow-sm">
-        <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hadir</div>
-        <div id="jumlahHadir" class="text-2xl font-extrabold text-emerald-800 mt-0.5">0</div>
-    </div>
-    <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80 rounded-xl p-3.5 text-center shadow-sm">
-        <div class="text-xs font-bold text-amber-700 uppercase tracking-wider">Izin</div>
-        <div id="jumlahIzin" class="text-2xl font-extrabold text-amber-800 mt-0.5">0</div>
-    </div>
-    <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/80 rounded-xl p-3.5 text-center shadow-sm">
-        <div class="text-xs font-bold text-blue-700 uppercase tracking-wider">Sakit</div>
-        <div id="jumlahSakit" class="text-2xl font-extrabold text-blue-800 mt-0.5">0</div>
-    </div>
-    <div class="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200/80 rounded-xl p-3.5 text-center shadow-sm">
-        <div class="text-xs font-bold text-red-700 uppercase tracking-wider">Alpa</div>
-        <div id="jumlahAlpa" class="text-2xl font-extrabold text-red-800 mt-0.5">0</div>
-    </div>
-</div>
+            <!-- KARTU REKAP RINGKASAN KEHADIRAN (HADIR, IZIN, ALPA) -->
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hadir</div>
+                    <div id="jumlahHadir" class="text-2xl font-extrabold text-emerald-800 mt-0.5">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-amber-700 uppercase tracking-wider">Izin / Sakit</div>
+                    <div id="jumlahIzin" class="text-2xl font-extrabold text-amber-800 mt-0.5">0</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200/80 rounded-xl p-3.5 text-center shadow-sm">
+                    <div class="text-xs font-bold text-red-700 uppercase tracking-wider">Alpa</div>
+                    <div id="jumlahAlpa" class="text-2xl font-extrabold text-red-800 mt-0.5">0</div>
+                </div>
+            </div>
 
             <!-- TABEL FORM INPUT UTAMA -->
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
@@ -117,7 +113,7 @@
                                 <th class="p-3.5 text-center w-12">No</th>
                                 <th class="p-3.5">Nama & Kategori</th>
                                 <th class="p-3.5 text-center">Pilihan Status Absensi</th>
-                                <th class="p-3.5">Catatan / Alasan</th>
+                                <th class="p-3.5">Catatan / Alasan Izin</th>
                             </tr>
                         </thead>
                         <tbody id="tabelGenerus" class="divide-y divide-slate-100 bg-white">
@@ -211,6 +207,7 @@
         window.daftarGenerus = [];
         window.tanggalAktif = "";
         window.sesiAktif = "Sore";
+        const PIN_ADMIN = "313354";
 
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
@@ -249,7 +246,6 @@
                 window.tampilkanGenerus();
             });
 
-            // Listen Materi per Tanggal & Sesi
             const materiKey = `${window.tanggalAktif}_${window.sesiAktif}`;
             const materiRef = ref(db, 'materi/' + materiKey);
             onValue(materiRef, (materiSnap) => {
@@ -263,12 +259,11 @@
             const boxSesi = document.getElementById("boxSesiPengajian");
             tbody.innerHTML = "";
 
-            // Tampilkan pilihan sesi hanya jika filter ACR atau Semua
             if (filterKat === "ACR" || filterKat === "Semua") {
                 boxSesi.classList.remove("hidden");
             } else {
                 boxSesi.classList.add("hidden");
-                window.sesiAktif = "Malam"; // Default malam untuk non-ACR
+                window.sesiAktif = "Malam";
             }
 
             if (!window.daftarGenerus || window.daftarGenerus.length === 0) {
@@ -289,15 +284,14 @@
                             <span class="inline-block bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 mt-1">${generus.kategori}</span>
                         </td>
                         <td class="p-3.5 text-center">
-                            <div class="no-print flex justify-center gap-1">
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
+                            <div class="no-print flex justify-center gap-1.5">
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
                             </div>
                         </td>
                         <td class="p-3.5">
-                            <input type="text" value="${generus.catatan || ''}" onchange="updateCatatanLokal('${generus.id}', this.value)" placeholder="Tambah catatan..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-slate-50/50 focus:bg-white transition">
+                            <input type="text" id="catatan_${generus.id}" value="${generus.catatan || ''}" onchange="updateCatatanLokal('${generus.id}', this.value)" placeholder="${generus.status === 'Izin' ? 'Ketik alasan izin / sakit...' : 'Tambah catatan...'}" class="w-full border ${generus.status === 'Izin' ? 'border-amber-400 ring-1 ring-amber-200 bg-amber-50/30' : 'border-slate-200 bg-slate-50/50'} rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 transition">
                         </td>
                     </tr>
                 `;
@@ -309,7 +303,6 @@
         function updateRekapDraft() {
             document.getElementById("jumlahHadir").innerText = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
             document.getElementById("jumlahIzin").innerText = window.daftarGenerus.filter(g => g.status === 'Izin').length;
-            document.getElementById("jumlahSakit").innerText = window.daftarGenerus.filter(g => g.status === 'Sakit').length;
             document.getElementById("jumlahAlpa").innerText = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
         }
 
@@ -323,6 +316,14 @@
                 generus.status = statusPilihan;
             }
             window.tampilkanGenerus();
+
+            // Auto-focus ke input catatan jika memilih status Izin
+            if (generus.status === 'Izin') {
+                setTimeout(() => {
+                    const inputCat = document.getElementById(`catatan_${id}`);
+                    if(inputCat) inputCat.focus();
+                }, 50);
+            }
         };
 
         window.updateCatatanLokal = function(id, teks) {
@@ -418,7 +419,6 @@
                 let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
                 if (item.status === "Hadir") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
                 else if (item.status === "Izin") badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
-                else if (item.status === "Sakit") badgeColor = "bg-blue-100 text-blue-800 border-blue-300";
                 else if (item.status === "Alpa") badgeColor = "bg-red-100 text-red-800 border-red-300";
 
                 tbodyRiwayat.innerHTML += `
