@@ -8,8 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -23,22 +21,18 @@
 </head>
 <body class="bg-slate-100/80 min-h-screen p-2 sm:p-4 md:p-8 font-sans antialiased text-slate-800">
 
-    <div class="card-container max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden relative">
+    <div class="card-container max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
         
         <!-- HEADER APLIKASI -->
         <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-5 sm:p-6 text-white relative">
             <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20" id="statusAdminText">🔒 Mode Pengurus</span>
-                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full text-emerald-200 bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync
-                    </span>
-                </div>
+                <span class="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20">
+                    🔒 Portal Pengurus Harian
+                </span>
                 
-                <!-- TOMBOL BUKA SIDEBAR ADMIN -->
-                <button onclick="bukaSidebarAdmin()" class="no-print bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
-                    ⚙️ Pengaturan & Admin
-                </button>
+                <a href="admin.html" class="no-print bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
+                    🔑 Ke Halaman Admin
+                </a>
             </div>
 
             <div class="text-center space-y-1">
@@ -79,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- KARTU REKAP RINGKASAN KEHADIRAN (DRAFT SEMENTARA) -->
+            <!-- KARTU REKAP RINGKASAN KEHADIRAN (DRAFT) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/80 rounded-xl p-3.5 text-center shadow-sm">
                     <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hadir (Draft)</div>
@@ -127,15 +121,6 @@
                 <button onclick="simpanAbsensiKeCloud()" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition text-base flex items-center justify-center gap-2">
                     💾 SIMPAN ABSENSI HARI INI
                 </button>
-
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button onclick="cetakLaporan()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
-                        🖨️ Cetak / Simpan PDF
-                    </button>
-                    <button onclick="exportExcelHarian()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
-                        📊 Export Excel Harian (.csv)
-                    </button>
-                </div>
             </div>
 
             <!-- SEKSI TABEL RIWAYAT TANGGAL LAIN -->
@@ -186,100 +171,10 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- SIDEBAR DRAWER (OVERLAY & PANEL ADMIN) -->
-    <!-- ========================================== -->
-    <!-- Backdrop Hitam Transparan -->
-    <div id="sidebarBackdrop" onclick="tutupSidebarAdmin()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity"></div>
-
-    <!-- Panel Sidebar Kanan -->
-    <div id="sidebarAdminPanel" class="fixed top-0 right-0 h-full w-full sm:w-80 md:w-96 bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between overflow-y-auto">
-        <div class="p-5 space-y-6">
-            
-            <!-- Header Sidebar -->
-            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">⚙️</span>
-                    <h2 class="font-extrabold text-slate-800 text-base">Menu Admin & Pengaturan</h2>
-                </div>
-                <button onclick="tutupSidebarAdmin()" class="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg text-lg">✕</button>
-            </div>
-
-            <!-- Login / Status Admin -->
-            <div id="sidebarAdminStatusBox" class="bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center">
-                <div>
-                    <div class="text-xs font-bold text-slate-700" id="sidebarAdminStatusTitle">🔒 Akses Pengurus</div>
-                    <div class="text-[11px] text-slate-500" id="sidebarAdminStatusDesc">Masuk PIN untuk fitu admin.</div>
-                </div>
-                <button onclick="toggleAdminMode()" id="sidebarBtnLogin" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm">
-                    🔑 Masuk PIN
-                </button>
-            </div>
-
-            <!-- MENU KHUSUS ADMIN (Tampil jika PIN Benar) -->
-            <div id="sidebarAdminFiturContent" class="hidden space-y-6">
-                
-                <!-- Kelola Tambah Generus -->
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">➕ Tambah Generus Baru</label>
-                    <input type="text" id="inputNama" placeholder="Nama lengkap generus..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <select id="inputKategori" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="ACR">ACR (6-12 thn)</option>
-                        <option value="APR">APR (13-15 thn)</option>
-                        <option value="AR">AR (16-18 thn)</option>
-                        <option value="AR Intensif">AR Intensif</option>
-                        <option value="GPN-A">GPN-A (19-22 thn)</option>
-                        <option value="GPN-B">GPN-B (23-30+ thn)</option>
-                    </select>
-                    <button onclick="tambahGenerus()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm">
-                        + Tambah Generus
-                    </button>
-                </div>
-
-                <!-- Export & Import -->
-                <div class="space-y-2.5 pt-3 border-t border-slate-200">
-                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider block">📊 Kelola File Data</label>
-                    
-                    <button onclick="downloadRekapMultiSheetExcel()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5">
-                        📊 Download Rekap Bulanan (3 Sheet)
-                    </button>
-
-                    <label class="cursor-pointer w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5">
-                        📂 Import Master Generus (.csv)
-                        <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
-                    </label>
-                </div>
-
-                <!-- ZONA BAHAYA (DANGER ZONE) -->
-                <div class="space-y-2.5 pt-4 border-t border-red-200 bg-red-50/50 p-3.5 rounded-xl border">
-                    <label class="text-xs font-bold text-red-800 uppercase tracking-wider flex items-center gap-1">
-                        ⚠️ Zona Bahaya / Reset
-                    </label>
-                    <p class="text-[11px] text-red-600">Aksi di bawah ini bersifat merusak data. Gunakan secara hati-hati.</p>
-
-                    <button onclick="resetAbsensiHariIni()" class="w-full bg-white hover:bg-red-100 text-red-700 text-xs font-semibold py-2 rounded-lg transition border border-red-200 shadow-sm">
-                        🔄 Bersihkan Status Absen Hari Ini
-                    </button>
-
-                    <button onclick="resetSemuaDataDengarPengamanan()" class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-lg transition shadow-md">
-                        🗑️ RESET TOTAL DATABASE
-                    </button>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Footer Sidebar -->
-        <div class="p-4 border-t border-slate-200 bg-slate-50 text-center">
-            <p class="text-[11px] text-slate-400">Absensi Generus LDII v2.5 • Cloud Sync</p>
-        </div>
-    </div>
-
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -296,66 +191,7 @@
 
         window.daftarGenerus = [];
         window.tanggalAktif = "";
-        window.isAdmin = false;
-        const PIN_ADMIN = "1234";
 
-        // SIDEBAR CONTROLLER
-        window.bukaSidebarAdmin = function() {
-            document.getElementById("sidebarBackdrop").classList.remove("hidden");
-            document.getElementById("sidebarAdminPanel").classList.remove("translate-x-full");
-        };
-
-        window.tutupSidebarAdmin = function() {
-            document.getElementById("sidebarBackdrop").classList.add("hidden");
-            document.getElementById("sidebarAdminPanel").classList.add("translate-x-full");
-        };
-
-        // TOGGLE ADMIN
-        window.toggleAdminMode = function() {
-            if (!window.isAdmin) {
-                const inputPIN = prompt("🔐 Masukkan PIN Admin:");
-                if (inputPIN === PIN_ADMIN) {
-                    window.isAdmin = true;
-                    alert("Akses Admin Berhasil Diberikan! 🔑");
-                    updateTampilanAdmin();
-                } else if (inputPIN !== null) {
-                    alert("❌ PIN Salah!");
-                }
-            } else {
-                window.isAdmin = false;
-                alert("Keluar dari Mode Admin.");
-                updateTampilanAdmin();
-            }
-        };
-
-        function updateTampilanAdmin() {
-            const statusHeader = document.getElementById("statusAdminText");
-            const sidebarFitur = document.getElementById("sidebarAdminFiturContent");
-            const sidebarTitle = document.getElementById("sidebarAdminStatusTitle");
-            const sidebarDesc = document.getElementById("sidebarAdminStatusDesc");
-            const sidebarBtn = document.getElementById("sidebarBtnLogin");
-
-            if (window.isAdmin) {
-                statusHeader.innerText = "🔓 Mode Admin Aktif";
-                statusHeader.className = "text-xs font-semibold px-3 py-1 rounded-full bg-amber-400 text-amber-950 border border-amber-300 shadow-sm";
-                sidebarFitur.classList.remove("hidden");
-                sidebarTitle.innerText = "🔓 Admin Aktif";
-                sidebarDesc.innerText = "Anda memiliki akses penuh.";
-                sidebarBtn.innerText = "🔒 Keluar";
-                sidebarBtn.className = "bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm";
-            } else {
-                statusHeader.innerText = "🔒 Mode Pengurus";
-                statusHeader.className = "text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20";
-                sidebarFitur.classList.add("hidden");
-                sidebarTitle.innerText = "🔒 Akses Pengurus";
-                sidebarDesc.innerText = "Masuk PIN untuk fitur admin.";
-                sidebarBtn.innerText = "🔑 Masuk PIN";
-                sidebarBtn.className = "bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm";
-            }
-            window.tampilkanGenerus();
-        }
-
-        // INIT TANGGAL & CLOUD LISTENERS
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputTanggal").value = today;
@@ -393,14 +229,13 @@
             });
         }
 
-        // RENDER TABEL HARIAN
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
             tbody.innerHTML = "";
 
             if (!window.daftarGenerus || window.daftarGenerus.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data nama generus. Masukkan nama di Sidebar Admin atau Import CSV.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data nama generus di database.</td></tr>`;
                 updateRekapDraft();
                 return;
             }
@@ -408,10 +243,6 @@
             let nomor = 1;
             window.daftarGenerus.forEach((generus) => {
                 if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
-
-                const tombolHapus = window.isAdmin 
-                    ? `<button onclick="hapusGenerus('${generus.id}')" class="ml-1 text-red-400 hover:text-red-600 font-bold px-1.5 py-0.5 text-xs rounded hover:bg-red-50 transition" title="Hapus Data">✕</button>` 
-                    : '';
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50/80 transition">
@@ -426,7 +257,6 @@
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
-                                ${tombolHapus}
                             </div>
                         </td>
                         <td class="p-3.5">
@@ -465,7 +295,6 @@
             }
         };
 
-        // SIMPAN ABSENSI
         window.simpanAbsensiKeCloud = async function() {
             const generusDiisi = window.daftarGenerus.filter(g => g.status !== "");
 
@@ -511,7 +340,6 @@
             window.tampilkanGenerus();
         };
 
-        // TABEL RIWAYAT
         window.muatTabelRiwayat = async function() {
             const tglPilih = document.getElementById("inputTanggalRiwayat").value;
             const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
@@ -562,315 +390,6 @@
                     </tr>
                 `;
             });
-        };
-
-        // ADMIN FUNCTIONS
-        window.tambahGenerus = function() {
-            const inputNama = document.getElementById("inputNama");
-            const inputKat = document.getElementById("inputKategori");
-            const nama = inputNama.value.trim();
-
-            if (nama === "") {
-                alert("Silakan masukkan nama Generus!");
-                return;
-            }
-
-            const idBaru = 'gen_' + Date.now();
-            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: inputKat.value });
-            inputNama.value = "";
-            alert(`✅ ${nama} berhasil ditambahkan!`);
-        };
-
-        window.importCSV = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const baris = e.target.result.split("\n");
-                let jumlah = 0;
-
-                baris.forEach((line, idx) => {
-                    if (idx === 0 || line.trim() === "") return;
-                    const kolom = line.split(",");
-                    if (kolom.length >= 1) {
-                        const nama = kolom[0].replace(/"/g, '').trim();
-                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim().toUpperCase() : "ACR";
-
-                        if (nama !== "") {
-                            const idBaru = 'gen_' + (Date.now() + idx);
-                            set(ref(db, `master_generus/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori });
-                            jumlah++;
-                        }
-                    }
-                });
-                alert(`Berhasil mengimpor ${jumlah} generus ke Database Cloud!`);
-            };
-            reader.readAsText(file);
-        };
-
-        window.resetAbsensiHariIni = function() {
-            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi di Cloud untuk tanggal (${window.tanggalAktif})?`)) {
-                remove(ref(db, `absensi/${window.tanggalAktif}`));
-                window.resetFormLokal();
-                alert(`Status absensi tanggal ${window.tanggalAktif} dibersihkan!`);
-            }
-        };
-
-        window.hapusGenerus = function(id) {
-            if (confirm("⚠️ Yakin ingin menghapus nama ini?")) {
-                remove(ref(db, `master_generus/${id}`));
-                remove(ref(db, `absensi/${window.tanggalAktif}/${id}`));
-            }
-        };
-
-        // RESET DATABASE DENGAN PENGAMANAN KETIK "HAPUS"
-        window.resetSemuaDataDengarPengamanan = function() {
-            const konfirmasiTeks = prompt("⚠️ PERINGATAN CRITICAL!\n\nSeluruh data generus dan absensi akan dihapus total.\n\nKetik kata \"HAPUS\" untuk melanjutkan:");
-            
-            if (konfirmasiTeks === "HAPUS") {
-                remove(ref(db, '/'));
-                alert("Database berhasil dibersihkan total.");
-                location.reload();
-            } else if (konfirmasiTeks !== null) {
-                alert("❌ Kata konfirmasi salah! Proses reset dibatalkan.");
-            }
-        };
-
-        window.cetakLaporan = function() { window.print(); };
-
-        window.exportExcelHarian = function() {
-            const materi = document.getElementById("inputMateri").value || "-";
-            const filterKat = document.getElementById("filterKategori").value;
-            let csvContent = `data:text/csv;charset=utf-8,Laporan Absensi Ngaji Generus (Harian)\nTanggal: ${window.tanggalAktif}\nKategori: ${filterKat}\nMateri Ngaji: "${materi}"\n\nNo,Nama,Kategori,Status,Catatan / Keterangan\n`;
-
-            let no = 1;
-            window.daftarGenerus.forEach((generus) => {
-                if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
-
-                let st = generus.status || "Belum Absen";
-                let ct = generus.catatan ? generus.catatan.replace(/"/g, '""') : "-";
-                csvContent += `${no++},"${generus.nama}",${generus.kategori},${st},"${ct}"\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Absensi_Generus_${window.tanggalAktif}_${filterKat}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
-        // EXCEL MULTI-SHEET GENERATOR
-        const thinBorder = {
-            top: { style: 'thin', color: { rgb: "CCCCCC" } },
-            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
-            left: { style: 'thin', color: { rgb: "CCCCCC" } },
-            right: { style: 'thin', color: { rgb: "CCCCCC" } }
-        };
-
-        function beriGarisDanFormatTabel(sheet) {
-            const range = XLSX.utils.decode_range(sheet['!ref']);
-            for (let R = range.s.r; R <= range.e.r; ++R) {
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cell_address = { c: C, r: R };
-                    const cell_ref = XLSX.utils.encode_cell(cell_address);
-                    if (!sheet[cell_ref]) sheet[cell_ref] = { t: 's', v: '' };
-
-                    sheet[cell_ref].s = sheet[cell_ref].s || {};
-                    sheet[cell_ref].s.border = thinBorder;
-
-                    if (R < 2) {
-                        sheet[cell_ref].s.fill = { fgColor: { rgb: "198754" } };
-                        sheet[cell_ref].s.font = { name: "Calibri", bold: true, color: { rgb: "FFFFFF" } };
-                        sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
-                    } else {
-                        sheet[cell_ref].s.font = { name: "Calibri", size: 11 };
-                        if (C === 0 || C >= 3) {
-                            sheet[cell_ref].s.alignment = { horizontal: "center", vertical: "center" };
-                        } else {
-                            sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
-                        }
-
-                        if (C === range.e.c || (sheet[cell_ref].f && sheet[cell_ref].f.includes("/"))) {
-                            sheet[cell_ref].z = "0%";
-                            sheet[cell_ref].t = 'n';
-                        }
-
-                        const val = String(sheet[cell_ref].v || "");
-                        if (val.includes("Total")) {
-                            sheet[cell_ref].s.fill = { fgColor: { rgb: "FFF200" } };
-                            sheet[cell_ref].s.font = { name: "Calibri", bold: true };
-                        }
-                    }
-                }
-            }
-        }
-
-        window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel persis template... Mohon tunggu sebentar.");
-
-            const snapshotMaster = await get(ref(db, 'master_generus'));
-            const masterData = snapshotMaster.val() || {};
-            const listGenerus = Object.values(masterData);
-
-            if (listGenerus.length === 0) {
-                alert("Data master generus masih kosong!");
-                return;
-            }
-
-            const snapshotAbsensi = await get(ref(db, 'absensi'));
-            const allAbsensi = snapshotAbsensi.val() || {};
-            const sortedDates = Object.keys(allAbsensi).sort();
-
-            const wb = XLSX.utils.book_new();
-            const dateHeaders = sortedDates.slice(0, 6);
-
-            function getKodeAbsen(status) {
-                if (status === 'Hadir') return 'H';
-                if (status === 'Izin') return 'I';
-                if (status === 'Sakit') return 'S';
-                if (status === 'Alpa') return 'A';
-                return '';
-            }
-
-            // SHEET 1: Absensi APR - GPN PIU
-            const ws1Data = [];
-            const r1 = ["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"];
-            r1[9] = "Akumulasi Kehadiran";
-            r1[10] = "Jumlah Pertemuan";
-            r1[11] = "Presentase";
-            ws1Data.push(r1);
-
-            const r2 = ["No", "Nama Lengkap", "Kategori"];
-            dateHeaders.forEach((d, idx) => { r2[3 + idx] = d; });
-            ws1Data.push(r2);
-
-            let currentRowIdx = 3;
-            const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
-
-            katPIU.forEach(kat => {
-                const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
-                if (anggota.length > 0) {
-                    let no = 1;
-                    let startCatRow = currentRowIdx;
-
-                    anggota.forEach(g => {
-                        let row = [no++, g.nama, kat];
-                        dateHeaders.forEach((d, dIdx) => {
-                            const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                            row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
-                        });
-                        row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
-                        row[10] = dateHeaders.length;
-                        row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
-                        ws1Data.push(row);
-                        currentRowIdx++;
-                    });
-
-                    let endCatRow = currentRowIdx - 1;
-                    let totalRowIdx = currentRowIdx;
-                    let totalRow = ["Total", "", ""];
-                    totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
-                    totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
-                    totalRow[11] = { f: `J${totalRowIdx}/K${totalRowIdx}` };
-                    ws1Data.push(totalRow);
-                    currentRowIdx++;
-                    ws1Data.push([]);
-                    currentRowIdx++;
-                }
-            });
-
-            const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-            beriGarisDanFormatTabel(ws1);
-            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
-
-            // SHEET 2: Absensi AR Intensif
-            const ws2Data = [];
-            const r2_1 = ["Absensi AR Intensif", "", "", "Tanggal Hadir"];
-            r2_1[9] = "Akumulasi Kehadiran";
-            r2_1[10] = "Jumlah Pertemuan";
-            r2_1[11] = "Presentase";
-            ws2Data.push(r2_1);
-
-            const r2_2 = ["No", "Nama Lengkap", "Kategori"];
-            dateHeaders.forEach((d, idx) => { r2_2[3 + idx] = d; });
-            ws2Data.push(r2_2);
-
-            let rowIdx2 = 3;
-            const anggotaAR = listGenerus.filter(g => g.kategori === "AR Intensif" || g.kategori === "AR");
-            let startARRow = rowIdx2;
-            let noAR = 1;
-
-            anggotaAR.forEach(g => {
-                let row = [noAR++, g.nama, "AR Intensif"];
-                dateHeaders.forEach((d, dIdx) => {
-                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                    row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
-                });
-                row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
-                row[10] = dateHeaders.length;
-                row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
-                ws2Data.push(row);
-                rowIdx2++;
-            });
-
-            let endARRow = rowIdx2 - 1;
-            let totalARRowIdx = rowIdx2;
-            let totalRowAR = ["Total Akumulasi Hadir & Presentase", "", ""];
-            totalRowAR[9] = { f: `SUM(J${startARRow}:J${endARRow})` };
-            totalRowAR[10] = { f: `SUM(K${startARRow}:K${endARRow})` };
-            totalRowAR[11] = { f: `J${totalARRowIdx}/K${totalARRowIdx}` };
-            ws2Data.push(totalRowAR);
-
-            const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-            beriGarisDanFormatTabel(ws2);
-            XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
-
-            // SHEET 3: Absensi ACR
-            const ws3Data = [];
-            const r3_1 = ["No", "Nama Lengkap", "Tanggal "];
-            r3_1[10] = "Akumulasi Hadir";
-            r3_1[11] = "Jumlah Pertemuan";
-            r3_1[12] = "Presentase";
-            ws3Data.push(r3_1);
-
-            const r3_2 = ["", ""];
-            dateHeaders.forEach((d, idx) => { r3_2[2 + idx] = d; });
-            ws3Data.push(r3_2);
-
-            let rowIdx3 = 3;
-            const anggotaACR = listGenerus.filter(g => (g.kategori || "ACR") === "ACR");
-            let startACRRow = rowIdx3;
-            let noACR = 1;
-
-            anggotaACR.forEach(g => {
-                let row = [noACR++, g.nama];
-                dateHeaders.forEach((d, dIdx) => {
-                    const abs = allAbsensi[d] && allAbsensi[d][g.id];
-                    row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
-                });
-                row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
-                row[11] = dateHeaders.length;
-                row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
-                ws3Data.push(row);
-                rowIdx3++;
-            });
-
-            let endACRRow = rowIdx3 - 1;
-            let totalACRRowIdx = rowIdx3;
-            let totalRowACR = ["Total Akumulasi Hadir & Presentase", ""];
-            totalRowACR[10] = { f: `SUM(K${startACRRow}:K${endACRRow})` };
-            totalRowACR[11] = { f: `SUM(L${startACRRow}:L${endACRRow})` };
-            totalRowACR[12] = { f: `K${totalACRRowIdx}/L${totalACRRowIdx}` };
-            ws3Data.push(totalRowACR);
-
-            const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
-            beriGarisDanFormatTabel(ws3);
-            XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
-
-            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
         };
 
         initTanggal();
