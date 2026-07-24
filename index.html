@@ -52,7 +52,7 @@
             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-2.5">
-                        <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider">📅 Tanggal:</label>
+                        <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider">📅 Tanggal Input:</label>
                         <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
 
@@ -88,10 +88,6 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <button onclick="downloadRekapMultiSheetExcel()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1">
                             📊 Download Rekap Bulanan (3 Sheet Excel)
-                        </button>
-
-                        <button onclick="muatDataTanggalIni()" class="bg-white hover:bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-amber-300 shadow-sm flex items-center gap-1">
-                            🔍 Lihat / Edit Data Tanggal Ini
                         </button>
 
                         <button onclick="resetAbsensiHariIni()" class="bg-white hover:bg-red-50 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition border border-red-200 shadow-sm flex items-center gap-1">
@@ -145,12 +141,16 @@
                 </div>
             </div>
 
-            <!-- TABEL DAFTAR GENERUS -->
+            <!-- TABEL FORM INPUT UTAMA -->
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-700 flex justify-between items-center">
+                    <span>Form Pengisian Absensi Tanggal Aktif</span>
+                    <span class="text-emerald-700 font-medium">Klik Simpan di bawah setelah selesai</span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-semibold text-xs uppercase tracking-wider">
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
                                 <th class="p-3.5 text-center w-12">No</th>
                                 <th class="p-3.5">Nama & Kategori</th>
                                 <th class="p-3.5 text-center">Pilihan Status Absensi</th>
@@ -164,7 +164,7 @@
                 </div>
             </div>
 
-            <!-- TOMBOL UTAMA SIMPAN ABSENSI HARI INI -->
+            <!-- TOMBOL UTAMA SIMPAN ABSENSI -->
             <div class="no-print pt-2 space-y-3">
                 <button onclick="simpanAbsensiKeCloud()" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition text-base flex items-center justify-center gap-2">
                     💾 SIMPAN ABSENSI HARI INI
@@ -177,6 +177,55 @@
                     <button onclick="exportExcelHarian()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
                         📊 Export Excel Harian (.csv)
                     </button>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- FITUR BARU: TABEL RIWAYAT / CEK TANGGAL LALU -->
+            <!-- ========================================== -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 mt-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            📋 Tabel Riwayat / Cek Absensi Tanggal Lain
+                        </h3>
+                        <p class="text-xs text-slate-500">Pilih tanggal untuk melihat daftar kehadiran yang pernah disimpan sebelumnya.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="date" id="inputTanggalRiwayat" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        <button onclick="muatTabelRiwayat()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center gap-1">
+                            🔍 Tampilkan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Materi di Tanggal Terpilih -->
+                <div id="infoMateriRiwayat" class="text-xs font-medium text-slate-600 bg-emerald-50/60 border border-emerald-200/60 rounded-lg px-3 py-2 hidden">
+                    📖 Materi Ngaji: <span id="teksMateriRiwayat" class="font-bold text-emerald-900"></span>
+                </div>
+
+                <!-- Tabel Riwayat -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold text-xs uppercase tracking-wider">
+                                    <th class="p-3 text-center w-12">No</th>
+                                    <th class="p-3">Nama Generus</th>
+                                    <th class="p-3 text-center">Kategori</th>
+                                    <th class="p-3 text-center">Status Kehadiran</th>
+                                    <th class="p-3 text-center">Waktu Simpan</th>
+                                    <th class="p-3">Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelRiwayatBody" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="6" class="p-6 text-center text-slate-400 text-xs">Silakan pilih tanggal di atas lalu klik "Tampilkan" untuk melihat riwayat.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -249,6 +298,7 @@
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputTanggal").value = today;
+            document.getElementById("inputTanggalRiwayat").value = today;
             window.tanggalAktif = today;
             listenMasterCloud();
         }
@@ -283,28 +333,7 @@
             });
         }
 
-        // 4. Muat Data yang Sudah Pernah Disimpan
-        window.muatDataTanggalIni = async function() {
-            const absensiSnap = await get(ref(db, `absensi/${window.tanggalAktif}`));
-            const absensiData = absensiSnap.val() || {};
-
-            if (Object.keys(absensiData).length === 0) {
-                alert(`Belum ada data absensi tersimpan untuk tanggal ${window.tanggalAktif}.`);
-                return;
-            }
-
-            window.daftarGenerus.forEach(g => {
-                if (absensiData[g.id]) {
-                    g.status = absensiData[g.id].status || "";
-                    g.catatan = absensiData[g.id].catatan || "";
-                }
-            });
-
-            window.tampilkanGenerus();
-            alert(`✅ Data absensi tanggal ${window.tanggalAktif} berhasil dimuat ke layar!`);
-        };
-
-        // 5. Render Tabel
+        // 4. Render Tabel Form Input Utama
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
@@ -326,17 +355,12 @@
                             <span class="inline-block bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 mt-1">${generus.kategori}</span>
                         </td>
                         <td class="p-3.5 text-center">
-                            <div class="no-print flex flex-col items-center gap-1">
-                                <div class="flex justify-center gap-1">
-                                    <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
-                                    <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
-                                    <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
-                                    <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
-                                    ${tombolHapus}
-                                </div>
-                            </div>
-                            <div class="hidden print:block font-bold ${getStatusColor(generus.status)}">
-                                ${generus.status || 'Belum Absen'}
+                            <div class="no-print flex justify-center gap-1">
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
+                                ${tombolHapus}
                             </div>
                         </td>
                         <td class="p-3.5">
@@ -349,14 +373,6 @@
             updateRekapDraft();
         };
 
-        function getStatusColor(status) {
-            if (status === 'Hadir') return 'text-emerald-600';
-            if (status === 'Izin') return 'text-amber-600';
-            if (status === 'Sakit') return 'text-blue-600';
-            if (status === 'Alpa') return 'text-red-600';
-            return 'text-slate-400';
-        }
-
         function updateRekapDraft() {
             document.getElementById("jumlahHadir").innerText = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
             document.getElementById("jumlahIzin").innerText = window.daftarGenerus.filter(g => g.status === 'Izin').length;
@@ -364,7 +380,6 @@
             document.getElementById("jumlahAlpa").innerText = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
         }
 
-        // 6. Pilih Status Kehadiran (Sementara / Draft)
         window.pilihStatusLokal = function(id, statusPilihan) {
             const generus = window.daftarGenerus.find(g => g.id === id);
             if(!generus) return;
@@ -377,7 +392,6 @@
             window.tampilkanGenerus();
         };
 
-        // 7. Update Catatan (Lokal)
         window.updateCatatanLokal = function(id, teks) {
             const generus = window.daftarGenerus.find(g => g.id === id);
             if(generus) {
@@ -385,7 +399,7 @@
             }
         };
 
-        // 8. TOMBOL UTAMA: SIMPAN ABSENSI KE CLOUD & BERSIHKAN FORM
+        // 5. TOMBOL UTAMA: SIMPAN ABSENSI KE CLOUD & BERSIHKAN FORM
         window.simpanAbsensiKeCloud = async function() {
             const generusDiisi = window.daftarGenerus.filter(g => g.status !== "");
 
@@ -423,7 +437,6 @@
             window.resetFormLokal();
         };
 
-        // Reset Tampilan Form Layar
         window.resetFormLokal = function() {
             window.daftarGenerus.forEach(g => {
                 g.status = "";
@@ -432,7 +445,64 @@
             window.tampilkanGenerus();
         };
 
-        // 9. Tambah Generus Baru
+        // ==========================================
+        // 6. FUNGSI MENAMPILKAN TABEL RIWAYAT TANGGAL LAIN
+        // ==========================================
+        window.muatTabelRiwayat = async function() {
+            const tglPilih = document.getElementById("inputTanggalRiwayat").value;
+            const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
+            const infoMateriDiv = document.getElementById("infoMateriRiwayat");
+            const teksMateriSpan = document.getElementById("teksMateriRiwayat");
+
+            if (!tglPilih) {
+                alert("Silakan pilih tanggal terlebih dahulu!");
+                return;
+            }
+
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs">Memuat data riwayat...</td></tr>`;
+
+            // Ambil data absensi dan materi dari tanggal tersebut
+            const snapshotAbsen = await get(ref(db, `absensi/${tglPilih}`));
+            const dataAbsen = snapshotAbsen.val() || {};
+
+            const snapshotMateri = await get(ref(db, `materi/${tglPilih}`));
+            const materiTeks = snapshotMateri.val() || "Tidak ada catatan materi";
+
+            // Tampilkan materi
+            infoMateriDiv.classList.remove("hidden");
+            teksMateriSpan.innerText = materiTeks;
+
+            const listAbsenArray = Object.values(dataAbsen);
+
+            if (listAbsenArray.length === 0) {
+                tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 font-medium text-xs">Belum ada data absensi yang disimpan untuk tanggal ${tglPilih}.</td></tr>`;
+                return;
+            }
+
+            tbodyRiwayat.innerHTML = "";
+            let no = 1;
+
+            listAbsenArray.forEach(item => {
+                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                if (item.status === "Hadir") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                else if (item.status === "Izin") badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+                else if (item.status === "Sakit") badgeColor = "bg-blue-100 text-blue-800 border-blue-300";
+                else if (item.status === "Alpa") badgeColor = "bg-red-100 text-red-800 border-red-300";
+
+                tbodyRiwayat.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
+                        <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
+                        <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span></td>
+                        <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor}">${item.status}</span></td>
+                        <td class="p-3 text-center text-xs text-slate-500">${item.waktu || '-'}</td>
+                        <td class="p-3 text-xs text-slate-600">${item.catatan || '-'}</td>
+                    </tr>
+                `;
+            });
+        };
+
+        // 7. Tambah Generus Baru
         window.tambahGenerus = function() {
             const inputNama = document.getElementById("inputNama");
             const inputKat = document.getElementById("inputKategori");
@@ -448,7 +518,7 @@
             inputNama.value = "";
         };
 
-        // 10. Import File CSV
+        // 8. Import File CSV
         window.importCSV = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -477,7 +547,7 @@
             reader.readAsText(file);
         };
 
-        // 11. Reset Absensi Hari Ini
+        // 9. Reset & Lain-lain
         window.resetAbsensiHariIni = function() {
             if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi di Cloud untuk tanggal (${window.tanggalAktif})?`)) {
                 remove(ref(db, `absensi/${window.tanggalAktif}`));
@@ -486,7 +556,6 @@
             }
         };
 
-        // 12. Hapus & Reset Database
         window.hapusGenerus = function(id) {
             if (confirm("⚠️ Yakin ingin menghapus nama ini?")) {
                 remove(ref(db, `master_generus/${id}`));
@@ -501,7 +570,6 @@
             }
         };
 
-        // 13. Cetak & Export Harian
         window.cetakLaporan = function() { window.print(); };
 
         window.exportExcelHarian = function() {
@@ -526,15 +594,6 @@
             link.click();
             document.body.removeChild(link);
         };
-
-        // Helper Kode Status
-        function getKodeAbsen(status) {
-            if (status === 'Hadir') return 'H';
-            if (status === 'Izin') return 'I';
-            if (status === 'Sakit') return 'S';
-            if (status === 'Alpa') return 'A';
-            return '';
-        }
 
         // Helper Style Excel
         const thinBorder = {
@@ -567,13 +626,11 @@
                             sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
                         }
 
-                        // FORMAT PERSENTASE 0% BULAT
                         if (C === range.e.c || (sheet[cell_ref].f && sheet[cell_ref].f.includes("/"))) {
                             sheet[cell_ref].z = "0%";
                             sheet[cell_ref].t = 'n';
                         }
 
-                        // Warna Kuning Sesuai Gambar
                         const val = String(sheet[cell_ref].v || "");
                         if (val.includes("Total")) {
                             sheet[cell_ref].s.fill = { fgColor: { rgb: "FFF200" } };
@@ -584,7 +641,7 @@
             }
         }
 
-        // 14. Download Rekap Multi-Sheet Excel Sesuai Tampilan Gambar User
+        // 10. Download Rekap Multi-Sheet Excel
         window.downloadRekapMultiSheetExcel = async function() {
             alert("Memproses data 3 Sheet Excel persis template... Mohon tunggu sebentar.");
 
@@ -602,8 +659,16 @@
             const sortedDates = Object.keys(allAbsensi).sort();
 
             const wb = XLSX.utils.book_new();
-
             const dateHeaders = sortedDates.slice(0, 6);
+
+            // Helper Kode Status
+            function getKodeAbsen(status) {
+                if (status === 'Hadir') return 'H';
+                if (status === 'Izin') return 'I';
+                if (status === 'Sakit') return 'S';
+                if (status === 'Alpa') return 'A';
+                return '';
+            }
 
             // SHEET 1: Absensi APR - GPN PIU
             const ws1Data = [];
@@ -628,28 +693,23 @@
 
                     anggota.forEach(g => {
                         let row = [no++, g.nama, kat];
-
                         dateHeaders.forEach((d, dIdx) => {
                             const abs = allAbsensi[d] && allAbsensi[d][g.id];
                             row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                         });
-
                         row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
                         row[10] = dateHeaders.length;
                         row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
-
                         ws1Data.push(row);
                         currentRowIdx++;
                     });
 
                     let endCatRow = currentRowIdx - 1;
                     let totalRowIdx = currentRowIdx;
-
                     let totalRow = ["Total", "", ""];
                     totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
                     totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
                     totalRow[11] = { f: `J${totalRowIdx}/K${totalRowIdx}` };
-
                     ws1Data.push(totalRow);
                     currentRowIdx++;
                     ws1Data.push([]);
@@ -680,16 +740,13 @@
 
             anggotaAR.forEach(g => {
                 let row = [noAR++, g.nama, "AR Intensif"];
-
                 dateHeaders.forEach((d, dIdx) => {
                     const abs = allAbsensi[d] && allAbsensi[d][g.id];
                     row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
-
                 row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
                 row[10] = dateHeaders.length;
                 row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
-
                 ws2Data.push(row);
                 rowIdx2++;
             });
@@ -725,16 +782,13 @@
 
             anggotaACR.forEach(g => {
                 let row = [noACR++, g.nama];
-
                 dateHeaders.forEach((d, dIdx) => {
                     const abs = allAbsensi[d] && allAbsensi[d][g.id];
                     row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                 });
-
                 row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
                 row[11] = dateHeaders.length;
                 row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
-
                 ws3Data.push(row);
                 rowIdx3++;
             });
