@@ -1,1 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Orang Tua - Absensi PIU</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
 
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        
+        <!-- HEADER ADMIN -->
+        <div class="bg-gradient-to-r from-blue-800 via-indigo-700 to-blue-900 p-5 text-white flex justify-between items-center">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold">⚙️ Panel Admin Orang Tua</h1>
+                <p class="text-blue-100 text-xs">Pusat Kelola Data Bapak-Bapak & Ibu-Ibu</p>
+            </div>
+            <a href="orangtua.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-2 rounded-lg border border-white/20 transition">
+                🏠 Ke Halaman Absen
+            </a>
+        </div>
+
+        <!-- FORM LOGIN PIN ADMIN -->
+        <div id="boxLoginAdmin" class="p-8 text-center space-y-4 max-w-md mx-auto">
+            <span class="text-4xl">🔐</span>
+            <h2 class="font-bold text-slate-800 text-lg">Masukkan PIN Admin</h2>
+            <p class="text-xs text-slate-500">Masukkan PIN untuk membuka fitur admin Orang Tua.</p>
+            <input type="password" id="inputPinAdmin" placeholder="Ketik PIN Admin..." class="w-full text-center border border-slate-300 rounded-lg p-2.5 text-lg font-bold tracking-widest focus:ring-2 focus:ring-blue-500 outline-none">
+            <button onclick="verifikasiPin()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg transition shadow-md">
+                Buka Panel Admin
+            </button>
+        </div>
+
+        <!-- KONTEN UTAMA ADMIN -->
+        <div id="kontenAdminUtama" class="hidden p-5 sm:p-6 space-y-8">
+
+            <!-- 1. FORM PENAMBAHAN NAMA BARU -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    ➕ Tambah Bapak / Ibu Baru
+                </h3>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inputNamaBaru" placeholder="Nama lengkap..." class="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="inputKatBaru" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Bapak">Bapak-Bapak</option>
+                        <option value="Ibu">Ibu-Ibu</option>
+                    </select>
+                    <button onclick="tambahOrangTua()" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-sm">
+                        + Tambah Nama
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. KELOLA FILE DATA (IMPORT FILE & EXPORT FILE) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    📊 Kelola File Data & Laporan
+                </h3>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="downloadRekapExcelOrangTua()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
+                        📊 Export File
+                    </button>
+
+                    <label class="flex-1 cursor-pointer bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
+                        📂 Import File
+                        <input type="file" id="fileCsvInput" accept=".csv" onchange="importCSV(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. TABEL DAFTAR MASTER -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                <div class="bg-slate-100 px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between items-center">
+                    <span>Daftar Master Orang Tua</span>
+                    <span id="totalCount" class="text-blue-700 font-bold">0 Orang</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase">
+                                <th class="p-3 text-center w-12">No</th>
+                                <th class="p-3">Nama Lengkap</th>
+                                <th class="p-3 text-center">Kategori</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelMasterAdmin" class="divide-y divide-slate-100">
+                            <!-- Data JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. ZONA BAHAYA -->
+            <div class="bg-red-50/60 border border-red-200 rounded-xl p-4 sm:p-5 space-y-3">
+                <h3 class="font-bold text-red-800 text-sm uppercase tracking-wider flex items-center gap-2">
+                    ⚠️ Zona Bahaya / Reset Database
+                </h3>
+                <p class="text-xs text-red-600">Aksi di bawah ini hanya berpengaruh pada data Orang Tua.</p>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="resetAbsensiHariIni()" class="flex-1 bg-white hover:bg-red-100 text-red-700 border border-red-300 font-semibold py-2.5 rounded-lg text-xs transition shadow-sm">
+                        🔄 Bersihkan Status Absen Hari Ini
+                    </button>
+                    <button onclick="resetSemuaData()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-xs transition shadow-md">
+                        🗑️ RESET DATA ORANG TUA
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK MODULAR -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
+            authDomain: "absensi-generus-db.firebaseapp.com",
+            projectId: "absensi-generus-db",
+            storageBucket: "absensi-generus-db.firebasestorage.app",
+            messagingSenderId: "350847945290",
+            appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
+            databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const PIN_ADMIN = "313354";
+
+        window.verifikasiPin = function() {
+            const input = document.getElementById("inputPinAdmin").value;
+            if (input === PIN_ADMIN) {
+                document.getElementById("boxLoginAdmin").classList.add("hidden");
+                document.getElementById("kontenAdminUtama").classList.remove("hidden");
+                muatMasterAdmin();
+            } else {
+                alert("❌ PIN Salah!");
+            }
+        };
+
+        function muatMasterAdmin() {
+            const masterRef = ref(db, 'master_orangtua');
+            onValue(masterRef, (snap) => {
+                const data = snap.val() || {};
+                const list = Object.values(data);
+                const tbody = document.getElementById("tabelMasterAdmin");
+                document.getElementById("totalCount").innerText = `${list.length} Orang`;
+                tbody.innerHTML = "";
+
+                if (list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data orang tua di database.</td></tr>`;
+                    return;
+                }
+
+                let no = 1;
+                list.forEach((item) => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
+                            <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'Bapak'}</span></td>
+                            <td class="p-3 text-center">
+                                <button onclick="hapusOrangTua('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-200 transition">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        window.tambahOrangTua = function() {
+            const nama = document.getElementById("inputNamaBaru").value.trim();
+            const kat = document.getElementById("inputKatBaru").value;
+
+            if (nama === "") {
+                alert("Silakan masukkan nama!");
+                return;
+            }
+
+            const idBaru = 'ortu_' + Date.now();
+            set(ref(db, `master_orangtua/${idBaru}`), { id: idBaru, nama: nama, kategori: kat });
+            document.getElementById("inputNamaBaru").value = "";
+            alert(`✅ ${nama} berhasil ditambahkan!`);
+        };
+
+        window.hapusOrangTua = function(id) {
+            if (confirm("⚠️ Yakin ingin menghapus data ini dari database?")) {
+                remove(ref(db, `master_orangtua/${id}`));
+            }
+        };
+
+        window.importCSV = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const baris = e.target.result.split("\n");
+                let jumlah = 0;
+
+                baris.forEach((line, idx) => {
+                    if (idx === 0 || line.trim() === "") return;
+                    const kolom = line.split(",");
+                    if (kolom.length >= 1) {
+                        const nama = kolom[0].replace(/"/g, '').trim();
+                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim() : "Bapak";
+
+                        if (nama !== "") {
+                            const idBaru = 'ortu_' + (Date.now() + idx);
+                            set(ref(db, `master_orangtua/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori });
+                            jumlah++;
+                        }
+                    }
+                });
+                alert(`Berhasil mengimpor ${jumlah} data orang tua!`);
+            };
+            reader.readAsText(file);
+        };
+
+        window.resetAbsensiHariIni = function() {
+            const today = new Date().toISOString().split('T')[0];
+            if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi orang tua hari ini (${today})?`)) {
+                remove(ref(db, `absensi_orangtua/${today}`));
+                alert(`Status absensi orang tua tanggal ${today} dibersihkan!`);
+            }
+        };
+
+        window.resetSemuaData = function() {
+            const konfirmasiTeks = prompt("⚠️ PERINGATAN!\n\nSeluruh data master & absensi Orang Tua akan dihapus.\n\nKetik kata \"HAPUS\" untuk melanjutkan:");
+            
+            if (konfirmasiTeks === "HAPUS") {
+                remove(ref(db, 'master_orangtua'));
+                remove(ref(db, 'absensi_orangtua'));
+                alert("Data Orang Tua berhasil dibersihkan total.");
+                location.reload();
+            }
+        };
+
+        // EXCEL GENERATOR ORANG TUA
+        window.downloadRekapExcelOrangTua = async function() {
+            try {
+                const snapshotMaster = await get(ref(db, 'master_orangtua'));
+                const masterData = snapshotMaster.val() || {};
+                const listMaster = Object.values(masterData);
+
+                if (listMaster.length === 0) {
+                    alert("Data master orang tua masih kosong!");
+                    return;
+                }
+
+                const snapshotAbsensi = await get(ref(db, 'absensi_orangtua'));
+                const allAbsensi = snapshotAbsensi.val() || {};
+                const rawKeys = Object.keys(allAbsensi).sort();
+
+                if (rawKeys.length === 0) {
+                    alert("Belum ada riwayat absensi orang tua yang tersimpan!");
+                    return;
+                }
+
+                const wb = XLSX.utils.book_new();
+
+                function getKode(status) {
+                    if (status === 'Hadir') return 'H';
+                    if (status === 'Izin' || status === 'Sakit') return 'I';
+                    if (status === 'Alpa') return 'A';
+                    return '';
+                }
+
+                // SHEET REKAP UTAMA
+                const wsData = [];
+                const r1 = ["Rekap Absensi Orang Tua (Bapak & Ibu)", "", "", "Tanggal Hadir"];
+                wsData.push(r1);
+
+                const r2 = ["No", "Nama Lengkap", "Kategori"];
+                rawKeys.forEach((dKey, idx) => { r2[3 + idx] = dKey; });
+
+                const lastColIdx = 3 + rawKeys.length;
+                r2[lastColIdx] = "Akumulasi Kehadiran";
+                r2[lastColIdx + 1] = "Jumlah Pertemuan";
+                r2[lastColIdx + 2] = "Presentase";
+                wsData.push(r2);
+
+                let rowIdx = 3;
+                let no = 1;
+
+                listMaster.forEach(item => {
+                    let row = [no++, item.nama, item.kategori || 'Bapak'];
+                    rawKeys.forEach((dKey, dIdx) => {
+                        const abs = allAbsensi[dKey] && allAbsensi[dKey][item.id];
+                        row[3 + dIdx] = abs ? getKode(abs.status) : "";
+                    });
+
+                    const endColChar = String.fromCharCode(67 + rawKeys.length);
+                    const totalHadirChar = String.fromCharCode(68 + rawKeys.length);
+                    const totalPertemuanChar = String.fromCharCode(69 + rawKeys.length);
+
+                    row[lastColIdx] = { f: `COUNTIF(D${rowIdx}:${endColChar}${rowIdx}, "H")` };
+                    row[lastColIdx + 1] = rawKeys.length;
+                    row[lastColIdx + 2] = { f: `${totalHadirChar}${rowIdx}/${totalPertemuanChar}${rowIdx}` };
+                    wsData.push(row);
+                    rowIdx++;
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, "Rekap Absensi Orang Tua");
+
+                XLSX.writeFile(wb, `Rekap_Absensi_OrangTua_PIU.xlsx`);
+                alert("✅ BERHASIL! File Rekap Excel Orang Tua terdownload.");
+            } catch (err) {
+                alert("❌ Terjadi kesalahan: " + err.message);
+            }
+        };
+    </script>
+</body>
+</html>
