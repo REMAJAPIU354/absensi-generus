@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Orang Tua (Bapak & Ibu) - PIU</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
 
+    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        
+        <!-- HEADER UTAMA -->
+        <div class="bg-gradient-to-r from-blue-800 via-indigo-700 to-blue-900 p-5 text-white flex justify-between items-center">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+                    👨‍👩‍👧‍👦 Absensi Orang Tua
+                </h1>
+                <p class="text-blue-100 text-xs mt-0.5">Kelola Kehadiran Pengajian Bapak-Bapak & Ibu-Ibu</p>
+            </div>
+            <a href="admin-orangtua.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-2 rounded-lg border border-white/20 transition flex items-center gap-1 font-semibold">
+                ⚙️ Admin
+            </a>
+        </div>
+
+        <!-- STATISTIK RINGKAS HARIAN -->
+        <div class="grid grid-cols-3 gap-2 p-4 bg-slate-50 border-b border-slate-200 text-center">
+            <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
+                <span class="block text-xs font-bold text-emerald-600 uppercase">Hadir</span>
+                <span id="statHadir" class="text-lg font-black text-emerald-700">0</span>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
+                <span class="block text-xs font-bold text-amber-600 uppercase">Izin/Sakit</span>
+                <span id="statIzin" class="text-lg font-black text-amber-700">0</span>
+            </div>
+            <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+                <span class="block text-xs font-bold text-rose-600 uppercase">Alpa</span>
+                <span id="statAlpa" class="text-lg font-black text-rose-700">0</span>
+            </div>
+        </div>
+
+        <!-- CONTROL PANEL (TANGGAL, KATEGORI & PENCARIAN) -->
+        <div class="p-4 sm:p-5 space-y-3 bg-white border-b border-slate-100">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex-1">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Absensi</label>
+                    <input type="date" id="inputTanggal" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="w-full sm:w-48">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Kategori / Kelompok</label>
+                    <select id="filterKategori" onchange="renderTabel()" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="ALL">Semua (Bapak & Ibu)</option>
+                        <option value="Bapak">Bapak-Bapak</option>
+                        <option value="Ibu">Ibu-Ibu</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <input type="text" id="inputCariNama" onkeyup="renderTabel()" placeholder="🔍 Cari nama bapak / ibu..." class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <!-- TABEL DAFTAR ABSENSI -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                    <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px]">
+                        <th class="p-3 text-center w-10">No</th>
+                        <th class="p-3">Nama Lengkap</th>
+                        <th class="p-3 text-center w-24">Kategori</th>
+                        <th class="p-3 text-center min-w-[200px]">Status Kehadiran</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelAbsensi" class="divide-y divide-slate-100">
+                    <!-- Data JS -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE SDK MODULAR -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
+            authDomain: "absensi-generus-db.firebaseapp.com",
+            projectId: "absensi-generus-db",
+            storageBucket: "absensi-generus-db.firebasestorage.app",
+            messagingSenderId: "350847945290",
+            appId: "1:350847945290:web:c9737eebb3e8092db4f4b3",
+            databaseURL: "https://absensi-generus-db-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let listMasterData = [];
+        let dataAbsensiHariIni = {};
+
+        // Inisialisasi Tanggal Hari Ini
+        const inputTgl = document.getElementById("inputTanggal");
+        const todayStr = new Date().toISOString().split('T')[0];
+        inputTgl.value = todayStr;
+
+        inputTgl.addEventListener("change", muatDataAbsensi);
+
+        function initApp() {
+            // Ambil data Master Orang Tua
+            const masterRef = ref(db, 'master_orangtua');
+            onValue(masterRef, (snap) => {
+                const data = snap.val() || {};
+                listMasterData = Object.values(data);
+                muatDataAbsensi();
+            });
+        }
+
+        function muatDataAbsensi() {
+            const tgl = inputTgl.value || todayStr;
+            const absensiRef = ref(db, `absensi_orangtua/${tgl}`);
+            
+            get(absensiRef).then((snap) => {
+                dataAbsensiHariIni = snap.val() || {};
+                renderTabel();
+                updateStatistik();
+            });
+        }
+
+        window.renderTabel = function() {
+            const tbody = document.getElementById("tabelAbsensi");
+            const katFilter = document.getElementById("filterKategori").value;
+            const cariKata = document.getElementById("inputCariNama").value.toLowerCase();
+
+            tbody.innerHTML = "";
+
+            let filtered = listMasterData.filter(item => {
+                const cocokKat = katFilter === "ALL" || (item.kategori || "Bapak") === katFilter;
+                const cocokNama = item.nama.toLowerCase().includes(cariKata);
+                return cocokKat && cocokNama;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Data orang tua tidak ditemukan.</td></tr>`;
+                return;
+            }
+
+            let no = 1;
+            filtered.forEach(item => {
+                const statusData = dataAbsensiHariIni[item.id] || {};
+                const st = statusData.status || "";
+                const ket = statusData.keterangan || "";
+
+                const row = document.createElement("tr");
+                row.className = "hover:bg-slate-50 transition";
+
+                row.innerHTML = `
+                    <td class="p-3 text-center font-semibold text-slate-400">${no++}</td>
+                    <td class="p-3">
+                        <div class="font-bold text-slate-800">${item.nama}</div>
+                        ${st === "Izin" || st === "Sakit" ? `<div class="text-[11px] text-amber-600 font-medium italic mt-0.5">Ket: ${ket || 'Tanpa Keterangan'}</div>` : ''}
+                    </td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${item.kategori === 'Ibu' ? 'bg-pink-100 text-pink-700 border border-pink-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">
+                            ${item.kategori || 'Bapak'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <div class="flex justify-center gap-1">
+                            <button onclick="setAbsen('${item.id}', 'Hadir')" class="px-2.5 py-1 rounded-md text-xs font-bold transition border ${st === 'Hadir' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}">Hadir</button>
+                            <button onclick="setAbsen('${item.id}', 'Izin')" class="px-2.5 py-1 rounded-md text-xs font-bold transition border ${st === 'Izin' || st === 'Sakit' ? 'bg-amber-500 text-white border-amber-500 shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}">Izin</button>
+                            <button onclick="setAbsen('${item.id}', 'Alpa')" class="px-2.5 py-1 rounded-md text-xs font-bold transition border ${st === 'Alpa' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}">Alpa</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        };
+
+        window.setAbsen = function(idAnak, status) {
+            const tgl = inputTgl.value || todayStr;
+            let ket = "";
+
+            if (status === "Izin") {
+                ket = prompt("Masukkan alasan izin/sakit (opsional):", "") || "Izin";
+            }
+
+            const absRef = ref(db, `absensi_orangtua/${tgl}/${idAnak}`);
+            set(absRef, { status: status, keterangan: ket, waktu: new Date().toLocaleTimeString('id-ID') })
+            .then(() => {
+                dataAbsensiHariIni[idAnak] = { status: status, keterangan: ket };
+                renderTabel();
+                updateStatistik();
+            });
+        };
+
+        function updateStatistik() {
+            let h = 0, i = 0, a = 0;
+            Object.values(dataAbsensiHariIni).forEach(item => {
+                if (item.status === "Hadir") h++;
+                else if (item.status === "Izin" || item.status === "Sakit") i++;
+                else if (item.status === "Alpa") a++;
+            });
+
+            document.getElementById("statHadir").innerText = h;
+            document.getElementById("statIzin").innerText = i;
+            document.getElementById("statAlpa").innerText = a;
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
