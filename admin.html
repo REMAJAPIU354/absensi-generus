@@ -235,6 +235,7 @@
         window.resetAbsensiHariIni = function() {
             const today = new Date().toISOString().split('T')[0];
             if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi di Cloud untuk hari ini (${today})?`)) {
+                remove(ref(db, `absensi/${today}`));
                 remove(ref(db, `absensi/${today}_Sore`));
                 remove(ref(db, `absensi/${today}_Malam`));
                 alert(`Status absensi tanggal ${today} dibersihkan!`);
@@ -253,7 +254,7 @@
             }
         };
 
-        // EXCEL MULTI-SHEET GENERATOR
+        // EXCEL MULTI-SHEET GENERATOR (AMANTAN / ANTI-CRASH)
         const thinBorder = {
             top: { style: 'thin', color: { rgb: "CCCCCC" } },
             bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
@@ -262,6 +263,7 @@
         };
 
         function beriGarisDanFormatTabel(sheet) {
+            if (!sheet || !sheet['!ref']) return;
             const range = XLSX.utils.decode_range(sheet['!ref']);
             for (let R = range.s.r; R <= range.e.r; ++R) {
                 for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -284,7 +286,7 @@
                             sheet[cell_ref].s.alignment = { horizontal: "left", vertical: "center" };
                         }
 
-                        if (C === range.e.c || (sheet[cell_ref].f && sheet[cell_ref].f.includes("/"))) {
+                        if (sheet[cell_ref].f && sheet[cell_ref].f.includes("/")) {
                             sheet[cell_ref].z = "0%";
                             sheet[cell_ref].t = 'n';
                         }
@@ -300,179 +302,229 @@
         }
 
         window.downloadRekapMultiSheetExcel = async function() {
-            alert("Memproses data 3 Sheet Excel persis template... Mohon tunggu sebentar.");
+            try {
+                const snapshotMaster = await get(ref(db, 'master_generus'));
+                const masterData = snapshotMaster.val() || {};
+                const listGenerus = Object.values(masterData);
 
-            const snapshotMaster = await get(ref(db, 'master_generus'));
-            const masterData = snapshotMaster.val() || {};
-            const listGenerus = Object.values(masterData);
+                if (listGenerus.length === 0) {
+                    alert("Data master generus masih kosong!");
+                    return;
+                }
 
-            if (listGenerus.length === 0) {
-                alert("Data master generus masih kosong!");
-                return;
-            }
+                const snapshotAbsensi = await get(ref(db, 'absensi'));
+                const allAbsensi = snapshotAbsensi.val() || {};
+                const rawKeys = Object.keys(allAbsensi).sort();
 
-            const snapshotAbsensi = await get(ref(db, 'absensi'));
-            const allAbsensi = snapshotAbsensi.val() || {};
-            const rawKeys = Object.keys(allAbsensi).sort();
+                if (rawKeys.length === 0) {
+                    alert("Belum ada riwayat absensi yang pernah disimpan ke database!");
+                    return;
+                }
 
-            const wb = XLSX.utils.book_new();
+                const wb = XLSX.utils.book_new();
 
-            function getKodeAbsen(status) {
-                if (status === 'Hadir') return 'H';
-                if (status === 'Izin') return 'I';
-                if (status === 'Sakit') return 'S';
-                if (status === 'Alpa') return 'A';
-                return '';
-            }
+                function getKodeAbsen(status) {
+                    if (status === 'Hadir') return 'H';
+                    if (status === 'Izin') return 'I';
+                    if (status === 'Sakit') return 'S';
+                    if (status === 'Alpa') return 'A';
+                    return '';
+                }
 
-            // SHEET 1: Absensi APR - GPN PIU
-            const ws1Data = [];
-            const r1 = ["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"];
-            r1[9] = "Akumulasi Kehadiran";
-            r1[10] = "Jumlah Pertemuan";
-            r1[11] = "Presentase";
-            ws1Data.push(r1);
+                // SHEET 1: Absensi APR - GPN PIU
+                const ws1Data = [];
+                const r1 = ["Absensi APR - GPN PIU", "", "", "Tanggal Hadir"];
+                ws1Data.push(r1);
 
-            const r2 = ["No", "Nama Lengkap", "Kategori"];
-            const datesSheet1 = rawKeys.slice(0, 6);
-            datesSheet1.forEach((dKey, idx) => { r2[3 + idx] = dKey.split('_')[0]; });
-            ws1Data.push(r2);
+                const r2 = ["No", "Nama Lengkap", "Kategori"];
+                const datesSheet1 = rawKeys.slice(0, 6);
+                datesSheet1.forEach((dKey, idx) => { 
+                    r2[3 + idx] = dKey.replace('_Sore', '').replace('_Malam', ''); 
+                });
+                
+                // Set Header Kolom Total
+                const lastColIdx1 = 3 + datesSheet1.length;
+                r2[lastColIdx1] = "Akumulasi Kehadiran";
+                r2[lastColIdx1 + 1] = "Jumlah Pertemuan";
+                r2[lastColIdx1 + 2] = "Presentase";
+                ws1Data.push(r2);
 
-            let currentRowIdx = 3;
-            const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
+                let currentRowIdx = 3;
+                const katPIU = ["APR", "AR", "GPN-A", "GPN-B"];
 
-            katPIU.forEach(kat => {
-                const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
-                if (anggota.length > 0) {
-                    let no = 1;
-                    let startCatRow = currentRowIdx;
+                katPIU.forEach(kat => {
+                    const anggota = listGenerus.filter(g => (g.kategori || "ACR") === kat);
+                    if (anggota.length > 0) {
+                        let no = 1;
+                        let startCatRow = currentRowIdx;
 
-                    anggota.forEach(g => {
-                        let row = [no++, g.nama, kat];
-                        datesSheet1.forEach((dKey, dIdx) => {
-                            const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
-                            row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                        anggota.forEach(g => {
+                            let row = [no++, g.nama, kat];
+                            datesSheet1.forEach((dKey, dIdx) => {
+                                const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
+                                row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                            });
+
+                            // Formula huruf kolom
+                            const endColChar = String.fromCharCode(67 + datesSheet1.length);
+                            const totalHadirChar = String.fromCharCode(68 + datesSheet1.length);
+                            const totalPertemuanChar = String.fromCharCode(69 + datesSheet1.length);
+
+                            row[lastColIdx1] = { f: `COUNTIF(D${currentRowIdx}:${endColChar}${currentRowIdx}, "H")` };
+                            row[lastColIdx1 + 1] = datesSheet1.length;
+                            row[lastColIdx1 + 2] = { f: `${totalHadirChar}${currentRowIdx}/${totalPertemuanChar}${currentRowIdx}` };
+                            ws1Data.push(row);
+                            currentRowIdx++;
                         });
-                        row[9] = { f: `COUNTIF(D${currentRowIdx}:I${currentRowIdx}, "H")` };
-                        row[10] = datesSheet1.length;
-                        row[11] = { f: `J${currentRowIdx}/K${currentRowIdx}` };
-                        ws1Data.push(row);
+
+                        let endCatRow = currentRowIdx - 1;
+                        let totalRowIdx = currentRowIdx;
+                        let totalRow = ["Total", "", ""];
+
+                        const totalHadirChar = String.fromCharCode(68 + datesSheet1.length);
+                        const totalPertemuanChar = String.fromCharCode(69 + datesSheet1.length);
+
+                        totalRow[lastColIdx1] = { f: `SUM(${totalHadirChar}${startCatRow}:${totalHadirChar}${endCatRow})` };
+                        totalRow[lastColIdx1 + 1] = { f: `SUM(${totalPertemuanChar}${startCatRow}:${totalPertemuanChar}${endCatRow})` };
+                        totalRow[lastColIdx1 + 2] = { f: `${totalHadirChar}${totalRowIdx}/${totalPertemuanChar}${totalRowIdx}` };
+                        ws1Data.push(totalRow);
                         currentRowIdx++;
+                        ws1Data.push([]);
+                        currentRowIdx++;
+                    }
+                });
+
+                const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+                beriGarisDanFormatTabel(ws1);
+                XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
+
+                // SHEET 2: AR Intensif
+                const ws2Data = [];
+                const r2_1 = ["Absensi AR Intensif", "", "", "Tanggal Hadir"];
+                ws2Data.push(r2_1);
+
+                const datesARIntensif = rawKeys.filter(key => {
+                    const tglStr = key.split('_')[0];
+                    const d = new Date(tglStr);
+                    const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
+                    return dayName === "Senin" || dayName === "Rabu" || dayName === "Jumat";
+                }).slice(0, 6);
+
+                const effectiveDates2 = datesARIntensif.length > 0 ? datesARIntensif : datesSheet1;
+
+                const r2_2 = ["No", "Nama Lengkap", "Kategori"];
+                effectiveDates2.forEach((dKey, idx) => { 
+                    r2_2[3 + idx] = dKey.replace('_Sore', '').replace('_Malam', ''); 
+                });
+
+                const lastColIdx2 = 3 + effectiveDates2.length;
+                r2_2[lastColIdx2] = "Akumulasi Kehadiran";
+                r2_2[lastColIdx2 + 1] = "Jumlah Pertemuan";
+                r2_2[lastColIdx2 + 2] = "Presentase";
+                ws2Data.push(r2_2);
+
+                let rowIdx2 = 3;
+                const anggotaAR = listGenerus.filter(g => g.kategori === "AR Intensif" || g.kategori === "AR");
+                let startARRow = rowIdx2;
+                let noAR = 1;
+
+                anggotaAR.forEach(g => {
+                    let row = [noAR++, g.nama, "AR Intensif"];
+                    effectiveDates2.forEach((dKey, dIdx) => {
+                        const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
+                        row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
                     });
 
-                    let endCatRow = currentRowIdx - 1;
-                    let totalRowIdx = currentRowIdx;
-                    let totalRow = ["Total", "", ""];
-                    totalRow[9] = { f: `SUM(J${startCatRow}:J${endCatRow})` };
-                    totalRow[10] = { f: `SUM(K${startCatRow}:K${endCatRow})` };
-                    totalRow[11] = { f: `J${totalRowIdx}/K${totalRowIdx}` };
-                    ws1Data.push(totalRow);
-                    currentRowIdx++;
-                    ws1Data.push([]);
-                    currentRowIdx++;
-                }
-            });
+                    const endColChar = String.fromCharCode(67 + effectiveDates2.length);
+                    const totalHadirChar = String.fromCharCode(68 + effectiveDates2.length);
+                    const totalPertemuanChar = String.fromCharCode(69 + effectiveDates2.length);
 
-            const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-            beriGarisDanFormatTabel(ws1);
-            XLSX.utils.book_append_sheet(wb, ws1, "Absensi APR - GPN PIU");
-
-            // SHEET 2: Absensi AR Intensif (Hanya menyaring tanggal Senin, Rabu, atau Jumat)
-            const ws2Data = [];
-            const r2_1 = ["Absensi AR Intensif", "", "", "Tanggal Hadir"];
-            r2_1[9] = "Akumulasi Kehadiran";
-            r2_1[10] = "Jumlah Pertemuan";
-            r2_1[11] = "Presentase";
-            ws2Data.push(r2_1);
-
-            const datesARIntensif = rawKeys.filter(key => {
-                const tglStr = key.split('_')[0];
-                const d = new Date(tglStr);
-                const dayName = d.toLocaleDateString('id-ID', { weekday: 'long' });
-                return dayName === "Senin" || dayName === "Rabu" || dayName === "Jumat";
-            }).slice(0, 6);
-
-            const r2_2 = ["No", "Nama Lengkap", "Kategori"];
-            datesARIntensif.forEach((dKey, idx) => { r2_2[3 + idx] = dKey.split('_')[0]; });
-            ws2Data.push(r2_2);
-
-            let rowIdx2 = 3;
-            const anggotaAR = listGenerus.filter(g => g.kategori === "AR Intensif" || g.kategori === "AR");
-            let startARRow = rowIdx2;
-            let noAR = 1;
-
-            anggotaAR.forEach(g => {
-                let row = [noAR++, g.nama, "AR Intensif"];
-                datesARIntensif.forEach((dKey, dIdx) => {
-                    const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
-                    row[3 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                    row[lastColIdx2] = { f: `COUNTIF(D${rowIdx2}:${endColChar}${rowIdx2}, "H")` };
+                    row[lastColIdx2 + 1] = effectiveDates2.length;
+                    row[lastColIdx2 + 2] = { f: `${totalHadirChar}${rowIdx2}/${totalPertemuanChar}${rowIdx2}` };
+                    ws2Data.push(row);
+                    rowIdx2++;
                 });
-                row[9] = { f: `COUNTIF(D${rowIdx2}:I${rowIdx2}, "H")` };
-                row[10] = datesARIntensif.length;
-                row[11] = { f: `J${rowIdx2}/K${rowIdx2}` };
-                ws2Data.push(row);
-                rowIdx2++;
-            });
 
-            let endARRow = rowIdx2 - 1;
-            let totalARRowIdx = rowIdx2;
-            let totalRowAR = ["Total Akumulasi Hadir & Presentase", "", ""];
-            totalRowAR[9] = { f: `SUM(J${startARRow}:J${endARRow})` };
-            totalRowAR[10] = { f: `SUM(K${startARRow}:K${endARRow})` };
-            totalRowAR[11] = { f: `J${totalARRowIdx}/K${totalARRowIdx}` };
-            ws2Data.push(totalRowAR);
+                let endARRow = rowIdx2 - 1;
+                let totalARRowIdx = rowIdx2;
+                let totalRowAR = ["Total Akumulasi Hadir & Presentase", "", ""];
 
-            const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-            beriGarisDanFormatTabel(ws2);
-            XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
+                const totalHadirChar2 = String.fromCharCode(68 + effectiveDates2.length);
+                const totalPertemuanChar2 = String.fromCharCode(69 + effectiveDates2.length);
 
-            // SHEET 3: Absensi ACR (Sesi Sore & Malam)
-            const ws3Data = [];
-            const r3_1 = ["No", "Nama Lengkap", "Tanggal & Sesi"];
-            r3_1[10] = "Akumulasi Hadir";
-            r3_1[11] = "Jumlah Pertemuan";
-            r3_1[12] = "Presentase";
-            ws3Data.push(r3_1);
+                totalRowAR[lastColIdx2] = { f: `SUM(${totalHadirChar2}${startARRow}:${totalHadirChar2}${endARRow})` };
+                totalRowAR[lastColIdx2 + 1] = { f: `SUM(${totalPertemuanChar2}${startARRow}:${totalPertemuanChar2}${endARRow})` };
+                totalRowAR[lastColIdx2 + 2] = { f: `${totalHadirChar2}${totalARRowIdx}/${totalPertemuanChar2}${totalARRowIdx}` };
+                ws2Data.push(totalRowAR);
 
-            const datesACR = rawKeys.slice(0, 8);
-            const r3_2 = ["", ""];
-            datesACR.forEach((dKey, idx) => { 
-                const parts = dKey.split('_');
-                r3_2[2 + idx] = `${parts[0]} (${parts[1] || 'Sore'})`; 
-            });
-            ws3Data.push(r3_2);
+                const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+                beriGarisDanFormatTabel(ws2);
+                XLSX.utils.book_append_sheet(wb, ws2, "Absensi AR Intensif");
 
-            let rowIdx3 = 3;
-            const anggotaACR = listGenerus.filter(g => (g.kategori || "ACR") === "ACR");
-            let startACRRow = rowIdx3;
-            let noACR = 1;
+                // SHEET 3: ACR
+                const ws3Data = [];
+                const r3_1 = ["No", "Nama Lengkap", "Tanggal & Sesi"];
+                ws3Data.push(r3_1);
 
-            anggotaACR.forEach(g => {
-                let row = [noACR++, g.nama];
-                datesACR.forEach((dKey, dIdx) => {
-                    const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
-                    row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                const datesACR = rawKeys.slice(0, 8);
+                const r3_2 = ["", ""];
+                datesACR.forEach((dKey, idx) => { 
+                    const parts = dKey.split('_');
+                    r3_2[2 + idx] = parts[1] ? `${parts[0]} (${parts[1]})` : parts[0]; 
                 });
-                row[10] = { f: `COUNTIF(C${rowIdx3}:J${rowIdx3}, "H")` };
-                row[11] = datesACR.length;
-                row[12] = { f: `K${rowIdx3}/L${rowIdx3}` };
-                ws3Data.push(row);
-                rowIdx3++;
-            });
 
-            let endACRRow = rowIdx3 - 1;
-            let totalACRRowIdx = rowIdx3;
-            let totalRowACR = ["Total Akumulasi Hadir & Presentase", ""];
-            totalRowACR[10] = { f: `SUM(K${startACRRow}:K${endACRRow})` };
-            totalRowACR[11] = { f: `SUM(L${startACRRow}:L${endACRRow})` };
-            totalRowACR[12] = { f: `K${totalACRRowIdx}/L${totalACRRowIdx}` };
-            ws3Data.push(totalRowACR);
+                const lastColIdx3 = 2 + datesACR.length;
+                r3_2[lastColIdx3] = "Akumulasi Hadir";
+                r3_2[lastColIdx3 + 1] = "Jumlah Pertemuan";
+                r3_2[lastColIdx3 + 2] = "Presentase";
+                ws3Data.push(r3_2);
 
-            const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
-            beriGarisDanFormatTabel(ws3);
-            XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
+                let rowIdx3 = 3;
+                const anggotaACR = listGenerus.filter(g => (g.kategori || "ACR") === "ACR");
+                let startACRRow = rowIdx3;
+                let noACR = 1;
 
-            XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
+                anggotaACR.forEach(g => {
+                    let row = [noACR++, g.nama];
+                    datesACR.forEach((dKey, dIdx) => {
+                        const abs = allAbsensi[dKey] && allAbsensi[dKey][g.id];
+                        row[2 + dIdx] = abs ? getKodeAbsen(abs.status) : "";
+                    });
+
+                    const endColChar = String.fromCharCode(66 + datesACR.length);
+                    const totalHadirChar = String.fromCharCode(67 + datesACR.length);
+                    const totalPertemuanChar = String.fromCharCode(68 + datesACR.length);
+
+                    row[lastColIdx3] = { f: `COUNTIF(C${rowIdx3}:${endColChar}${rowIdx3}, "H")` };
+                    row[lastColIdx3 + 1] = datesACR.length;
+                    row[lastColIdx3 + 2] = { f: `${totalHadirChar}${rowIdx3}/${totalPertemuanChar}${rowIdx3}` };
+                    ws3Data.push(row);
+                    rowIdx3++;
+                });
+
+                let endACRRow = rowIdx3 - 1;
+                let totalACRRowIdx = rowIdx3;
+                let totalRowACR = ["Total Akumulasi Hadir & Presentase", ""];
+
+                const totalHadirChar3 = String.fromCharCode(67 + datesACR.length);
+                const totalPertemuanChar3 = String.fromCharCode(68 + datesACR.length);
+
+                totalRowACR[lastColIdx3] = { f: `SUM(${totalHadirChar3}${startACRRow}:${totalHadirChar3}${endACRRow})` };
+                totalRowACR[lastColIdx3 + 1] = { f: `SUM(${totalPertemuanChar3}${startACRRow}:${totalPertemuanChar3}${endACRRow})` };
+                totalRowACR[lastColIdx3 + 2] = { f: `${totalHadirChar3}${totalACRRowIdx}/${totalPertemuanChar3}${totalACRRowIdx}` };
+                ws3Data.push(totalRowACR);
+
+                const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+                beriGarisDanFormatTabel(ws3);
+                XLSX.utils.book_append_sheet(wb, ws3, "Absensi ACR");
+
+                XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
+                alert("✅ BERHASIL! File Rekap Excel 3 Sheet terdownload.");
+            } catch (err) {
+                alert("❌ Terjadi kesalahan: " + err.message);
+                console.error(err);
+            }
         };
     </script>
 </body>
