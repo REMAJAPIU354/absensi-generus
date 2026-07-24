@@ -43,18 +43,29 @@
 
         <div class="p-4 sm:p-6 space-y-6">
 
-            <!-- PANEL TANGGAL, FILTER, & JURNAL MATERI -->
+            <!-- PANEL TANGGAL, SESI, FILTER, & JURNAL MATERI -->
             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2.5">
-                        <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider">📅 Tanggal Input:</label>
-                        <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <div class="flex items-center gap-1.5">
+                            <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider">📅 Tanggal:</label>
+                            <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        </div>
+
+                        <!-- Pilih Sesi (Khusus ACR) -->
+                        <div id="boxSesiPengajian" class="flex items-center gap-1.5">
+                            <label for="selectSesi" class="text-xs font-bold text-slate-600 uppercase tracking-wider">⏰ Sesi:</label>
+                            <select id="selectSesi" onchange="gantiSesi()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                <option value="Sore">🌅 Sesi 1 (Sore)</option>
+                                <option value="Malam">🌙 Sesi 2 (Malam)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Filter Kategori -->
                     <div class="no-print flex items-center gap-2">
                         <label for="filterKategori" class="text-xs font-bold text-slate-600 uppercase tracking-wider">🔍 Filter:</label>
-                        <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                             <option value="Semua">Semua Kategori</option>
                             <option value="ACR">ACR (6-12 thn)</option>
                             <option value="APR">APR (13-15 thn)</option>
@@ -116,10 +127,14 @@
                 </div>
             </div>
 
-            <!-- TOMBOL UTAMA SIMPAN ABSENSI -->
+            <!-- TOMBOL UTAMA SIMPAN ABSENSI & CETAK PDF -->
             <div class="no-print pt-2 space-y-3">
                 <button onclick="simpanAbsensiKeCloud()" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition text-base flex items-center justify-center gap-2">
                     💾 SIMPAN ABSENSI HARI INI
+                </button>
+
+                <button onclick="cetakLaporan()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                    🖨️ Cetak / Simpan PDF
                 </button>
             </div>
 
@@ -130,12 +145,16 @@
                         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
                             📋 Tabel Riwayat / Cek Absensi Tanggal Lain
                         </h3>
-                        <p class="text-xs text-slate-500">Pilih tanggal untuk melihat daftar kehadiran yang pernah disimpan sebelumnya.</p>
+                        <p class="text-xs text-slate-500">Pilih tanggal dan sesi untuk melihat daftar kehadiran yang pernah disimpan sebelumnya.</p>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <input type="date" id="inputTanggalRiwayat" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                        <button onclick="muatTabelRiwayat()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm flex items-center gap-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input type="date" id="inputTanggalRiwayat" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                        <select id="selectSesiRiwayat" class="border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                            <option value="Sore">🌅 Sore</option>
+                            <option value="Malam">🌙 Malam</option>
+                        </select>
+                        <button onclick="muatTabelRiwayat()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1">
                             🔍 Tampilkan
                         </button>
                     </div>
@@ -191,17 +210,24 @@
 
         window.daftarGenerus = [];
         window.tanggalAktif = "";
+        window.sesiAktif = "Sore";
 
         function initTanggal() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("inputTanggal").value = today;
             document.getElementById("inputTanggalRiwayat").value = today;
             window.tanggalAktif = today;
+            window.sesiAktif = document.getElementById("selectSesi").value;
             listenMasterCloud();
         }
 
         window.gantiTanggal = function() {
             window.tanggalAktif = document.getElementById("inputTanggal").value;
+            window.resetFormLokal();
+        };
+
+        window.gantiSesi = function() {
+            window.sesiAktif = document.getElementById("selectSesi").value;
             window.resetFormLokal();
         };
 
@@ -223,7 +249,9 @@
                 window.tampilkanGenerus();
             });
 
-            const materiRef = ref(db, 'materi/' + window.tanggalAktif);
+            // Listen Materi per Tanggal & Sesi
+            const materiKey = `${window.tanggalAktif}_${window.sesiAktif}`;
+            const materiRef = ref(db, 'materi/' + materiKey);
             onValue(materiRef, (materiSnap) => {
                 document.getElementById("inputMateri").value = materiSnap.val() || "";
             });
@@ -232,7 +260,16 @@
         window.tampilkanGenerus = function() {
             const tbody = document.getElementById("tabelGenerus");
             const filterKat = document.getElementById("filterKategori").value;
+            const boxSesi = document.getElementById("boxSesiPengajian");
             tbody.innerHTML = "";
+
+            // Tampilkan pilihan sesi hanya jika filter ACR atau Semua
+            if (filterKat === "ACR" || filterKat === "Semua") {
+                boxSesi.classList.remove("hidden");
+            } else {
+                boxSesi.classList.add("hidden");
+                window.sesiAktif = "Malam"; // Default malam untuk non-ACR
+            }
 
             if (!window.daftarGenerus || window.daftarGenerus.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 text-xs">Belum ada data nama generus di database.</td></tr>`;
@@ -303,7 +340,7 @@
                 return;
             }
 
-            if (!confirm(`💾 Simpan data absensi ${generusDiisi.length} generus untuk tanggal (${window.tanggalAktif})?`)) {
+            if (!confirm(`💾 Simpan data absensi ${generusDiisi.length} generus untuk tanggal (${window.tanggalAktif}) - Sesi ${window.sesiAktif}?`)) {
                 return;
             }
 
@@ -312,17 +349,19 @@
             const menit = String(now.getMinutes()).padStart(2, '0');
             const waktuFormat = `${jam}:${menit} WIB`;
 
+            const materiKey = `${window.tanggalAktif}_${window.sesiAktif}`;
             const materi = document.getElementById("inputMateri").value;
             if (materi) {
-                set(ref(db, 'materi/' + window.tanggalAktif), materi);
+                set(ref(db, 'materi/' + materiKey), materi);
             }
 
             for (const g of generusDiisi) {
-                await set(ref(db, `absensi/${window.tanggalAktif}/${g.id}`), {
+                await set(ref(db, `absensi/${window.tanggalAktif}_${window.sesiAktif}/${g.id}`), {
                     id: g.id,
                     nama: g.nama,
                     kategori: g.kategori,
                     status: g.status,
+                    sesi: window.sesiAktif,
                     waktu: waktuFormat,
                     catatan: g.catatan || ""
                 });
@@ -342,6 +381,7 @@
 
         window.muatTabelRiwayat = async function() {
             const tglPilih = document.getElementById("inputTanggalRiwayat").value;
+            const sesiPilih = document.getElementById("selectSesiRiwayat").value;
             const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
             const infoMateriDiv = document.getElementById("infoMateriRiwayat");
             const teksMateriSpan = document.getElementById("teksMateriRiwayat");
@@ -353,10 +393,12 @@
 
             tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs">Memuat data riwayat...</td></tr>`;
 
-            const snapshotAbsen = await get(ref(db, `absensi/${tglPilih}`));
+            const pathKey = `${tglPilih}_${sesiPilih}`;
+
+            const snapshotAbsen = await get(ref(db, `absensi/${pathKey}`));
             const dataAbsen = snapshotAbsen.val() || {};
 
-            const snapshotMateri = await get(ref(db, `materi/${tglPilih}`));
+            const snapshotMateri = await get(ref(db, `materi/${pathKey}`));
             const materiTeks = snapshotMateri.val() || "Tidak ada catatan materi";
 
             infoMateriDiv.classList.remove("hidden");
@@ -365,7 +407,7 @@
             const listAbsenArray = Object.values(dataAbsen);
 
             if (listAbsenArray.length === 0) {
-                tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 font-medium text-xs">Belum ada data absensi yang disimpan untuk tanggal ${tglPilih}.</td></tr>`;
+                tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 font-medium text-xs">Belum ada data absensi untuk tanggal ${tglPilih} (Sesi ${sesiPilih}).</td></tr>`;
                 return;
             }
 
@@ -391,6 +433,8 @@
                 `;
             });
         };
+
+        window.cetakLaporan = function() { window.print(); };
 
         initTanggal();
     </script>
