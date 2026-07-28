@@ -3,187 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Ngaji Generus</title>
+    <title>Absensi Generus PIU</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        @media print {
-            .no-print { display: none !important; }
-            body { background-color: white !important; padding: 0 !important; }
-            .card-container { box-shadow: none !important; max-width: 100% !important; padding: 0 !important; border: none !important; }
-            input, select, textarea { border: none !important; background: transparent !important; }
-        }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
-<body class="bg-slate-100/80 min-h-screen p-2 sm:p-4 md:p-8 font-sans antialiased text-slate-800">
+<body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
 
-    <div class="card-container max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
+    <div class="max-w-md sm:max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         
         <!-- HEADER APLIKASI -->
-        <div class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 p-5 sm:p-6 text-white relative">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-100 border border-white/20">📱 Absensi Pengurus</span>
-                    <span class="text-xs font-medium px-2.5 py-0.5 rounded-full text-emerald-200 bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync
-                    </span>
-                </div>
-                
-                <a href="admin.html" class="no-print bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition border border-white/20 backdrop-blur-md flex items-center gap-1.5 shadow-sm">
-                    ⚙️ Ke Panel Admin
-                </a>
-            </div>
-
-            <div class="text-center space-y-1">
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Absensi Ngaji Generus</h1>
-                <p class="text-emerald-100/80 text-xs sm:text-sm font-light">Pencatatan Kehadiran & Jurnal Pengajian Realtime</p>
-            </div>
+        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-5 text-white text-center relative">
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-wide">📋 ABSENSI GENERUS PIU</h1>
+            <p class="text-emerald-100 text-xs mt-1">Majelis Ta'lim & Pengajian Generus</p>
+            <a href="admin.html" class="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg border border-white/20 transition">
+                ⚙️ Admin
+            </a>
         </div>
 
         <div class="p-4 sm:p-6 space-y-6">
 
-            <!-- PANEL TANGGAL, SESI, FILTER, & JURNAL MATERI -->
-            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                    
-                    <!-- 1. Filter Kategori -->
-                    <div class="no-print sm:col-span-5 flex items-center gap-2">
-                        <label for="filterKategori" class="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">🔍 Filter:</label>
-                        <select id="filterKategori" onchange="sesuaikanTampilanSesi()" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                            <option value="ACR" selected>ACR (6-12 thn)</option>
-                            <option value="APR">APR (13-15 thn)</option>
-                            <option value="AR">AR (16-18 thn)</option>
-                            <option value="AR Intensif">AR Intensif</option>
-                            <option value="GPN-A">GPN-A (19-22 thn)</option>
-                            <option value="GPN-B">GPN-B (23-30+ thn)</option>
-                            <option value="Semua">Semua Kategori</option>
-                        </select>
-                    </div>
-
-                    <!-- 2. Tanggal Input -->
-                    <div class="sm:col-span-4 flex items-center gap-2">
-                        <label for="inputTanggal" class="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">📅 Tanggal:</label>
-                        <input type="date" id="inputTanggal" onchange="gantiTanggalAtauSesi()" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                    </div>
-
-                    <!-- 3. Pilihan Sesi Pengajian (MUNCUL HANYA SAAT KATEGORI ACR TERPILIH) -->
-                    <div id="boxSelectSesi" class="sm:col-span-3 flex items-center gap-2">
-                        <label for="selectSesi" class="text-xs font-bold text-amber-800 uppercase tracking-wider whitespace-nowrap">⏰ Sesi ACR:</label>
-                        <select id="selectSesi" onchange="gantiTanggalAtauSesi()" class="w-full border border-amber-300 rounded-lg px-2 py-1.5 text-xs font-bold text-amber-900 bg-amber-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="Sore">🌅 Sore</option>
-                            <option value="Malam" selected>🌙 Malam</option>
-                        </select>
-                    </div>
-
-                </div>
-
-                <!-- Jurnal Materi Ngaji -->
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-slate-200">
-                    <label for="inputMateri" class="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">📖 Materi Ngaji:</label>
-                    <input type="text" id="inputMateri" placeholder="Contoh: Surat Al-Baqarah 1-10 / Jilid 2 Hal 12..." class="flex-1 border border-slate-300 rounded-lg px-3.5 py-1.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                </div>
-            </div>
-
-            <!-- KARTU REKAP RINGKASAN KEHADIRAN (CUMA 3 STATUS: HADIR, IZIN, ALPA) -->
-            <div class="grid grid-cols-3 gap-3">
-                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200/80 rounded-xl p-3.5 text-center shadow-sm">
-                    <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Hadir</div>
-                    <div id="jumlahHadir" class="text-2xl font-extrabold text-emerald-800 mt-0.5">0</div>
-                </div>
-                <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200/80 rounded-xl p-3.5 text-center shadow-sm">
-                    <div class="text-xs font-bold text-amber-700 uppercase tracking-wider">Izin</div>
-                    <div id="jumlahIzin" class="text-2xl font-extrabold text-amber-800 mt-0.5">0</div>
-                </div>
-                <div class="bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200/80 rounded-xl p-3.5 text-center shadow-sm">
-                    <div class="text-xs font-bold text-red-700 uppercase tracking-wider">Alpa</div>
-                    <div id="jumlahAlpa" class="text-2xl font-extrabold text-red-800 mt-0.5">0</div>
-                </div>
-            </div>
-
-            <!-- TABEL FORM INPUT UTAMA -->
-            <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                <div class="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-700 flex justify-between items-center">
-                    <span>Form Pengisian Absensi</span>
-                    <span class="text-emerald-700 font-medium">Klik Simpan di bawah setelah selesai</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold text-xs uppercase tracking-wider">
-                                <th class="p-3.5 text-center w-12">No</th>
-                                <th class="p-3.5">Nama & Kategori</th>
-                                <th class="p-3.5 text-center">Pilihan Status Absensi</th>
-                                <th class="p-3.5">Catatan / Alasan Izin</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelGenerus" class="divide-y divide-slate-100 bg-white">
-                            <!-- Data dimasukkan via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TOMBOL UTAMA SIMPAN ABSENSI -->
-            <div class="no-print pt-2 space-y-3">
-                <button onclick="simpanAbsensiKeCloud()" class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl transition text-base flex items-center justify-center gap-2">
-                    💾 SIMPAN ABSENSI HARI INI
-                </button>
-            </div>
-
-            <!-- FITUR RIWAYAT ABSENSI & MATERI -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 mt-8">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <!-- FILTER & PILIHAN SESI ABSENSI -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                            📋 Tabel Riwayat / Cek Absensi Tanggal Lain
-                        </h3>
-                        <p class="text-xs text-slate-500">Pilih tanggal dan sesi untuk melihat daftar kehadiran & materi ngaji yang pernah disimpan.</p>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <input type="date" id="inputTanggalRiwayat" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
-                        <select id="selectSesiRiwayat" class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-800 bg-amber-50/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
-                            <option value="Malam" selected>🌙 Sesi Malam / Umum</option>
-                            <option value="Sore">🌅 Sesi Sore (Khusus ACR)</option>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
+                        <select id="filterKategori" onchange="muatDaftarAbsen()" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="ALL">Semua Kategori</option>
+                            <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
+                            <option value="APR">APR (Pra Remaja 13-15 thn)</option>
+                            <option value="AR">AR (Remaja 16-18 thn)</option>
+                            <option value="AR Intensif">AR Intensif</option>
+                            <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
+                            <option value="GPN-B">GPN-B (Pra Nikah B 23-30+ thn)</option>
                         </select>
-                        <button onclick="muatTabelRiwayat()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1">
-                            🔍 Tampilkan
-                        </button>
+                    </div>
+
+                    <div id="boxSesiACR">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian:</label>
+                        <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Malam">🌙 Sesi Malam / Umum</option>
+                            <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- INFO MATERI DI TANGGAL TERPILIH -->
-                <div id="infoMateriRiwayat" class="text-xs font-medium text-slate-600 bg-emerald-50/80 border border-emerald-200 rounded-lg p-3 hidden">
-                    📖 <span class="font-bold text-emerald-900 uppercase">Materi Ngaji Pada Tanggal Tersebut:</span> 
-                    <div id="teksMateriRiwayat" class="font-semibold text-slate-800 mt-1 text-sm bg-white p-2 rounded border border-emerald-100"></div>
+                <!-- CATATAN MATERI NG AJI -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
+                    <input type="text" id="inputMateriPengajian" placeholder="Contoh: Jilid 2 Hal 15 / Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+            </div>
+
+            <!-- DAFTAR NAMA ABSENSI HARIAN -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Daftar Kehadiran Santri</h2>
+                    <span id="labelTanggalHariIni" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"></span>
                 </div>
 
-                <!-- TABEL RIWAYAT -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
+                <div id="containerDaftarAbsen" class="space-y-2.5">
+                    <!-- Direset via JS -->
+                </div>
+            </div>
+
+            <!-- TOMBOL SIMPAN -->
+            <button onclick="simpanAbsensiHariIni()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm tracking-wide">
+                💾 SIMPAN ABSENSI HARI INI
+            </button>
+
+            <hr class="border-slate-200 my-6">
+
+            <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN (RESPONSIF MOBILE) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        📋 Cek Riwayat Absensi Tanggal Lain
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
+                </div>
+
+                <!-- FILTER TANGGAL & SESI (RESPONSIF HP) -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <input type="date" id="inputTanggalRiwayat" class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <select id="pilihanSesiRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="Malam">🌙 Sesi Malam / Umum</option>
+                        <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
+                    </select>
+                    <button onclick="tampilkanRiwayatAbsen()" class="sm:col-span-3 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm w-full">
+                        🔍 Tampilkan
+                    </button>
+                </div>
+
+                <!-- KETERANGAN MATERI YANG TERSIMPAN -->
+                <div id="boxInfoMateriRiwayat" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900">
+                    <span class="font-bold">📖 Materi Pengajian Tersimpan:</span>
+                    <p id="teksMateriRiwayat" class="font-semibold text-emerald-800 mt-0.5">-</p>
+                </div>
+
+                <!-- KONTEN HASIL RIWAYAT -->
+                <div id="boxHasilRiwayat">
+                    <!-- Tampilan HP (Mobile List Cards) -->
+                    <div id="listRiwayatMobile" class="block sm:hidden space-y-2">
+                        <p class="text-center text-xs text-slate-400 py-4">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</p>
+                    </div>
+
+                    <!-- Tampilan Laptop/Tablet (Desktop Table) -->
+                    <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-lg bg-white">
+                        <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold text-xs uppercase tracking-wider">
-                                    <th class="p-3 text-center w-12">No</th>
-                                    <th class="p-3">Nama Generus</th>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold uppercase">
+                                    <th class="p-3 text-center w-10">No</th>
+                                    <th class="p-3">Nama Lengkap</th>
                                     <th class="p-3 text-center">Kategori</th>
                                     <th class="p-3 text-center">Status Kehadiran</th>
                                     <th class="p-3 text-center">Waktu Simpan</th>
                                     <th class="p-3">Catatan / Alasan Izin</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabelRiwayatBody" class="divide-y divide-slate-100">
+                            <tbody id="tabelRiwayatAbsenDesktop" class="divide-y divide-slate-100">
                                 <tr>
-                                    <td colspan="6" class="p-6 text-center text-slate-400 text-xs">Silakan pilih tanggal & sesi di atas lalu klik "Tampilkan".</td>
+                                    <td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -207,263 +155,203 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.daftarGenerus = [];
-        window.tanggalAktif = "";
-        window.sesiAktif = "Malam";
+        let dataMasterGenerus = [];
+        let statusAbsenTemp = {}; 
+        let catatanIzinTemp = {};
 
-        function initTanggal() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById("inputTanggal").value = today;
-            document.getElementById("inputTanggalRiwayat").value = today;
-            window.tanggalAktif = today;
-            window.sesuaikanTampilanSesi();
-            listenMasterCloud();
-        }
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("labelTanggalHariIni").innerText = today;
+        document.getElementById("inputTanggalRiwayat").value = today;
 
-        window.sesuaikanTampilanSesi = function() {
+        // Ambil Data Master Generus
+        onValue(ref(db, 'master'), (snap) => {
+            const data = snap.val() || {};
+            dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
+            muatDaftarAbsen();
+        });
+
+        // Tampilkan Form Absensi Harian
+        window.muatDaftarAbsen = function() {
             const filterKat = document.getElementById("filterKategori").value;
-            const boxSesi = document.getElementById("boxSelectSesi");
+            const container = document.getElementById("containerDaftarAbsen");
+            container.innerHTML = "";
 
-            if (filterKat === "ACR") {
-                boxSesi.classList.remove("hidden");
-                window.sesiAktif = document.getElementById("selectSesi").value;
-            } else {
-                boxSesi.classList.add("hidden");
-                window.sesiAktif = "Malam"; 
+            let listTampil = dataMasterGenerus;
+            if (filterKat !== "ALL") {
+                listTampil = dataMasterGenerus.filter(g => g.kategori === filterKat);
             }
 
-            window.tampilkanGenerus();
-            listenMateriCloud();
-        };
-
-        window.gantiTanggalAtauSesi = function() {
-            window.tanggalAktif = document.getElementById("inputTanggal").value;
-            const filterKat = document.getElementById("filterKategori").value;
-            if (filterKat === "ACR") {
-                window.sesiAktif = document.getElementById("selectSesi").value;
-            } else {
-                window.sesiAktif = "Malam";
-            }
-            window.resetFormLokal();
-            listenMateriCloud();
-        };
-
-        function getStorageKey() {
-            return `${window.tanggalAktif}_${window.sesiAktif}`;
-        }
-
-        function listenMasterCloud() {
-            const masterRef = ref(db, 'master');
-            onValue(masterRef, (masterSnap) => {
-                const masterData = masterSnap.val() || {};
-                
-                window.daftarGenerus = Object.values(masterData).filter(item => item && typeof item === 'object').map((item) => {
-                    return {
-                        id: item.id,
-                        nama: item.nama,
-                        kategori: item.kategori || "ACR",
-                        status: "",
-                        catatan: ""
-                    };
-                });
-
-                window.tampilkanGenerus();
-            });
-
-            listenMateriCloud();
-        }
-
-        function listenMateriCloud() {
-            const key = getStorageKey();
-            const materiRef = ref(db, `absensi/${key}/_materi`);
-            onValue(materiRef, (materiSnap) => {
-                document.getElementById("inputMateri").value = materiSnap.val() || "";
-            });
-        }
-
-        window.tampilkanGenerus = function() {
-            const tbody = document.getElementById("tabelGenerus");
-            const filterKat = document.getElementById("filterKategori").value;
-            tbody.innerHTML = "";
-
-            let nomor = 1;
-            window.daftarGenerus.forEach((generus) => {
-                if (filterKat !== "Semua" && generus.kategori !== filterKat) return;
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="p-3.5 text-center font-semibold text-slate-400 text-xs">${nomor++}</td>
-                        <td class="p-3.5">
-                            <div class="font-semibold text-slate-800">${generus.nama}</div>
-                            <span class="inline-block bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 mt-1">${generus.kategori}</span>
-                        </td>
-                        <td class="p-3.5 text-center">
-                            <div class="no-print flex justify-center gap-1.5">
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-3 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
-                            </div>
-                        </td>
-                        <td class="p-3.5">
-                            <input type="text" id="catatan_${generus.id}" value="${generus.catatan || ''}" onchange="updateCatatanLokal('${generus.id}', this.value)" placeholder="${generus.status === 'Izin' ? 'Wajib isi alasan izin...' : 'Tambah catatan...'}" class="w-full border ${generus.status === 'Izin' && !generus.catatan ? 'border-amber-400 bg-amber-50/50 font-medium' : 'border-slate-200 bg-slate-50/50'} rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white transition">
-                        </td>
-                    </tr>
-                `;
-            });
-
-            updateRekapDraft();
-        };
-
-        function updateRekapDraft() {
-            document.getElementById("jumlahHadir").innerText = window.daftarGenerus.filter(g => g.status === 'Hadir').length;
-            document.getElementById("jumlahIzin").innerText = window.daftarGenerus.filter(g => g.status === 'Izin').length;
-            document.getElementById("jumlahAlpa").innerText = window.daftarGenerus.filter(g => g.status === 'Alpa').length;
-        }
-
-        // LOGIKA BARU PILIH STATUS (IZIN OTOMATIS MINTA ALASAN/CATATAN)
-        window.pilihStatusLokal = function(id, statusPilihan) {
-            const generus = window.daftarGenerus.find(g => g.id === id);
-            if(!generus) return;
-
-            if (generus.status === statusPilihan) {
-                // Unselect status jika diklik ulang
-                generus.status = "";
-                generus.catatan = "";
-            } else {
-                if (statusPilihan === 'Izin') {
-                    const alasan = prompt(`✏️ Masukkan Alasan Izin untuk ${generus.nama}:`, generus.catatan || "");
-                    if (alasan === null || alasan.trim() === "") {
-                        alert("⚠️ Alasan izin wajib diisi! Status izin dibatalkan.");
-                        return; // Batal izin kalau tidak diisi
-                    }
-                    generus.catatan = alasan.trim();
-                } else if (statusPilihan === 'Hadir' || statusPilihan === 'Alpa') {
-                    // Jika pindah ke Hadir/Alpa, hapus catatan izin lama
-                    if (generus.status === 'Izin') {
-                        generus.catatan = "";
-                    }
-                }
-                generus.status = statusPilihan;
-            }
-            window.tampilkanGenerus();
-        };
-
-        window.updateCatatanLokal = function(id, teks) {
-            const generus = window.daftarGenerus.find(g => g.id === id);
-            if(generus) {
-                generus.catatan = teks;
-            }
-        };
-
-        window.simpanAbsensiKeCloud = async function() {
-            const generusDiisi = window.daftarGenerus.filter(g => g.status !== "");
-
-            if (generusDiisi.length === 0) {
-                alert("Belum ada status absensi yang dipilih!");
+            if (listTampil.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-300">Tidak ada generus pada kategori ini.</div>`;
                 return;
             }
 
-            // Cek jika ada yang Izin tapi belum punya alasan
-            const izinTanpaAlasan = generusDiisi.find(g => g.status === 'Izin' && (!g.catatan || g.catatan.trim() === ""));
-            if (izinTanpaAlasan) {
-                alert(`⚠️ ${izinTanpaAlasan.nama} berstatus IZIN tetapi belum mengisi alasan! Silakan isi alasan terlebih dahulu.`);
-                return;
-            }
-
-            const keyStorage = getStorageKey();
-            const filterKat = document.getElementById("filterKategori").value;
-            const pesanSesi = filterKat === "ACR" ? ` Sesi (${window.sesiAktif})` : "";
-
-            if (!confirm(`💾 Simpan absensi ${generusDiisi.length} generus untuk Tanggal (${window.tanggalAktif})${pesanSesi}?`)) {
-                return;
-            }
-
-            const now = new Date();
-            const jam = String(now.getHours()).padStart(2, '0');
-            const menit = String(now.getMinutes()).padStart(2, '0');
-            const waktuFormat = `${jam}:${menit} WIB`;
-
-            const materi = document.getElementById("inputMateri").value;
-            if (materi) {
-                set(ref(db, `absensi/${keyStorage}/_materi`), materi);
-            }
-
-            for (const g of generusDiisi) {
-                await set(ref(db, `absensi/${keyStorage}/${g.id}`), {
-                    id: g.id,
-                    nama: g.nama,
-                    kategori: g.kategori,
-                    status: g.status,
-                    sesi: window.sesiAktif,
-                    waktu: waktuFormat,
-                    catatan: g.catatan || ""
-                });
-            }
-
-            alert(`✅ BERHASIL! Absensi ${window.tanggalAktif}${pesanSesi} tersimpan.`);
-            window.resetFormLokal();
-        };
-
-        window.resetFormLokal = function() {
-            window.daftarGenerus.forEach(g => {
-                g.status = "";
-                g.catatan = "";
-            });
-            window.tampilkanGenerus();
-        };
-
-        window.muatTabelRiwayat = async function() {
-            const tglPilih = document.getElementById("inputTanggalRiwayat").value;
-            const sesiPilih = document.getElementById("selectSesiRiwayat").value;
-            const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
-            const infoMateriDiv = document.getElementById("infoMateriRiwayat");
-            const teksMateriSpan = document.getElementById("teksMateriRiwayat");
-
-            if (!tglPilih) {
-                alert("Silakan pilih tanggal terlebih dahulu!");
-                return;
-            }
-
-            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 text-xs">Memuat data riwayat...</td></tr>`;
-
-            const keyRiwayat = `${tglPilih}_${sesiPilih}`;
-            const snapshotAbsen = await get(ref(db, `absensi/${keyRiwayat}`));
-            const dataAbsen = snapshotAbsen.val() || {};
-
-            const materiTeks = dataAbsen._materi || "Tidak ada catatan materi pada sesi ini.";
-            infoMateriDiv.classList.remove("hidden");
-            teksMateriSpan.innerText = materiTeks;
-
-            const listAbsenArray = Object.values(dataAbsen).filter(item => item && typeof item === 'object' && item.id);
-
-            if (listAbsenArray.length === 0) {
-                tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-600 font-medium text-xs">Belum ada data absensi untuk tanggal ${tglPilih} (${sesiPilih}).</td></tr>`;
-                return;
-            }
-
-            tbodyRiwayat.innerHTML = "";
             let no = 1;
+            listTampil.forEach(item => {
+                const st = statusAbsenTemp[item.id] || '';
+                const catatan = catatanIzinTemp[item.id] || '';
 
-            listAbsenArray.forEach(item => {
-                let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
-                if (item.status === "Hadir") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
-                else if (item.status === "Izin") badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
-                else if (item.status === "Alpa") badgeColor = "bg-red-100 text-red-800 border-red-300";
+                const btnHadir = st === 'Hadir' 
+                    ? 'bg-emerald-600 text-white font-bold border-emerald-600' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+                
+                const btnIzin = st === 'Izin' 
+                    ? 'bg-amber-500 text-white font-bold border-amber-500' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
 
-                tbodyRiwayat.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
-                        <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
-                        <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'Generus'}</span></td>
-                        <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColor}">${item.status}</span></td>
-                        <td class="p-3 text-center text-xs text-slate-500">${item.waktu || '-'}</td>
-                        <td class="p-3 text-xs text-slate-600 font-medium">${item.catatan || '-'}</td>
-                    </tr>
+                const btnAlpa = st === 'Alpa' 
+                    ? 'bg-red-600 text-white font-bold border-red-600' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+
+                container.innerHTML += `
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400 w-5">${no++}.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${item.nama}</h4>
+                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span>
+                                ${catatan ? `<p class="text-[11px] text-amber-700 italic mt-0.5">Note: "${catatan}"</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
+                            <button onclick="pilihStatus('${item.id}', 'Hadir')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnHadir}">Hadir</button>
+                            <button onclick="pilihStatus('${item.id}', 'Izin')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnIzin}">Izin</button>
+                            <button onclick="pilihStatus('${item.id}', 'Alpa')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnAlpa}">Alpa</button>
+                        </div>
+                    </div>
                 `;
             });
         };
 
-        initTanggal();
+        window.pilihStatus = function(id, status) {
+            statusAbsenTemp[id] = status;
+
+            if (status === 'Izin') {
+                const alasan = prompt("Masukkan Catatan / Alasan Izin:");
+                if (alasan && alasan.trim() !== "") {
+                    catatanIzinTemp[id] = alasan.trim();
+                } else {
+                    catatanIzinTemp[id] = "Izin";
+                }
+            } else {
+                delete catatanIzinTemp[id];
+            }
+
+            muatDaftarAbsen();
+        };
+
+        window.simpanAbsensiHariIni = async function() {
+            const sesi = document.getElementById("pilihanSesi").value;
+            const materi = document.getElementById("inputMateriPengajian").value.trim();
+            const keyPath = sesi === "Sore" ? `${today}_Sore` : `${today}_Malam`;
+
+            if (Object.keys(statusAbsenTemp).length === 0) {
+                alert("⚠️ Pilih status absen sekurang-kurangnya 1 generus sebelum menyimpan!");
+                return;
+            }
+
+            const payload = {
+                _materi: materi || "-",
+                _timestamp: new Date().toLocaleTimeString('id-ID')
+            };
+
+            for (let id in statusAbsenTemp) {
+                payload[id] = {
+                    status: statusAbsenTemp[id],
+                    catatan: catatanIzinTemp[id] || "-"
+                };
+            }
+
+            await set(ref(db, `absensi/${keyPath}`), payload);
+            alert("✅ Absensi hari ini berhasil disimpan ke database!");
+        };
+
+        // TAMPILKAN RIWAYAT RESPONSIF UNTUK HP & LAPTOP
+        window.tampilkanRiwayatAbsen = async function() {
+            const tgl = document.getElementById("inputTanggalRiwayat").value;
+            const sesi = document.getElementById("pilihanSesiRiwayat").value;
+            const keyPath = sesi === "Sore" ? `${tgl}_Sore` : `${tgl}_Malam`;
+
+            const snapshot = await get(ref(db, `absensi/${keyPath}`));
+            const dataAbsen = snapshot.val();
+
+            const containerMobile = document.getElementById("listRiwayatMobile");
+            const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
+            const boxMateri = document.getElementById("boxInfoMateriRiwayat");
+            const teksMateri = document.getElementById("teksMateriRiwayat");
+
+            containerMobile.innerHTML = "";
+            tbodyDesktop.innerHTML = "";
+
+            if (!dataAbsen) {
+                boxMateri.classList.add("hidden");
+                const pesanKosong = `<div class="p-4 text-center text-xs text-slate-400">Belum ada riwayat absensi tersimpan pada tanggal & sesi ini.</div>`;
+                containerMobile.innerHTML = pesanKosong;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada tanggal & sesi ini.</td></tr>`;
+                return;
+            }
+
+            // Tampilkan Catatan Materi
+            if (dataAbsen._materi) {
+                teksMateri.innerText = dataAbsen._materi;
+                boxMateri.classList.remove("hidden");
+            } else {
+                boxMateri.classList.add("hidden");
+            }
+
+            let no = 1;
+            let adaData = false;
+
+            dataMasterGenerus.forEach(item => {
+                const rec = dataAbsen[item.id];
+                if (rec) {
+                    adaData = true;
+                    const st = rec.status || '-';
+                    const catatan = rec.catatan || '-';
+                    const jam = dataAbsen._timestamp || '-';
+
+                    let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                    if (st === 'Hadir') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    if (st === 'Izin') badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
+                    if (st === 'Alpa') badgeColor = 'bg-red-100 text-red-800 border-red-200';
+
+                    // 1. TAMPILAN KHUSUS MOBILE (KARTU RAPI HP)
+                    containerMobile.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-1.5">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-xs">${no}. ${item.nama}</span>
+                                    <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded ml-1">${item.kategori || 'ACR'}</span>
+                                </div>
+                                <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full border">${st}</span>
+                            </div>
+                            ${catatan !== '-' ? `<p class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100">📌 Catatan: ${catatan}</p>` : ''}
+                        </div>
+                    `;
+
+                    // 2. TAMPILAN DESKTOP (TABEL)
+                    tbodyDesktop.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-2.5 text-center font-bold text-slate-400">${no}</td>
+                            <td class="p-2.5 font-semibold text-slate-800">${item.nama}</td>
+                            <td class="p-2.5 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border">${item.kategori || 'ACR'}</span></td>
+                            <td class="p-2.5 text-center"><span class="${badgeColor} text-[10px] font-bold px-2.5 py-1 rounded-full border">${st}</span></td>
+                            <td class="p-2.5 text-center text-slate-500">${jam}</td>
+                            <td class="p-2.5 text-slate-600">${catatan}</td>
+                        </tr>
+                    `;
+
+                    no++;
+                }
+            });
+
+            if (!adaData) {
+                const pesanKosong = `<div class="p-4 text-center text-xs text-slate-400">Tidak ada data kehadiran yang tercatat.</div>`;
+                containerMobile.innerHTML = pesanKosong;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Tidak ada data kehadiran yang tercatat.</td></tr>`;
+            }
+        };
     </script>
 </body>
 </html>
