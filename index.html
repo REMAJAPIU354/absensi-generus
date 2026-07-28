@@ -14,7 +14,7 @@
 
     <div class="max-w-md sm:max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         
-        <!-- HEADER APLIKASI (RESPONSIF BEBAS TUMPUK) -->
+        <!-- HEADER APLIKASI -->
         <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-4 sm:p-5 text-white">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div class="text-center sm:text-left">
@@ -36,7 +36,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
-                        <select id="filterKategori" onchange="muatDaftarAbsen()" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <select id="filterKategori" onchange="filterKategoriDiubah()" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
                             <option value="ALL">Semua Kategori</option>
                             <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
                             <option value="APR">APR (Pra Remaja 13-15 thn)</option>
@@ -47,11 +47,12 @@
                         </select>
                     </div>
 
-                    <div id="boxSesiACR">
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian:</label>
+                    <!-- SESI HANYA MUNCUL KHUSUS UNTUK ACR -->
+                    <div id="boxSesiACR" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian (Khusus ACR):</label>
                         <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="Malam">🌙 Sesi Malam / Umum</option>
-                            <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
+                            <option value="Malam">🌙 Sesi Malam</option>
+                            <option value="Sore">☀️ Sesi Sore</option>
                         </select>
                     </div>
                 </div>
@@ -82,7 +83,7 @@
 
             <hr class="border-slate-200 my-5">
 
-            <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN (RESPONSIF MOBILE) -->
+            <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN -->
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
                 <div>
                     <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
@@ -91,11 +92,11 @@
                     <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
                 </div>
 
-                <!-- FILTER TANGGAL & SESI (RESPONSIF HP) -->
+                <!-- FILTER TANGGAL & SESI -->
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                     <input type="date" id="inputTanggalRiwayat" class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     <select id="pilihanSesiRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
-                        <option value="Malam">🌙 Sesi Malam / Umum</option>
+                        <option value="Malam">🌙 Sesi Malam</option>
                         <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
                     </select>
                     <button onclick="tampilkanRiwayatAbsen()" class="sm:col-span-3 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm w-full">
@@ -176,6 +177,20 @@
             muatDaftarAbsen();
         });
 
+        // FUNGSI CEK LOGIKA TAMPIL/SEMBUNYI SESI
+        window.filterKategoriDiubah = function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const boxSesi = document.getElementById("boxSesiACR");
+
+            if (filterKat === "ACR") {
+                boxSesi.classList.remove("hidden");
+            } else {
+                boxSesi.classList.add("hidden");
+                document.getElementById("pilihanSesi").value = "Malam"; // Reset ke Malam
+            }
+            muatDaftarAbsen();
+        };
+
         // Tampilkan Form Absensi Harian
         window.muatDaftarAbsen = function() {
             const filterKat = document.getElementById("filterKategori").value;
@@ -248,7 +263,8 @@
         };
 
         window.simpanAbsensiHariIni = async function() {
-            const sesi = document.getElementById("pilihanSesi").value;
+            const filterKat = document.getElementById("filterKategori").value;
+            const sesi = (filterKat === "ACR") ? document.getElementById("pilihanSesi").value : "Malam";
             const materi = document.getElementById("inputMateriPengajian").value.trim();
             const keyPath = sesi === "Sore" ? `${today}_Sore` : `${today}_Malam`;
 
