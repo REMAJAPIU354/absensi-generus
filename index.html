@@ -12,83 +12,137 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
 
-    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden space-y-6">
         
-        <!-- HEADER UTAMA -->
-        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-5 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
-                    🌱 Absensi Generus
-                </h1>
-                <p class="text-emerald-100 text-xs mt-0.5">Kelola Kehadiran Pengajian Generus PIU</p>
-            </div>
-            <a href="admin.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-2 rounded-lg border border-white/20 transition flex items-center gap-1 font-semibold">
-                ⚙️ Admin
-            </a>
-        </div>
-
-        <!-- STATISTIK RINGKAS HARIAN -->
-        <div class="grid grid-cols-3 gap-2 p-4 bg-slate-50 border-b border-slate-200 text-center">
-            <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
-                <span class="block text-xs font-bold text-emerald-600 uppercase">Hadir</span>
-                <span id="statHadir" class="text-lg font-black text-emerald-700">0</span>
-            </div>
-            <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
-                <span class="block text-xs font-bold text-amber-600 uppercase">Izin/Sakit</span>
-                <span id="statIzin" class="text-lg font-black text-amber-700">0</span>
-            </div>
-            <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
-                <span class="block text-xs font-bold text-rose-600 uppercase">Alpa</span>
-                <span id="statAlpa" class="text-lg font-black text-rose-700">0</span>
-            </div>
-        </div>
-
-        <!-- CONTROL PANEL -->
-        <div class="p-4 sm:p-5 space-y-3 bg-white border-b border-slate-100">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <div class="flex-1">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Absensi</label>
-                    <input type="date" id="inputTanggal" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <div>
+            <!-- HEADER UTAMA -->
+            <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-5 text-white flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+                        🌱 Absensi Generus
+                    </h1>
+                    <p class="text-emerald-100 text-xs mt-0.5">Kelola Kehadiran Pengajian Generus PIU</p>
                 </div>
-                <div class="w-full sm:w-48">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Kategori / Kelompok</label>
-                    <select id="filterKategori" onchange="renderTabel()" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="ALL">Semua Kategori</option>
-                    </select>
+                <a href="admin.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-2 rounded-lg border border-white/20 transition flex items-center gap-1 font-semibold">
+                    ⚙️ Admin
+                </a>
+            </div>
+
+            <!-- STATISTIK RINGKAS HARIAN -->
+            <div class="grid grid-cols-3 gap-2 p-4 bg-slate-50 border-b border-slate-200 text-center">
+                <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
+                    <span class="block text-xs font-bold text-emerald-600 uppercase">Hadir</span>
+                    <span id="statHadir" class="text-lg font-black text-emerald-700">0</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
+                    <span class="block text-xs font-bold text-amber-600 uppercase">Izin/Sakit</span>
+                    <span id="statIzin" class="text-lg font-black text-amber-700">0</span>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+                    <span class="block text-xs font-bold text-rose-600 uppercase">Alpa</span>
+                    <span id="statAlpa" class="text-lg font-black text-rose-700">0</span>
                 </div>
             </div>
 
-            <!-- CATATAN MATERI HARIAN -->
-            <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📖 Catatan Materi / Pengajian Hari Ini</label>
-                <div class="flex gap-2">
-                    <input type="text" id="inputMateri" placeholder="Ketik materi pengajian generus hari ini..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
-                    <button onclick="simpanMateri()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition shadow-sm">
-                        Simpan Materi
-                    </button>
+            <!-- CONTROL PANEL -->
+            <div class="p-4 sm:p-5 space-y-3 bg-white border-b border-slate-100">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Absensi</label>
+                        <input type="date" id="inputTanggal" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div class="w-full sm:w-48">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Kategori / Kelompok</label>
+                        <select id="filterKategori" onchange="renderTabel()" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">Semua Kategori</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CATATAN MATERI HARIAN -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📖 Catatan Materi / Pengajian Hari Ini</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="inputMateri" placeholder="Ketik materi pengajian generus hari ini..." class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                        <button onclick="simpanMateri()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition shadow-sm">
+                            Simpan Materi
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <input type="text" id="inputCariNama" onkeyup="renderTabel()" placeholder="🔍 Cari nama generus..." class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
             </div>
 
-            <div>
-                <input type="text" id="inputCariNama" onkeyup="renderTabel()" placeholder="🔍 Cari nama generus..." class="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <!-- TABEL DAFTAR ABSENSI -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px]">
+                            <th class="p-3 text-center w-10">No</th>
+                            <th class="p-3">Nama Lengkap</th>
+                            <th class="p-3 text-center w-28">Kategori</th>
+                            <th class="p-3 text-center min-w-[200px]">Status Kehadiran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelAbsensi" class="divide-y divide-slate-100">
+                        <!-- Data JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- TABEL DAFTAR ABSENSI -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                <thead>
-                    <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px]">
-                        <th class="p-3 text-center w-10">No</th>
-                        <th class="p-3">Nama Lengkap</th>
-                        <th class="p-3 text-center w-28">Kategori</th>
-                        <th class="p-3 text-center min-w-[200px]">Status Kehadiran</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelAbsensi" class="divide-y divide-slate-100">
-                    <!-- Data JS -->
-                </tbody>
-            </table>
+        <!-- RIWAYAT SECTION (TERDIRI DARI RIWAYAT ABSENSI & RIWAYAT MATERI GURU) -->
+        <div class="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 space-y-6">
+            
+            <!-- 1. TABEL RIWAYAT MATERI PENGAJIAN DEWAN GURU -->
+            <div>
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                    <span>📚 Riwayat Materi Pengajian Dewan Guru</span>
+                    <span id="totalMateriCount" class="text-xs bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">0 Pertemuan</span>
+                </h3>
+                <div class="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-sm max-h-56 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 bg-slate-100 border-b border-slate-200 font-bold text-slate-600 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-2.5 text-center w-10">No</th>
+                                <th class="p-2.5 w-28 text-center">Tanggal</th>
+                                <th class="p-2.5">Materi / Kajian Yang Disampaikan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayatMateri" class="divide-y divide-slate-100">
+                            <!-- Data Riwayat Materi JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. TABEL RIWAYAT ABSENSI HARIAN -->
+            <div>
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                    <span>📋 Riwayat Kehadiran Hari Ini</span>
+                    <span id="totalRiwayatCount" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">0 Absen</span>
+                </h3>
+
+                <div class="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-sm max-h-60 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 bg-slate-100 border-b border-slate-200 font-bold text-slate-600 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-2.5 text-center w-10">No</th>
+                                <th class="p-2.5">Nama</th>
+                                <th class="p-2.5 text-center">Status</th>
+                                <th class="p-2.5">Keterangan</th>
+                                <th class="p-2.5 text-center">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayat" class="divide-y divide-slate-100">
+                            <!-- Data Riwayat JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -113,6 +167,7 @@
 
         let listMasterData = [];
         let dataAbsensiHariIni = {};
+        let seluruhDataAbsensi = {};
 
         const inputTgl = document.getElementById("inputTanggal");
         const todayStr = new Date().toISOString().split('T')[0];
@@ -121,13 +176,20 @@
         inputTgl.addEventListener("change", muatDataAbsensi);
 
         function initApp() {
-            // Dengarkan perubahan master secara Realtime
+            // Realtime listener untuk Master
             const masterRef = ref(db, 'master');
             onValue(masterRef, (snap) => {
                 const data = snap.val() || {};
                 listMasterData = Object.values(data).filter(item => item && typeof item === 'object');
                 updateDropdownKategori();
                 muatDataAbsensi();
+            });
+
+            // Realtime listener seluruh absensi untuk membuat Riwayat Materi
+            const allAbsensiRef = ref(db, 'absensi');
+            onValue(allAbsensiRef, (snap) => {
+                seluruhDataAbsensi = snap.val() || {};
+                renderRiwayatMateri();
             });
         }
 
@@ -148,7 +210,6 @@
             const tgl = inputTgl.value || todayStr;
             const absensiRef = ref(db, `absensi/${tgl}`);
             
-            // Menggunakan onValue agar realtime tanpa menghilangkan riwayat
             onValue(absensiRef, (snap) => {
                 const rawVal = snap.val() || {};
                 
@@ -158,6 +219,7 @@
                 delete dataAbsensiHariIni._materi;
 
                 renderTabel();
+                renderRiwayat();
                 updateStatistik();
             });
         }
@@ -167,7 +229,6 @@
             const materiTeks = document.getElementById("inputMateri").value.trim();
             const materiRef = ref(db, `absensi/${tgl}`);
 
-            // Menggunakan update agar data absensi anak tidak terhapus saat simpan materi
             update(materiRef, { _materi: materiTeks }).then(() => {
                 alert("✅ Catatan materi generus berhasil disimpan!");
             });
@@ -188,7 +249,7 @@
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Data generus tidak ditemukan. Sila tambahkan/import di Admin.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Data generus tidak ditemukan.</td></tr>`;
                 return;
             }
 
@@ -224,6 +285,83 @@
             });
         };
 
+        // RENDER TABEL RIWAYAT MATERI (GURU)
+        function renderRiwayatMateri() {
+            const tbody = document.getElementById("tabelRiwayatMateri");
+            tbody.innerHTML = "";
+
+            const sortedTanggal = Object.keys(seluruhDataAbsensi).sort().reverse();
+            let countMateri = 0;
+            let no = 1;
+
+            sortedTanggal.forEach(tgl => {
+                const materi = seluruhDataAbsensi[tgl] && seluruhDataAbsensi[tgl]._materi;
+                if (materi && materi.trim() !== "") {
+                    countMateri++;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-2 text-center text-slate-400 font-semibold">${no++}</td>
+                            <td class="p-2 text-center font-semibold text-slate-600 font-mono text-[11px]">${tgl}</td>
+                            <td class="p-2 font-medium text-slate-800">${materi}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            document.getElementById("totalMateriCount").innerText = `${countMateri} Pertemuan`;
+
+            if (countMateri === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-400">Belum ada riwayat materi yang disimpan dewan guru.</td></tr>`;
+            }
+        }
+
+        // RENDER TABEL RIWAYAT ABSENSI HARIAN
+        window.renderRiwayat = function() {
+            const tbody = document.getElementById("tabelRiwayat");
+            tbody.innerHTML = "";
+
+            const masterMap = {};
+            listMasterData.forEach(m => { masterMap[m.id] = m.nama; });
+
+            let listRiwayat = [];
+            Object.keys(dataAbsensiHariIni).forEach(idAnak => {
+                const item = dataAbsensiHariIni[idAnak];
+                if (item && item.status) {
+                    listRiwayat.push({
+                        nama: masterMap[idAnak] || "Seseorang",
+                        status: item.status,
+                        keterangan: item.keterangan || "-",
+                        waktu: item.waktu || "-"
+                    });
+                }
+            });
+
+            document.getElementById("totalRiwayatCount").innerText = `${listRiwayat.length} Absen`;
+
+            if (listRiwayat.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada riwayat absensi untuk tanggal ini.</td></tr>`;
+                return;
+            }
+
+            let no = 1;
+            listRiwayat.reverse().forEach(r => {
+                let badgeClass = "bg-slate-100 text-slate-700";
+                if (r.status === "Hadir") badgeClass = "bg-emerald-100 text-emerald-800";
+                else if (r.status === "Izin" || r.status === "Sakit") badgeClass = "bg-amber-100 text-amber-800";
+                else if (r.status === "Alpa") badgeClass = "bg-rose-100 text-rose-800";
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-2 text-center text-slate-400 font-semibold">${no++}</td>
+                        <td class="p-2 font-bold text-slate-800">${r.nama}</td>
+                        <td class="p-2 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${r.status}</span></td>
+                        <td class="p-2 text-slate-500">${r.keterangan}</td>
+                        <td class="p-2 text-center font-mono text-[10px] text-slate-400">${r.waktu}</td>
+                    </tr>
+                `;
+            });
+        };
+
         window.setAbsen = function(idAnak, status) {
             const tgl = inputTgl.value || todayStr;
             let ket = "";
@@ -232,7 +370,6 @@
                 ket = prompt("Masukkan alasan izin/sakit (opsional):", "") || "Izin";
             }
 
-            // Gunakan update untuk memperbarui individu anak saja tanpa merusak data tanggal tersebut
             const absRef = ref(db, `absensi/${tgl}/${idAnak}`);
             set(absRef, { status: status, keterangan: ket, waktu: new Date().toLocaleTimeString('id-ID') });
         };
