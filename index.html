@@ -54,12 +54,13 @@
                         <input type="date" id="inputTanggal" onchange="gantiTanggal()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                     </div>
 
-                    <!-- Filter Kategori -->
+                    <!-- Filter Kategori Kategori Terpisah ACR Sore & Malam -->
                     <div class="no-print flex items-center gap-2">
                         <label for="filterKategori" class="text-xs font-bold text-slate-600 uppercase tracking-wider">🔍 Filter:</label>
                         <select id="filterKategori" onchange="tampilkanGenerus()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
                             <option value="Semua">Semua Kategori</option>
-                            <option value="ACR">ACR (6-12 thn)</option>
+                            <option value="ACR (Sore)">ACR - Sesi Sore (Senin/Jumat)</option>
+                            <option value="ACR (Malam)">ACR - Sesi Malam (Senin/Jumat)</option>
                             <option value="APR">APR (13-15 thn)</option>
                             <option value="AR">AR (16-18 thn)</option>
                             <option value="AR Intensif">AR Intensif</option>
@@ -126,9 +127,7 @@
                 </button>
             </div>
 
-            <!-- ========================================== -->
             <!-- FITUR RIWAYAT ABSENSI & RIWAYAT MATERI -->
-            <!-- ========================================== -->
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 mt-8">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                     <div>
@@ -222,7 +221,7 @@
                     return {
                         id: item.id,
                         nama: item.nama,
-                        kategori: item.kategori || "ACR",
+                        kategori: item.kategori || "ACR (Sore)",
                         status: "",
                         catatan: ""
                     };
@@ -257,7 +256,7 @@
                             <div class="no-print flex justify-center gap-1">
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Hadir')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Hadir' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">Hadir</button>
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Izin')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Izin' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}">Izin</button>
-                                <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}">Sakit</button>
+                                <button onclick="pilihStatusLokal('${generus.id}', 'Sakit')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Sakit' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-300' : 'bg-blue-50 text-blue-100 border border-blue-200'}">Sakit</button>
                                 <button onclick="pilihStatusLokal('${generus.id}', 'Alpa')" class="px-2.5 py-1 rounded-full text-xs font-semibold transition ${generus.status === 'Alpa' ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}">Alpa</button>
                             </div>
                         </td>
@@ -342,7 +341,6 @@
             window.tampilkanGenerus();
         };
 
-        // MUAT TABEL RIWAYAT ABSENSI & MATERI NGAJI
         window.muatTabelRiwayat = async function() {
             const tglPilih = document.getElementById("inputTanggalRiwayat").value;
             const tbodyRiwayat = document.getElementById("tabelRiwayatBody");
@@ -359,7 +357,6 @@
             const snapshotAbsen = await get(ref(db, `absensi/${tglPilih}`));
             const dataAbsen = snapshotAbsen.val() || {};
 
-            // Ambil Catatan Materi Ngaji
             const materiTeks = dataAbsen._materi || "Tidak ada catatan materi pada tanggal ini.";
             infoMateriDiv.classList.remove("hidden");
             teksMateriSpan.innerText = materiTeks;
