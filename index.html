@@ -10,23 +10,29 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-3 sm:p-6 text-slate-800">
+<body class="bg-slate-100 min-h-screen p-2 sm:p-6 text-slate-800">
 
     <div class="max-w-md sm:max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         
-        <!-- HEADER APLIKASI -->
-        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-5 text-white text-center relative">
-            <h1 class="text-xl sm:text-2xl font-extrabold tracking-wide">📋 ABSENSI GENERUS PIU</h1>
-            <p class="text-emerald-100 text-xs mt-1">Majelis Ta'lim & Pengajian Generus</p>
-            <a href="admin.html" class="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg border border-white/20 transition">
-                ⚙️ Admin
-            </a>
+        <!-- HEADER APLIKASI (RESPONSIF BEBAS TUMPUK) -->
+        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-4 sm:p-5 text-white">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="text-center sm:text-left">
+                    <h1 class="text-lg sm:text-2xl font-black tracking-wide flex items-center justify-center sm:justify-start gap-2">
+                        📋 <span>ABSENSI GENERUS PIU</span>
+                    </h1>
+                    <p class="text-emerald-100 text-[11px] sm:text-xs mt-0.5">Majelis Ta'lim & Pengajian Generus</p>
+                </div>
+                <a href="admin.html" class="bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg border border-white/20 transition shadow-sm flex items-center gap-1.5 shrink-0">
+                    ⚙️ <span>Panel Admin</span>
+                </a>
+            </div>
         </div>
 
-        <div class="p-4 sm:p-6 space-y-6">
+        <div class="p-3.5 sm:p-6 space-y-5">
 
             <!-- FILTER & PILIHAN SESI ABSENSI -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
@@ -50,7 +56,7 @@
                     </div>
                 </div>
 
-                <!-- CATATAN MATERI NG AJI -->
+                <!-- CATATAN MATERI NGAJI -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
                     <input type="text" id="inputMateriPengajian" placeholder="Contoh: Jilid 2 Hal 15 / Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -60,8 +66,8 @@
             <!-- DAFTAR NAMA ABSENSI HARIAN -->
             <div class="space-y-3">
                 <div class="flex justify-between items-center px-1">
-                    <h2 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Daftar Kehadiran Santri</h2>
-                    <span id="labelTanggalHariIni" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"></span>
+                    <h2 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider">Daftar Kehadiran Santri</h2>
+                    <span id="labelTanggalHariIni" class="text-[11px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"></span>
                 </div>
 
                 <div id="containerDaftarAbsen" class="space-y-2.5">
@@ -70,19 +76,19 @@
             </div>
 
             <!-- TOMBOL SIMPAN -->
-            <button onclick="simpanAbsensiHariIni()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm tracking-wide">
+            <button onclick="simpanAbsensiHariIni()" class="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm tracking-wide">
                 💾 SIMPAN ABSENSI HARI INI
             </button>
 
-            <hr class="border-slate-200 my-6">
+            <hr class="border-slate-200 my-5">
 
             <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN (RESPONSIF MOBILE) -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
                         📋 Cek Riwayat Absensi Tanggal Lain
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
                 </div>
 
                 <!-- FILTER TANGGAL & SESI (RESPONSIF HP) -->
