@@ -27,7 +27,7 @@
             </a>
         </div>
 
-        <!-- FORM LOGIN PIN ADMIN (BISA ENTER / KLIK MANUAL) -->
+        <!-- FORM LOGIN PIN ADMIN -->
         <div id="boxLoginAdmin" class="p-8 text-center space-y-4 max-w-md mx-auto">
             <span class="text-4xl">🔐</span>
             <h2 class="font-bold text-slate-800 text-lg">Masukkan PIN Admin</h2>
@@ -83,7 +83,7 @@
                 </div>
             </div>
 
-            <!-- 3. TABEL DAFTAR MASTER -->
+            <!-- 3. TABEL DAFTAR MASTER DENGAN INDIKATOR SIAP PINDAH STATUS -->
             <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
                 <div class="bg-slate-100 px-4 py-2.5 font-bold text-xs uppercase tracking-wider text-slate-700 border-b border-slate-200 flex justify-between items-center">
                     <span>Daftar Master Generus</span>
@@ -133,7 +133,7 @@
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -176,24 +176,43 @@
                 }
 
                 let no = 1;
+                const hariIni = new Date();
+
                 list.forEach((item) => {
                     const statusText = item.status_anggota || 'Lama';
-                    const badgeClass = statusText === 'Baru' 
-                        ? 'bg-amber-100 text-amber-800 border-amber-200' 
-                        : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    let isSiapPindah = false;
+
+                    // Hitung durasi hari jika terdaftar sebagai santri Baru
+                    if (statusText === 'Baru' && item.tgl_daftar) {
+                        const tglDaftar = new Date(item.tgl_daftar);
+                        const selisihHari = Math.floor((hariIni - tglDaftar) / (1000 * 60 * 60 * 24));
+                        if (selisihHari >= 180) { // 180 hari = 6 bulan
+                            isSiapPindah = true;
+                        }
+                    }
 
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
                             <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
                             <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span></td>
-                            <td class="p-3 text-center">
-                                <span class="${badgeClass} text-[10px] font-bold px-2.5 py-1 rounded-full border">
-                                    ${statusText === 'Baru' ? 'Baru/Pindahan (<6 Bln)' : 'Lama (>6 Bln)'}
-                                </span>
+                            <td class="p-3 text-center space-y-1">
+                                <div>
+                                    ${statusText === 'Baru' 
+                                        ? '<span class="bg-amber-100 text-amber-800 border-amber-200 text-[10px] font-bold px-2.5 py-1 rounded-full border">Baru/Pindahan (<6 Bln)</span>' 
+                                        : '<span class="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full border">Lama (>6 Bln)</span>'}
+                                </div>
+                                ${isSiapPindah ? `
+                                    <button onclick="pindahkanKeLama('${item.id}', '${item.nama}')" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold px-2 py-1 rounded-md shadow transition block mx-auto animate-bounce">
+                                        ⭐ SIAP PINDAH KE LAMA (>6 BLN)
+                                    </button>
+                                ` : ''}
                             </td>
-                            <td class="p-3 text-center">
-                                <button onclick="hapusGenerus('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-200 transition">Hapus</button>
+                            <td class="p-3 text-center flex justify-center gap-1.5">
+                                ${statusText === 'Baru' && !isSiapPindah ? `
+                                    <button onclick="pindahkanKeLama('${item.id}', '${item.nama}')" title="Ubah manual ke Generus Lama" class="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2 py-1 rounded-md border border-blue-200 transition">Pindah ke Lama</button>
+                                ` : ''}
+                                <button onclick="hapusGenerus('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded-md border border-red-200 transition">Hapus</button>
                             </td>
                         </tr>
                     `;
@@ -212,9 +231,27 @@
             }
 
             const idBaru = 'gen_' + Date.now();
-            set(ref(db, `master/${idBaru}`), { id: idBaru, nama: nama, kategori: kat, status_anggota: stAnggota });
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            set(ref(db, `master/${idBaru}`), { 
+                id: idBaru, 
+                nama: nama, 
+                kategori: kat, 
+                status_anggota: stAnggota,
+                tgl_daftar: todayStr 
+            });
+
             document.getElementById("inputNamaBaru").value = "";
             alert(`✅ ${nama} berhasil ditambahkan!`);
+        };
+
+        window.pindahkanKeLama = function(id, nama) {
+            if (confirm(`⭐ Yakin ingin memindahkan ${nama} ke status "Generus Lama (>6 Bln)"?\n\nSetelah dipindah, rekap absensinya otomatis masuk ke Sheet Resmi Laporan Utama!`)) {
+                update(ref(db, `master/${id}`), {
+                    status_anggota: 'Lama'
+                });
+                alert(`✅ ${nama} berhasil dipindahkan ke Generus Lama (>6 Bln)!`);
+            }
         };
 
         window.hapusGenerus = function(id) {
@@ -228,6 +265,8 @@
             if (!file) return;
 
             const reader = new FileReader();
+            const todayStr = new Date().toISOString().split('T')[0];
+
             reader.onload = function(e) {
                 const baris = e.target.result.split("\n");
                 let jumlah = 0;
@@ -248,7 +287,13 @@
 
                         if (nama !== "") {
                             const idBaru = 'gen_' + (Date.now() + idx);
-                            set(ref(db, `master/${idBaru}`), { id: idBaru, nama: nama, kategori: kategori, status_anggota: stAnggota });
+                            set(ref(db, `master/${idBaru}`), { 
+                                id: idBaru, 
+                                nama: nama, 
+                                kategori: kategori, 
+                                status_anggota: stAnggota,
+                                tgl_daftar: todayStr 
+                            });
                             jumlah++;
                         }
                     }
