@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <!-- CONTROL PANEL (TANGGAL, KATEGORI, MATERI & PENCARIAN) -->
+        <!-- CONTROL PANEL -->
         <div class="p-4 sm:p-5 space-y-3 bg-white border-b border-slate-100">
             <div class="flex flex-col sm:flex-row gap-2">
                 <div class="flex-1">
@@ -96,7 +96,7 @@
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -114,7 +114,6 @@
         let listMasterData = [];
         let dataAbsensiHariIni = {};
 
-        // Inisialisasi Tanggal Hari Ini
         const inputTgl = document.getElementById("inputTanggal");
         const todayStr = new Date().toISOString().split('T')[0];
         inputTgl.value = todayStr;
@@ -122,11 +121,11 @@
         inputTgl.addEventListener("change", muatDataAbsensi);
 
         function initApp() {
-            // Ambil data Master Generus
+            // Dengarkan perubahan master secara Realtime
             const masterRef = ref(db, 'master');
             onValue(masterRef, (snap) => {
                 const data = snap.val() || {};
-                listMasterData = Object.values(data);
+                listMasterData = Object.values(data).filter(item => item && typeof item === 'object');
                 updateDropdownKategori();
                 muatDataAbsensi();
             });
@@ -149,13 +148,12 @@
             const tgl = inputTgl.value || todayStr;
             const absensiRef = ref(db, `absensi/${tgl}`);
             
-            get(absensiRef).then((snap) => {
+            // Menggunakan onValue agar realtime tanpa menghilangkan riwayat
+            onValue(absensiRef, (snap) => {
                 const rawVal = snap.val() || {};
                 
-                // Ambil materi jika ada
                 document.getElementById("inputMateri").value = rawVal._materi || "";
                 
-                // Pisahkan data status
                 dataAbsensiHariIni = { ...rawVal };
                 delete dataAbsensiHariIni._materi;
 
@@ -167,9 +165,10 @@
         window.simpanMateri = function() {
             const tgl = inputTgl.value || todayStr;
             const materiTeks = document.getElementById("inputMateri").value.trim();
-            const materiRef = ref(db, `absensi/${tgl}/_materi`);
+            const materiRef = ref(db, `absensi/${tgl}`);
 
-            set(materiRef, materiTeks).then(() => {
+            // Menggunakan update agar data absensi anak tidak terhapus saat simpan materi
+            update(materiRef, { _materi: materiTeks }).then(() => {
                 alert("✅ Catatan materi generus berhasil disimpan!");
             });
         };
@@ -177,18 +176,19 @@
         window.renderTabel = function() {
             const tbody = document.getElementById("tabelAbsensi");
             const katFilter = document.getElementById("filterKategori").value;
-            const cariKata = document.getElementById("inputCariNama").value.toLowerCase();
+            const cariKata = (document.getElementById("inputCariNama").value || "").toLowerCase();
 
             tbody.innerHTML = "";
 
             let filtered = listMasterData.filter(item => {
+                if (!item || !item.nama) return false;
                 const cocokKat = katFilter === "ALL" || (item.kategori || "") === katFilter;
                 const cocokNama = item.nama.toLowerCase().includes(cariKata);
                 return cocokKat && cocokNama;
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Data generus tidak ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Data generus tidak ditemukan. Sila tambahkan/import di Admin.</td></tr>`;
                 return;
             }
 
@@ -232,21 +232,19 @@
                 ket = prompt("Masukkan alasan izin/sakit (opsional):", "") || "Izin";
             }
 
+            // Gunakan update untuk memperbarui individu anak saja tanpa merusak data tanggal tersebut
             const absRef = ref(db, `absensi/${tgl}/${idAnak}`);
-            set(absRef, { status: status, keterangan: ket, waktu: new Date().toLocaleTimeString('id-ID') })
-            .then(() => {
-                dataAbsensiHariIni[idAnak] = { status: status, keterangan: ket };
-                renderTabel();
-                updateStatistik();
-            });
+            set(absRef, { status: status, keterangan: ket, waktu: new Date().toLocaleTimeString('id-ID') });
         };
 
         function updateStatistik() {
             let h = 0, i = 0, a = 0;
             Object.values(dataAbsensiHariIni).forEach(item => {
-                if (item.status === "Hadir") h++;
-                else if (item.status === "Izin" || item.status === "Sakit") i++;
-                else if (item.status === "Alpa") a++;
+                if (item && typeof item === 'object') {
+                    if (item.status === "Hadir") h++;
+                    else if (item.status === "Izin" || item.status === "Sakit") i++;
+                    else if (item.status === "Alpa") a++;
+                }
             });
 
             document.getElementById("statHadir").innerText = h;
