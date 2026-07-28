@@ -48,7 +48,14 @@
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                     <input type="text" id="inputNamaBaru" placeholder="Nama lengkap..." class="sm:col-span-5 border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <input type="text" id="inputKatBaru" placeholder="Kategori (misal: ACR, APR, AR Intensif)..." class="sm:col-span-3 border border-slate-300 rounded-lg px-3.5 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select id="inputKatBaru" class="sm:col-span-3 border border-slate-300 rounded-lg px-2 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-700">
+                        <option value="ACR">ACR (6-12 thn)</option>
+                        <option value="APR">APR (13-15 thn)</option>
+                        <option value="AR">AR (16-18 thn)</option>
+                        <option value="AR Intensif">AR Intensif</option>
+                        <option value="GPN-A">GPN-A (19-22 thn)</option>
+                        <option value="GPN-B">GPN-B (23-30+ thn)</option>
+                    </select>
                     <select id="inputStatusAnggota" class="sm:col-span-2 border border-slate-300 rounded-lg px-2 py-2 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-slate-700">
                         <option value="Lama">Generus Lama (>6 Bln)</option>
                         <option value="Baru">Pindahan / Baru (<6 Bln)</option>
@@ -66,7 +73,7 @@
                 </h3>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button onclick="downloadRekapExcelGenerus()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
-                        📊 Export File Excel Rekap
+                        📊 Export File Excel Rekap (4 Sheet Sesuai Jadwal)
                     </button>
 
                     <label class="flex-1 cursor-pointer bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-lg text-xs transition shadow-sm flex items-center justify-center gap-2">
@@ -179,7 +186,7 @@
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-3 text-center text-slate-400 font-semibold text-xs">${no++}</td>
                             <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
-                            <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'Generus'}</span></td>
+                            <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span></td>
                             <td class="p-3 text-center">
                                 <span class="${badgeClass} text-[10px] font-bold px-2.5 py-1 rounded-full border">
                                     ${statusText === 'Baru' ? 'Baru/Pindahan (<6 Bln)' : 'Lama (>6 Bln)'}
@@ -196,7 +203,7 @@
 
         window.tambahGenerus = function() {
             const nama = document.getElementById("inputNamaBaru").value.trim();
-            const kat = document.getElementById("inputKatBaru").value.trim() || "Generus";
+            const kat = document.getElementById("inputKatBaru").value;
             const stAnggota = document.getElementById("inputStatusAnggota").value;
 
             if (nama === "") {
@@ -207,7 +214,6 @@
             const idBaru = 'gen_' + Date.now();
             set(ref(db, `master/${idBaru}`), { id: idBaru, nama: nama, kategori: kat, status_anggota: stAnggota });
             document.getElementById("inputNamaBaru").value = "";
-            document.getElementById("inputKatBaru").value = "";
             alert(`✅ ${nama} berhasil ditambahkan!`);
         };
 
@@ -231,7 +237,7 @@
                     const kolom = line.split(",");
                     if (kolom.length >= 1) {
                         const nama = kolom[0].replace(/"/g, '').trim();
-                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim() : "Generus";
+                        const kategori = kolom[1] ? kolom[1].replace(/"/g, '').trim() : "ACR";
                         let stAnggota = kolom[2] ? kolom[2].replace(/"/g, '').trim() : "Lama";
                         
                         if (stAnggota.toLowerCase().includes("baru") || stAnggota.toLowerCase().includes("pindahan")) {
@@ -255,8 +261,10 @@
         window.resetAbsensiHariIni = function() {
             const today = new Date().toISOString().split('T')[0];
             if (confirm(`🔄 PERINGATAN!\n\nYakin ingin mengosongkan status absensi generus hari ini (${today})?`)) {
+                remove(ref(db, `absensi/${today}_Malam`));
+                remove(ref(db, `absensi/${today}_Sore`));
                 remove(ref(db, `absensi/${today}`));
-                alert(`Status absensi generus tanggal ${today} dibersihkan!`);
+                alert(`Status absensi tanggal ${today} dibersihkan!`);
             }
         };
 
@@ -278,7 +286,7 @@
             }
         };
 
-        // EXCEL GENERATOR GENERUS DENGAN PRESENTASE DIBUAT UNTUK FORMAT %
+        // EXCEL GENERATOR GENERUS MULTI-SHEET LENGKAP & PERSISI
         window.downloadRekapExcelGenerus = async function() {
             try {
                 const snapshotMaster = await get(ref(db, 'master'));
@@ -303,9 +311,19 @@
 
                 function getKode(status) {
                     if (status === 'Hadir') return 'H';
-                    if (status === 'Izin' || status === 'Sakit') return 'I';
+                    if (status === 'Izin') return 'I';
                     if (status === 'Alpa') return 'A';
                     return '';
+                }
+
+                function cleanKat(katStr) {
+                    return (katStr || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                }
+
+                function formatLabelTanggal(key) {
+                    if (key.includes('_Sore')) return key.replace('_Sore', ' (Sore)');
+                    if (key.includes('_Malam')) return key.replace('_Malam', '');
+                    return key;
                 }
 
                 function generateSheetDataContent(filteredList, judulSheet) {
@@ -324,7 +342,7 @@
 
                     // BARIS TANGGAL & HEADER TABEL
                     const rTanggal = ["No", "Nama Lengkap", "Kategori"];
-                    rawKeys.forEach((dKey) => { rTanggal.push(dKey); });
+                    rawKeys.forEach((dKey) => { rTanggal.push(formatLabelTanggal(dKey)); });
 
                     const lastColIdx = 3 + rawKeys.length;
                     rTanggal[lastColIdx] = "Akumulasi Kehadiran (H+I)";
@@ -357,7 +375,6 @@
 
                                 row[lastColIdx] = { f: `COUNTIF(D${currentRowIdx}:${endColChar}${currentRowIdx}, "H") + COUNTIF(D${currentRowIdx}:${endColChar}${currentRowIdx}, "I")` };
                                 row[lastColIdx + 1] = rawKeys.length;
-                                // RUMUS PRESENTASE DENGAN FORMAT FORMATTING PERCENT
                                 row[lastColIdx + 2] = { f: `${totalHadirChar}${currentRowIdx}/${totalPertemuanChar}${currentRowIdx}`, z: '0%' };
                                 wsData.push(row);
                                 currentRowIdx++;
@@ -388,23 +405,20 @@
 
                 // 1. SHEET LAPORAN RESMI (UTAMA)
                 const listResmiUtama = listResmiAll.filter(g => {
-                    const katUpper = (g.kategori || '').toUpperCase();
-                    return katUpper !== 'ACR' && katUpper !== 'AR INTENSIF' && katUpper !== 'AR_INTENSIF';
+                    const cKat = cleanKat(g.kategori);
+                    return !cKat.includes('ACR') && !cKat.includes('ARINTENSIF');
                 });
 
                 // 2. SHEET AR INTENSIF
-                const listARIntensif = listResmiAll.filter(g => {
-                    const katUpper = (g.kategori || '').toUpperCase();
-                    return katUpper === 'AR INTENSIF' || katUpper === 'AR_INTENSIF';
-                });
+                const listARIntensif = listResmiAll.filter(g => cleanKat(g.kategori).includes('ARINTENSIF'));
 
                 // 3. SHEET ACR
-                const listACR = listResmiAll.filter(g => (g.kategori || '').toUpperCase() === 'ACR');
+                const listACR = listResmiAll.filter(g => cleanKat(g.kategori).includes('ACR'));
 
                 // 4. SHEET INTERNAL (<6 BULAN)
                 const listInternal = listMaster.filter(g => g.status_anggota === 'Baru');
 
-                // SUSUNAN PENAMBAHAN SHEET SESUAI URUTAN
+                // SUSUNAN PENAMBAHAN SHEET KHUSUS
                 if (listResmiUtama.length > 0) {
                     XLSX.utils.book_append_sheet(wb, generateSheetDataContent(listResmiUtama, "Laporan Resmi (>6 Bulan)"), "Laporan Resmi");
                 }
@@ -422,7 +436,7 @@
                 }
 
                 XLSX.writeFile(wb, `Rekap_Absensi_Generus_PIU.xlsx`);
-                alert("✅ BERHASIL! File Rekap Excel terunduh rapi dengan format Persentase (%) dan urutan Sheet yang presisi.");
+                alert("✅ BERHASIL! File Rekap Excel terunduh rapi dengan format 4 Sheet sempurna.");
             } catch (err) {
                 alert("❌ Terjadi kesalahan: " + err.message);
                 console.error(err);
