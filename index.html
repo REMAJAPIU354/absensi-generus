@@ -3,137 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - Absensi Generus PIU</title>
+    <title>Dashboard Absensi Generus PIU</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ExcelJS & FileSaver Library -->
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <!-- Chart.js & Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style> 
         body { font-family: 'Inter', sans-serif; } 
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 p-2 sm:p-6">
+<body class="bg-slate-100 min-h-screen text-slate-800 relative overflow-x-hidden">
 
-    <div class="max-w-4xl mx-auto space-y-4">
-        
-        <!-- HEADER PANEL ADMIN -->
-        <div class="bg-gradient-to-r from-slate-800 to-emerald-900 rounded-2xl p-4 sm:p-5 text-white shadow-lg flex justify-between items-center">
+    <!-- BACKDROP SIDEBAR -->
+    <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- SIDEBAR NAVIGASI -->
+    <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
+        <div>
+            <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🕌</span>
+                    <div>
+                        <h2 class="font-bold text-sm leading-tight">Generus PIU</h2>
+                        <p class="text-[10px] text-emerald-200">Majelis Ta'lim & Pengajian</p>
+                    </div>
+                </div>
+                <button onclick="tutupSidebar()" class="p-1 rounded-lg hover:bg-white/10 text-white transition text-lg">✕</button>
+            </div>
+
+            <nav class="p-3 space-y-1 text-xs font-semibold overflow-y-auto max-h-[calc(100vh-140px)]">
+                <p class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dashboard & Absensi</p>
+                
+                <button onclick="pindahTab('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
+                    <span class="text-base">📊</span>
+                    <span>Dashboard Analytics</span>
+                </button>
+
+                <button onclick="bukaModalAbsen('Kelompok')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
+                    <span class="text-base">📋</span>
+                    <span>Input Absen Kelompok</span>
+                </button>
+
+                <button onclick="bukaModalAbsen('ARIntensif')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-800 bg-amber-50 hover:bg-amber-100 transition font-bold text-left">
+                    <span class="text-base">📖</span>
+                    <span>Input Absen AR Intensif</span>
+                </button>
+
+                <button onclick="bukaModalAbsen('Desa')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-800 hover:bg-teal-50 transition text-left">
+                    <span class="text-base">🏡</span>
+                    <span>Pengajian Desa</span>
+                </button>
+
+                <button onclick="bukaModalAbsen('Daerah')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-800 hover:bg-teal-50 transition text-left">
+                    <span class="text-base">🏛️</span>
+                    <span>Pengajian Daerah</span>
+                </button>
+
+                <button onclick="pindahTab('riwayat')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
+                    <span class="text-base">📜</span>
+                    <span>Cek Riwayat Ngaji</span>
+                </button>
+
+                <hr class="my-2 border-slate-100">
+
+                <p class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Manajemen System</p>
+
+                <button onclick="bukaModalPin('ADMIN')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
+                    <span class="text-base">⚙️</span>
+                    <span>Admin</span>
+                </button>
+
+                <button onclick="bukaModalPin('SUPERADMIN')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-800 hover:bg-amber-50 transition text-left font-bold">
+                    <span class="text-base">👑</span>
+                    <span>Superadmin</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-3.5 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <div class="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">P</div>
+                <div class="flex-1 overflow-hidden">
+                    <h4 class="text-xs font-bold text-slate-800 truncate">Pengurus PIU</h4>
+                    <p class="text-[10px] text-slate-400 truncate">Mode Pengurus Harian</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- WRAPPER KONTEN UTAMA -->
+    <div class="max-w-md sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-6">
+        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl p-3.5 sm:p-5 text-white shadow-lg flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div id="badgeRoleIcon" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl border border-white/20">🔑</div>
+                <button onclick="bukaSidebar()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white transition border border-white/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
                 <div>
-                    <h1 class="text-base sm:text-xl font-black tracking-wide flex items-center gap-2">
-                        PANEL MANAGEMENT <span id="labelRoleAkses" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500 text-white">ADMIN</span>
-                    </h1>
-                    <p class="text-slate-300 text-[10px] sm:text-xs">Kelola Data Master Generus & Download Laporan 6 Sheet Excel</p>
+                    <h1 class="text-base sm:text-2xl font-black tracking-wide">ABSENSI GENERUS PIU</h1>
+                    <p class="text-emerald-100 text-[10px] sm:text-xs">Majelis Ta'lim & Pengajian Generus</p>
+                </div>
+            </div>
+            
+            <button onclick="bukaModalAbsen('Kelompok')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+                📋 <span>Isi Absen</span>
+            </button>
+        </div>
+
+        <!-- SECTION 1: DASHBOARD ANALYTICS -->
+        <div id="sectionDashboard" class="space-y-4 pt-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Santri</p>
+                        <h4 id="statTotalSantri" class="text-xl sm:text-2xl font-black text-slate-800 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">👥</div>
+                </div>
+
+                <div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Hadir Periode Ini</p>
+                        <h4 id="statTotalHadir" class="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">✅</div>
+                </div>
+
+                <div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Izin Periode Ini</p>
+                        <h4 id="statTotalIzin" class="text-xl sm:text-2xl font-black text-amber-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">📩</div>
+                </div>
+
+                <div class="bg-white border border-red-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Alpa Periode Ini</p>
+                        <h4 id="statTotalAlpa" class="text-xl sm:text-2xl font-black text-red-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-red-50 text-red-700 flex items-center justify-center text-lg">❌</div>
                 </div>
             </div>
 
-            <a href="index.html" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 flex items-center gap-1">
-                ⬅️ <span>Ke Dashboard</span>
-            </a>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 Total Keseluruhan Generus</h3>
+                        <p id="recTotal" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartAll"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 Kelompok APR s/d GPN-B</h3>
+                        <p id="recUtama" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartUtama"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 Kelompok AR Intensif</h3>
+                        <p id="recIntensif" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartIntensif"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 Kelompok ACR (Sore & Malam)</h3>
+                        <p id="recACR" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartACR"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- BOX FITUR EXPORT 6 SHEET EXCEL MASTER -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
-            <div>
-                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel
-                </h3>
+        <!-- SECTION 2: CEK RIWAYAT -->
+        <div id="sectionRiwayat" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        📜 <span>CEK RIWAYAT NGAJI</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Pilih tanggal, jenis pengajian, dan sesi untuk melihat histori kehadiran.</p>
+                </div>
+                <button onclick="pindahTab('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg transition">⬅️ Kembali</button>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-2 pt-1">
-                <button onclick="exportKeExcelSesuaiTemplate()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
-                    <span>📑</span>
-                    <span>Export file</span>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <input type="date" id="inputTanggalRiwayat" class="sm:col-span-4 border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold">
+                
+                <select id="pilihanJenisRiwayat" class="sm:col-span-3 border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="Kelompok">Pengajian Kelompok</option>
+                    <option value="ARIntensif">Pengajian AR Intensif</option>
+                    <option value="Desa">Pengajian Desa</option>
+                    <option value="Daerah">Pengajian Daerah</option>
+                </select>
+
+                <select id="pilihanSesiRiwayat" class="sm:col-span-3 border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="Malam">🌙 Sesi Malam</option>
+                    <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
+                </select>
+
+                <button onclick="tampilkanRiwayatAbsen()" class="sm:col-span-2 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition shadow-sm w-full flex items-center justify-center gap-1">
+                    🔍 <span>Cek</span>
                 </button>
             </div>
-        </div>
 
-        <!-- FORM TAMBAH / EDIT DATA GENERUS -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
-            <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
-                <h3 id="judulFormGenerus" class="font-bold text-slate-800 text-xs sm:text-sm">➕ Tambah Generus Baru</h3>
-                <button id="btnBatalEdit" onclick="resetFormGenerus()" class="hidden text-xs text-red-600 font-bold hover:underline">Batal Edit</button>
+            <div id="boxInfoMateriRiwayat" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 space-y-1">
+                <span class="font-bold flex items-center gap-1">📖 Catatan Materi Pengajian:</span>
+                <p id="teksMateriRiwayat" class="font-semibold text-emerald-800 text-xs sm:text-sm pl-1">-</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <input type="hidden" id="inputIdGenerus">
-                
-                <div class="sm:col-span-4">
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Lengkap Generus:</label>
-                    <input type="text" id="inputNamaGenerus" placeholder="Contoh: Ahmad Fauzi" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <div id="boxHasilRiwayat">
+                <div id="listRiwayatMobile" class="block sm:hidden space-y-2">
+                    <p class="text-center text-xs text-slate-400 py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">Pilih kriteria di atas lalu klik "Cek".</p>
                 </div>
 
-                <div class="sm:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Kategori Generus:</label>
-                    <select id="inputKategoriGenerus" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
-                        <option value="ACR">ACR (Anak Caberawit)</option>
-                        <option value="APR">APR (Pra Remaja)</option>
-                        <option value="AR">AR (Remaja)</option>
-                        <option value="AR Intensif">AR Intensif</option>
-                        <option value="GPN-A">GPNA (Pra Nikah A)</option>
-                        <option value="GPN-B">GPNB (Pra Nikah B)</option>
-                    </select>
-                </div>
-
-                <div class="sm:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Bergabung:</label>
-                    <input type="date" id="inputTglMasukGenerus" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
-                </div>
-
-                <div class="sm:col-span-2 flex items-end">
-                    <button onclick="simpanDataGenerus()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">💾 Simpan</button>
+                <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
+                                <th class="p-3 text-center w-12">No</th>
+                                <th class="p-3">Nama Lengkap Santri</th>
+                                <th class="p-3 text-center">Kategori</th>
+                                <th class="p-3 text-center">Status Kehadiran</th>
+                                <th class="p-3 text-center">Waktu Simpan</th>
+                                <th class="p-3">Catatan / Alasan Izin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayatAbsenDesktop" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="6" class="p-6 text-center text-slate-400">Pilih kriteria di atas lalu klik "Cek".</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- TABEL DATA MASTER GENERUS -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+    <!-- MODAL FORM INPUT ABSENSI -->
+    <div id="modalAbsenHarian" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 my-8 max-h-[90vh] flex flex-col justify-between">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-xs sm:text-sm">👥 Master Data Generus PIU</h3>
-                    <p class="text-[11px] text-slate-400">Total Generus: <span id="labelJumlahSantri" class="font-bold text-emerald-700">0</span> orang</p>
+                    <h3 id="judulModalAbsen" class="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-2">📋 <span>INPUT ABSENSI</span></h3>
+                    <p class="text-[11px] text-slate-400">Pilih kehadiran santri dan masukkan catatan materi pengajian hari ini.</p>
+                </div>
+                <button onclick="tutupModalAbsenHarian()" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">✕</button>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto pr-1">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Pengajian:</label>
+                            <select id="pilihanJenisPengajian" onchange="jenisPengajianDiubah()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Kelompok">🕌 Pengajian Kelompok (Gabungan)</option>
+                                <option value="ARIntensif">📖 Pengajian AR Intensif (Khusus AR)</option>
+                                <option value="Desa">🏡 Pengajian Desa (Pekan ke-2)</option>
+                                <option value="Daerah">🏛️ Pengajian Daerah (Pekan ke-4)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Target:</label>
+                            <select id="filterKategori" onchange="filterKategoriDiubah()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="ALL">Semua Kategori</option>
+                                <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
+                                <option value="APR">APR (Pra Remaja 13-15 thn)</option>
+                                <option value="AR">AR (Remaja 16-18 thn)</option>
+                                <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
+                                <option value="GPN-B">GPN-B (Pra Nikah B 23-30+ thn)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="boxSesiACR" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian (Khusus ACR):</label>
+                        <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Malam">🌙 Sesi Malam</option>
+                            <option value="Sore">☀️ Sesi Sore</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
+                        <input type="text" id="inputMateriPengajian" placeholder="Contoh: Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
                 </div>
 
-                <input type="text" id="inputCariMaster" onkeyup="filterMasterGenerus()" placeholder="🔍 Cari nama generus..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none sm:w-60">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Daftar Kehadiran Santri</h4>
+                        <span id="labelTanggalHariIni" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"></span>
+                    </div>
+
+                    <div id="containerDaftarAbsen" class="space-y-2"></div>
+                </div>
             </div>
 
-            <!-- TAMPILAN MOBILE LIST -->
-            <div id="listMasterMobile" class="block sm:hidden space-y-2">
-                <p class="text-center text-xs text-slate-400 py-4">Memuat data...</p>
-            </div>
-
-            <!-- TAMPILAN DESKTOP TABEL -->
-            <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-xl bg-white">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
-                            <th class="p-3 text-center w-10">No</th>
-                            <th class="p-3">Nama Lengkap Generus</th>
-                            <th class="p-3 text-center">Kategori</th>
-                            <th class="p-3 text-center">Tanggal Masuk</th>
-                            <th class="p-3 text-center">Status Keanggotaan</th>
-                            <th class="p-3 text-center w-28">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelMasterDesktop" class="divide-y divide-slate-100">
-                        <tr>
-                            <td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="pt-2 border-t border-slate-100 flex gap-2">
+                <button onclick="tutupModalAbsenHarian()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Batal</button>
+                <button onclick="simpanAbsensiHariIni()" class="w-2/3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-2.5 rounded-xl shadow-md transition text-xs tracking-wide">💾 SIMPAN ABSENSI</button>
             </div>
         </div>
+    </div>
 
+    <!-- MODAL POP-UP PIN ADMIN / SUPERADMIN -->
+    <div id="modalPinAdmin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4 text-center">
+            <div id="iconPinModal" class="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-xl">🔑</div>
+            <div>
+                <h3 id="judulPinModal" class="font-bold text-slate-800 text-sm">Masuk Panel Admin</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Masukkan PIN Akses Anda.</p>
+            </div>
+            
+            <input type="password" id="inputPinAkses" placeholder="Masukkan PIN..." class="w-full border border-slate-300 rounded-xl p-2.5 text-center text-sm font-bold tracking-widest bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+            
+            <div class="flex gap-2">
+                <button onclick="tutupModalPinAdmin()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">Batal</button>
+                <button onclick="prosesVerifikasiPin()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">Masuk</button>
+            </div>
+        </div>
     </div>
 
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        Chart.register(ChartDataLabels);
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -148,314 +364,451 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let dataMaster = [];
-        const roleAkses = sessionStorage.getItem("userRole") || "ADMIN";
+        let dataMasterGenerus = [];
+        let statusAbsenTemp = {}; 
+        let catatanIzinTemp = {};
+        let chartInstances = {};
+        let roleAksesTarget = "ADMIN";
 
-        document.getElementById("labelRoleAkses").innerText = roleAkses;
-        if (roleAkses === "SUPERADMIN") {
-            document.getElementById("labelRoleAkses").className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-500 text-white";
-            document.getElementById("badgeRoleIcon").innerText = "👑";
-        }
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("labelTanggalHariIni").innerText = today;
+        document.getElementById("inputTanggalRiwayat").value = today;
 
-        const todayStr = new Date().toISOString().split('T')[0];
-        document.getElementById("inputTglMasukGenerus").value = todayStr;
+        window.bukaSidebar = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const backdrop = document.getElementById("sidebarBackdrop");
+            sidebar.classList.remove("-translate-x-full");
+            backdrop.classList.remove("hidden");
+            setTimeout(() => backdrop.classList.add("opacity-100"), 10);
+        };
+
+        window.tutupSidebar = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const backdrop = document.getElementById("sidebarBackdrop");
+            sidebar.classList.add("-translate-x-full");
+            backdrop.classList.remove("opacity-100");
+            setTimeout(() => backdrop.classList.add("hidden"), 300);
+        };
+
+        window.pindahTab = function(namaTab) {
+            tutupSidebar();
+            const secDashboard = document.getElementById("sectionDashboard");
+            const secRiwayat = document.getElementById("sectionRiwayat");
+
+            if (namaTab === 'riwayat') {
+                secDashboard.classList.add("hidden");
+                secRiwayat.classList.remove("hidden");
+                tampilkanRiwayatAbsen();
+            } else {
+                secRiwayat.classList.add("hidden");
+                secDashboard.classList.remove("hidden");
+            }
+        };
+
+        window.bukaModalAbsen = function(jenis) {
+            tutupSidebar();
+            document.getElementById("pilihanJenisPengajian").value = jenis;
+            
+            const judul = document.getElementById("judulModalAbsen");
+            if (jenis === 'Kelompok') judul.innerHTML = "📋 <span>INPUT ABSEN KELOMPOK (GABUNGAN)</span>";
+            if (jenis === 'ARIntensif') {
+                judul.innerHTML = "📖 <span>INPUT ABSEN AR INTENSIF</span>";
+                document.getElementById("filterKategori").value = "AR";
+            }
+            if (jenis === 'Desa') judul.innerHTML = "🏡 <span>INPUT ABSEN PENGAJIAN DESA</span>";
+            if (jenis === 'Daerah') judul.innerHTML = "🏛️ <span>INPUT ABSEN PENGAJIAN DAERAH</span>";
+
+            muatDaftarAbsen();
+            document.getElementById("modalAbsenHarian").classList.remove("hidden");
+        };
+
+        window.tutupModalAbsenHarian = function() {
+            document.getElementById("modalAbsenHarian").classList.add("hidden");
+        };
+
+        window.bukaModalPin = function(role) {
+            tutupSidebar();
+            roleAksesTarget = role;
+            document.getElementById("inputPinAkses").value = "";
+            
+            const icon = document.getElementById("iconPinModal");
+            const judul = document.getElementById("judulPinModal");
+            
+            if (role === "SUPERADMIN") {
+                icon.innerText = "👑";
+                judul.innerText = "Masuk Panel Superadmin";
+            } else {
+                icon.innerText = "🔑";
+                judul.innerText = "Masuk Panel Admin";
+            }
+
+            document.getElementById("modalPinAdmin").classList.remove("hidden");
+        };
+
+        window.tutupModalPinAdmin = function() {
+            document.getElementById("modalPinAdmin").classList.add("hidden");
+        };
+
+        window.prosesVerifikasiPin = function() {
+            const pin = document.getElementById("inputPinAkses").value.trim();
+            if (roleAksesTarget === "ADMIN" && pin === "admin354") {
+                sessionStorage.setItem("userRole", "ADMIN");
+                window.location.href = "admin.html";
+            } else if (roleAksesTarget === "SUPERADMIN" && pin === "superadmin354") {
+                sessionStorage.setItem("userRole", "SUPERADMIN");
+                window.location.href = "admin.html";
+            } else {
+                alert("❌ PIN " + roleAksesTarget + " yang Anda masukkan salah!");
+            }
+        };
 
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
-            dataMaster = Object.values(data).filter(item => item && typeof item === 'object');
-            document.getElementById("labelJumlahSantri").innerText = dataMaster.length;
-            tampilkanMasterTabel(dataMaster);
+            dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
+            document.getElementById("statTotalSantri").innerText = dataMasterGenerus.length;
+            hitungStatistikDashboard();
         });
 
-        window.filterMasterGenerus = function() {
-            const keyword = document.getElementById("inputCariMaster").value.toLowerCase();
-            const hasilFilter = dataMaster.filter(g => g.nama.toLowerCase().includes(keyword));
-            tampilkanMasterTabel(hasilFilter);
-        };
-
-        function hitungApakahSantriBaru(tglMasuk) {
-            if (!tglMasuk) return false;
-            const tglAwal = new Date(tglMasuk);
+        function dapatkanRentangSiklusBerjalan() {
             const skr = new Date();
-            const diffBulan = (skr.getFullYear() - tglAwal.getFullYear()) * 12 + (skr.getMonth() - tglAwal.getMonth());
-            return diffBulan < 6;
+            const thn = skr.getFullYear();
+            const bln = skr.getMonth();
+            const tgl = skr.getDate();
+
+            let awal, akhir;
+            if (tgl >= 21) {
+                awal = new Date(thn, bln, 21);
+                akhir = new Date(thn, bln + 1, 20);
+            } else {
+                awal = new Date(thn, bln - 1, 21);
+                akhir = new Date(thn, bln, 20);
+            }
+
+            return {
+                strAwal: awal.toISOString().split('T')[0],
+                strAkhir: akhir.toISOString().split('T')[0]
+            };
         }
 
-        function tampilkanMasterTabel(list) {
-            const mob = document.getElementById("listMasterMobile");
-            const desk = document.getElementById("tabelMasterDesktop");
+        async function hitungStatistikDashboard() {
+            const snapAbsen = await get(ref(db, 'absensi'));
+            const dataAbsen = snapAbsen.val() || {};
 
-            mob.innerHTML = "";
-            desk.innerHTML = "";
+            let stat = {
+                all: { H: 0, I: 0, A: 0 },
+                utama: { H: 0, I: 0, A: 0 },
+                intensif: { H: 0, I: 0, A: 0 },
+                acr: { H: 0, I: 0, A: 0 }
+            };
 
-            if (list.length === 0) {
-                mob.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">Tidak ada data generus ditemukan.</div>`;
-                desk.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Tidak ada data generus ditemukan.</td></tr>`;
+            const siklus = dapatkanRentangSiklusBerjalan();
+
+            Object.keys(dataAbsen).forEach(keyPath => {
+                const tglPath = keyPath.substring(0, 10);
+                
+                if (tglPath >= siklus.strAwal && tglPath <= siklus.strAkhir) {
+                    const sessionData = dataAbsen[keyPath];
+                    const isIntensifKey = keyPath.includes('_ARIntensif_');
+
+                    dataMasterGenerus.forEach(g => {
+                        const rec = sessionData[g.id];
+                        if (rec && rec.status) {
+                            const st = rec.status;
+                            const kat = g.kategori || 'ACR';
+                            const mapKey = st === 'Hadir' ? 'H' : (st === 'Izin' ? 'I' : 'A');
+
+                            stat.all[mapKey]++;
+
+                            if (isIntensifKey || kat === 'AR Intensif') {
+                                stat.intensif[mapKey]++;
+                            } else if (kat === 'ACR') {
+                                stat.acr[mapKey]++;
+                            } else {
+                                stat.utama[mapKey]++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            document.getElementById("statTotalHadir").innerText = stat.all.H;
+            document.getElementById("statTotalIzin").innerText = stat.all.I;
+            document.getElementById("statTotalAlpa").innerText = stat.all.A;
+
+            buatDiagramDonat('chartAll', 'recTotal', stat.all);
+            buatDiagramDonat('chartUtama', 'recUtama', stat.utama);
+            buatDiagramDonat('chartIntensif', 'recIntensif', stat.intensif);
+            buatDiagramDonat('chartACR', 'recACR', stat.acr);
+        }
+
+        function buatDiagramDonat(canvasId, elemTotalId, dataObj) {
+            const totalRec = dataObj.H + dataObj.I + dataObj.A;
+            document.getElementById(elemTotalId).innerText = `Total: ${totalRec} Record Periode Ini`;
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
+            const persenHadir = totalRec > 0 ? Math.round((dataObj.H / totalRec) * 100) : 0;
+            const persenIzin = totalRec > 0 ? Math.round((dataObj.I / totalRec) * 100) : 0;
+            const persenAlpa = totalRec > 0 ? Math.round((dataObj.A / totalRec) * 100) : 0;
+
+            const isDataKosong = totalRec === 0;
+            const chartData = isDataKosong ? [1] : [dataObj.H, dataObj.I, dataObj.A];
+            const chartColors = isDataKosong ? ['#e2e8f0'] : ['#10b981', '#f59e0b', '#ef4444'];
+
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: isDataKosong ? ['Belum Ada Data'] : [`Hadir (${persenHadir}%)`, `Izin (${persenIzin}%)`, `Alpa (${persenAlpa}%)`],
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' }, boxWidth: 12 } },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: (value, ctx) => {
+                                if (isDataKosong) return '';
+                                let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                if (sum === 0 || value === 0) return '';
+                                return Math.round((value / sum) * 100) + '%';
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        window.jenisPengajianDiubah = function() {
+            const jenis = document.getElementById("pilihanJenisPengajian").value;
+            if (jenis === 'ARIntensif') {
+                document.getElementById("filterKategori").value = 'AR';
+            }
+            muatDaftarAbsen();
+        };
+
+        window.filterKategoriDiubah = function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const boxSesi = document.getElementById("boxSesiACR");
+
+            if (filterKat === "ACR") {
+                boxSesi.classList.remove("hidden");
+            } else {
+                boxSesi.classList.add("hidden");
+                document.getElementById("pilihanSesi").value = "Malam";
+            }
+            muatDaftarAbsen();
+        };
+
+        window.muatDaftarAbsen = function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const container = document.getElementById("containerDaftarAbsen");
+            container.innerHTML = "";
+
+            let listTampil = dataMasterGenerus;
+            if (filterKat !== "ALL") {
+                listTampil = dataMasterGenerus.filter(g => g.kategori === filterKat);
+            }
+
+            if (listTampil.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-300">Tidak ada generus pada kategori ini.</div>`;
                 return;
             }
 
             let no = 1;
-            list.forEach(g => {
-                const isBaru = hitungApakahSantriBaru(g.tglMasuk);
-                const badgeBaru = isBaru 
-                    ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200">Generus Baru (&lt; 6 Bln)</span>`
-                    : `<span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-slate-200">Lama</span>`;
+            listTampil.forEach(item => {
+                const st = statusAbsenTemp[item.id] || '';
+                const catatan = catatanIzinTemp[item.id] || '';
 
-                const btnHapusSuperadmin = roleAkses === "SUPERADMIN" 
-                    ? `<button onclick="hapusGenerus('${g.id}')" class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-bold text-[10px] transition">Hapus</button>`
-                    : '';
+                const btnHadir = st === 'Hadir' ? 'bg-emerald-600 text-white font-bold border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+                const btnIzin = st === 'Izin' ? 'bg-amber-500 text-white font-bold border-amber-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+                const btnAlpa = st === 'Alpa' ? 'bg-red-600 text-white font-bold border-red-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
 
-                mob.innerHTML += `
-                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
-                        <div class="flex justify-between items-start">
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400 w-5">${no++}.</span>
                             <div>
-                                <h4 class="font-bold text-slate-800 text-xs">${no}. ${g.nama}</h4>
-                                <span class="bg-emerald-50 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">${g.kategori || 'ACR'}</span>
+                                <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${item.nama}</h4>
+                                <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span>
+                                ${catatan ? `<p class="text-[10px] text-amber-700 italic mt-0.5">Note: "${catatan}"</p>` : ''}
                             </div>
-                            ${badgeBaru}
                         </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-[10px] text-slate-500">
-                            <span>Masuk: ${g.tglMasuk || '-'}</span>
-                            <div class="flex gap-1">
-                                <button onclick="editGenerus('${g.id}')" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition">Edit</button>
-                                ${btnHapusSuperadmin}
-                            </div>
+
+                        <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-1.5 sm:pt-0 border-t sm:border-0 border-slate-100">
+                            <button onclick="pilihStatus('${item.id}', 'Hadir')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnHadir}">Hadir</button>
+                            <button onclick="pilihStatus('${item.id}', 'Izin')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnIzin}">Izin</button>
+                            <button onclick="pilihStatus('${item.id}', 'Alpa')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnAlpa}">Alpa</button>
                         </div>
                     </div>
                 `;
-
-                desk.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-3 text-center font-bold text-slate-400">${no}</td>
-                        <td class="p-3 font-bold text-slate-800">${g.nama}</td>
-                        <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">${g.kategori || 'ACR'}</span></td>
-                        <td class="p-3 text-center text-slate-600 font-medium">${g.tglMasuk || '-'}</td>
-                        <td class="p-3 text-center">${badgeBaru}</td>
-                        <td class="p-3 text-center">
-                            <div class="flex justify-center gap-1">
-                                <button onclick="editGenerus('${g.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-[11px] transition">Edit</button>
-                                ${btnHapusSuperadmin}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-
-                no++;
             });
-        }
+        };
 
-        window.simpanDataGenerus = async function() {
-            const id = document.getElementById("inputIdGenerus").value || 'GEN_' + Date.now();
-            const nama = document.getElementById("inputNamaGenerus").value.trim();
-            const kategori = document.getElementById("inputKategoriGenerus").value;
-            const tglMasuk = document.getElementById("inputTglMasukGenerus").value;
+        window.pilihStatus = function(id, status) {
+            statusAbsenTemp[id] = status;
 
-            if (!nama) {
-                alert("⚠️ Masukkan nama lengkap generus!");
+            if (status === 'Izin') {
+                const alasan = prompt("Masukkan Catatan / Alasan Izin:");
+                if (alasan && alasan.trim() !== "") {
+                    catatanIzinTemp[id] = alasan.trim();
+                } else {
+                    catatanIzinTemp[id] = "Izin";
+                }
+            } else {
+                delete catatanIzinTemp[id];
+            }
+
+            muatDaftarAbsen();
+        };
+
+        window.simpanAbsensiHariIni = async function() {
+            const jenis = document.getElementById("pilihanJenisPengajian").value;
+            const filterKat = document.getElementById("filterKategori").value;
+            const sesi = (filterKat === "ACR") ? document.getElementById("pilihanSesi").value : "Malam";
+            const materi = document.getElementById("inputMateriPengajian").value.trim();
+            
+            const keyPath = `${today}_${jenis}_${sesi}`;
+
+            if (Object.keys(statusAbsenTemp).length === 0) {
+                alert("⚠️ Pilih status absen sekurang-kurangnya 1 generus sebelum menyimpan!");
                 return;
             }
 
-            const payload = { id, nama, kategori, tglMasuk };
-            await set(ref(db, `master/${id}`), payload);
-            alert("✅ Data generus berhasil disimpan!");
-            resetFormGenerus();
-        };
+            const payload = {
+                _jenis: jenis,
+                _targetKat: filterKat,
+                _materi: materi || "-",
+                _timestamp: new Date().toLocaleTimeString('id-ID')
+            };
 
-        window.editGenerus = function(id) {
-            const item = dataMaster.find(g => g.id === id);
-            if (!item) return;
-
-            document.getElementById("inputIdGenerus").value = item.id;
-            document.getElementById("inputNamaGenerus").value = item.nama;
-            document.getElementById("inputKategoriGenerus").value = item.kategori || 'ACR';
-            document.getElementById("inputTglMasukGenerus").value = item.tglMasuk || todayStr;
-
-            document.getElementById("judulFormGenerus").innerText = "✏️ Edit Data Generus";
-            document.getElementById("btnBatalEdit").classList.remove("hidden");
-        };
-
-        window.resetFormGenerus = function() {
-            document.getElementById("inputIdGenerus").value = "";
-            document.getElementById("inputNamaGenerus").value = "";
-            document.getElementById("inputKategoriGenerus").value = "ACR";
-            document.getElementById("inputTglMasukGenerus").value = todayStr;
-
-            document.getElementById("judulFormGenerus").innerText = "➕ Tambah Generus Baru";
-            document.getElementById("btnBatalEdit").classList.add("hidden");
-        };
-
-        function normKat(k) {
-            return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
-        }
-
-        // EXPORT EXCEL
-        window.exportKeExcelSesuaiTemplate = async function() {
-            try {
-                const response = await fetch('template_absensi.xlsx');
-                if (!response.ok) {
-                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan!");
-                    return;
-                }
-                const arrayBuffer = await response.arrayBuffer();
-
-                const snapAbsen = await get(ref(db, 'absensi'));
-                const dataAbsen = snapAbsen.val() || {};
-
-                const workbook = new ExcelJS.Workbook();
-                await workbook.xlsx.load(arrayBuffer);
-
-                const santriLama = dataMaster.filter(g => !hitungApakahSantriBaru(g.tglMasuk));
-                const santriBaru = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk));
-
-                const listAPR = santriLama.filter(g => normKat(g.kategori) === 'APR');
-                const listAR = santriLama.filter(g => normKat(g.kategori) === 'AR' || normKat(g.kategori) === 'ARINTENSIF');
-                const listGPNA = santriLama.filter(g => normKat(g.kategori) === 'GPNA');
-                const listGPNB = santriLama.filter(g => normKat(g.kategori) === 'GPNB');
-
-                // --- SHEET 1: Absensi APR - GPN B ---
-                const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
-                if (ws1) {
-                    isiBertingkatHIA(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
-                }
-
-                // --- SHEET 2: Absensi AR Intensif ---
-                const ws2 = workbook.getWorksheet('Absensi AR Intensif');
-                if (ws2) {
-                    isiSheetStandarHIA(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
-                }
-
-                // --- SHEET 3: Absensi ACR ---
-                const ws3 = workbook.getWorksheet('Absensi ACR');
-                if (ws3) {
-                    isiSheetStandarHIA(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
-                }
-
-                // --- SHEET 4: Pengajian Desa ---
-                const ws4 = workbook.getWorksheet('Pengajian Desa');
-                if (ws4) {
-                    isiBertingkatHIA(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
-                }
-
-                // --- SHEET 5: Pengajian Daerah ---
-                const ws5 = workbook.getWorksheet('Pengajian Daerah');
-                if (ws5) {
-                    isiBertingkatHIA(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
-                }
-
-                // --- SHEET 6: Absen Generus Baru ---
-                const ws6 = workbook.getWorksheet('Absen Generus Baru');
-                if (ws6) {
-                    isiSheetStandarHIA(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
-                }
-
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                saveAs(blob, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
-
-            } catch (err) {
-                console.error(err);
-                alert("❌ Terjadi kesalahan saat memproses file Excel: " + err.message);
-            }
-        };
-
-        function ambilSemuaKunciSesiValid(dataAbsen, jenisFilter) {
-            let allKeys = Object.keys(dataAbsen);
-            let filtered = allKeys.filter(k => k.toLowerCase().includes(jenisFilter.toLowerCase()));
-            if (filtered.length === 0) {
-                filtered = allKeys.filter(k => !k.startsWith('_'));
-            }
-            return filtered.sort();
-        }
-
-        function isiBertingkatHIA(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
-            let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilter);
-            let displayKeys = sessionKeys.slice(-6);
-
-            displayKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
-                const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
-            });
-
-            isiBlokHIA(ws, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
-        }
-
-        function isiBlokHIA(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen, colStartLetter, colEndLetter, colAkumulasi) {
-            listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
-                const rowNum = startRow + idx;
-                const row = ws.getRow(rowNum);
-
-                row.getCell(2).value = santri.nama;
-
-                sessionKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
-                    if (rec && rec.status) {
-                        const st = rec.status.toString().toLowerCase();
-                        let kode = '';
-                        if (st === 'hadir') kode = 'H';
-                        else if (st === 'izin') kode = 'I';
-                        else if (st === 'alpa') kode = 'A';
-
-                        if (kode !== '') {
-                            row.getCell(4 + colIdx).value = kode;
-                        }
-                    }
-                });
-
-                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
-            });
-        }
-
-        function isiSheetStandarHIA(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
-            let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterUtama);
-
-            if (sessionKeys.length === 0 && jenisFilterFallback) {
-                sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterFallback);
+            for (let id in statusAbsenTemp) {
+                payload[id] = {
+                    status: statusAbsenTemp[id],
+                    catatan: catatanIzinTemp[id] || "-"
+                };
             }
 
-            let displayKeys = sessionKeys.slice(-8);
-            const colStart = colStartOverride || 3;
-            const colStartLetter = colStart === 4 ? 'D' : 'C';
-            const colEndLetter = colStart === 4 ? 'K' : 'J';
-            const colAkumulasi = colStart === 4 ? 12 : 11;
+            await set(ref(db, `absensi/${keyPath}`), payload);
+            alert(`✅ Absensi ${jenis} berhasil disimpan ke database!`);
+            statusAbsenTemp = {};
+            catatanIzinTemp = {};
+            tutupModalAbsenHarian();
+            hitungStatistikDashboard();
+        };
 
-            displayKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
-                const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
+        window.tampilkanRiwayatAbsen = async function() {
+            let tglRaw = document.getElementById("inputTanggalRiwayat").value;
+            const jenis = document.getElementById("pilihanJenisRiwayat").value;
+            const sesi = document.getElementById("pilihanSesiRiwayat").value;
+            
+            const containerMobile = document.getElementById("listRiwayatMobile");
+            const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
+            const boxMateri = document.getElementById("boxInfoMateriRiwayat");
+            const teksMateri = document.getElementById("teksMateriRiwayat");
+
+            containerMobile.innerHTML = "";
+            tbodyDesktop.innerHTML = "";
+
+            if (!tglRaw) {
+                alert("⚠️ Silakan pilih tanggal terlebih dahulu!");
+                return;
+            }
+
+            let tglFormatted = tglRaw;
+
+            if (!dataMasterGenerus || dataMasterGenerus.length === 0) {
+                const snapMaster = await get(ref(db, 'master'));
+                const masterVal = snapMaster.val() || {};
+                dataMasterGenerus = Object.values(masterVal).filter(item => item && typeof item === 'object');
+            }
+
+            const snapAllAbsen = await get(ref(db, 'absensi'));
+            const allAbsenData = snapAllAbsen.val() || {};
+
+            let matchedKeys = Object.keys(allAbsenData).filter(k => k.startsWith(tglFormatted));
+
+            if (matchedKeys.length === 0) {
+                boxMateri.classList.add("hidden");
+                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat absensi tersimpan pada tanggal ${tglFormatted}.</div>`;
+                containerMobile.innerHTML = pesanKosong;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada tanggal ${tglFormatted}.</td></tr>`;
+                return;
+            }
+
+            let targetKey = matchedKeys.find(k => k.includes(`_${jenis}_${sesi}`)) 
+                         || matchedKeys.find(k => k.includes(`_${jenis}_`)) 
+                         || matchedKeys[0];
+
+            const dataAbsen = allAbsenData[targetKey];
+
+            const materiTersimpan = dataAbsen._materi || dataAbsen.materi || "-";
+            if (materiTersimpan !== "-") {
+                teksMateri.innerText = `[${targetKey.replaceAll('_', ' ')}] : ${materiTersimpan}`;
+            } else {
+                teksMateri.innerText = `[${targetKey.replaceAll('_', ' ')}] : (Materi pengajian tidak diisi saat simpan absen)`;
+            }
+            boxMateri.classList.remove("hidden");
+
+            let no = 1;
+            let adaData = false;
+
+            dataMasterGenerus.forEach(item => {
+                const rec = dataAbsen[item.id];
+                if (rec) {
+                    adaData = true;
+                    const st = rec.status || '-';
+                    const catatan = rec.catatan || rec.keterangan || '-';
+                    const jam = dataAbsen._timestamp || '-';
+
+                    let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                    if (st === 'Hadir') badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                    if (st === 'Izin') badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
+                    if (st === 'Alpa') badgeColor = 'bg-red-100 text-red-800 border-red-200';
+
+                    containerMobile.innerHTML += `
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-xs sm:text-sm">${no}. ${item.nama}</span>
+                                    <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-full border ml-1">${item.kategori || 'ACR'}</span>
+                                </div>
+                                <span class="${badgeColor} text-[10px] font-bold px-2.5 py-0.5 rounded-full border">${st}</span>
+                            </div>
+                            ${catatan !== '-' ? `<p class="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">📌 Catatan: ${catatan}</p>` : ''}
+                        </div>
+                    `;
+
+                    tbodyDesktop.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 text-center font-bold text-slate-400">${no}</td>
+                            <td class="p-3 font-semibold text-slate-800">${item.nama}</td>
+                            <td class="p-3 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full border">${item.kategori || 'ACR'}</span></td>
+                            <td class="p-3 text-center"><span class="${badgeColor} text-[10px] font-bold px-2.5 py-1 rounded-full border">${st}</span></td>
+                            <td class="p-3 text-center text-slate-500 font-medium">${jam}</td>
+                            <td class="p-3 text-slate-600">${catatan}</td>
+                        </tr>
+                    `;
+
+                    no++;
+                }
             });
 
-            listSantri.forEach((santri, idx) => {
-                const rowNum = 3 + idx;
-                const row = ws.getRow(rowNum);
-
-                row.getCell(2).value = santri.nama;
-
-                displayKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
-                    if (rec && rec.status) {
-                        const st = rec.status.toString().toLowerCase();
-                        let kode = '';
-                        if (st === 'hadir') kode = 'H';
-                        else if (st === 'izin') kode = 'I';
-                        else if (st === 'alpa') kode = 'A';
-
-                        if (kode !== '') {
-                            row.getCell(colStart + colIdx).value = kode;
-                        }
-                    }
-                });
-
-                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
-            });
-        }
+            if (!adaData) {
+                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Tidak ada rincian santri tersimpan pada ${targetKey.replaceAll('_', ' ')}.</div>`;
+                containerMobile.innerHTML = pesanKosong;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Tidak ada rincian santri tersimpan pada ${targetKey.replaceAll('_', ' ')}.</td></tr>`;
+            }
+        };
     </script>
 </body>
 </html>
