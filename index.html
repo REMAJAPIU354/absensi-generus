@@ -20,7 +20,7 @@
     <!-- BACKDROP SIDEBAR -->
     <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
 
-    <!-- SIDEBAR NAVIGASI TERBARU (7 MENU UTAMA) -->
+    <!-- SIDEBAR NAVIGASI (CLEAN TANPA ANGKA) -->
     <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
         <div>
             <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
@@ -36,54 +36,47 @@
                 </button>
             </div>
 
-            <!-- LIST 7 MENU NAVIGASI SIDEBAR -->
+            <!-- LIST MENU NAVIGASI CLEAN -->
             <nav class="p-3 space-y-1 text-xs font-semibold overflow-y-auto max-h-[calc(100vh-140px)]">
                 <p class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dashboard & Absensi</p>
                 
-                <!-- 1. DASHBOARD ANALYTICS -->
                 <a href="#sectionDashboard" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📊</span>
-                    <span>1. Dashboard Analytics</span>
+                    <span>Dashboard Analytics</span>
                 </a>
 
-                <!-- 2. INPUT ABSEN HARIAN -->
                 <button onclick="bukaModalAbsen('Kelompok')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
                     <span class="text-base">📋</span>
-                    <span>2. Input Absen Harian</span>
+                    <span>Input Absen Harian</span>
                 </button>
 
-                <!-- 3. PENGAJIAN DESA -->
                 <button onclick="bukaModalAbsen('Desa')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-800 hover:bg-teal-50 transition text-left">
                     <span class="text-base">🏡</span>
-                    <span>3. Pengajian Desa</span>
+                    <span>Pengajian Desa</span>
                 </button>
 
-                <!-- 4. PENGAJIAN DAERAH -->
                 <button onclick="bukaModalAbsen('Daerah')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-800 hover:bg-teal-50 transition text-left">
                     <span class="text-base">🏛️</span>
-                    <span>4. Pengajian Daerah</span>
+                    <span>Pengajian Daerah</span>
                 </button>
 
-                <!-- 5. CEK RIWAYAT NGAJI -->
                 <a href="#sectionRiwayat" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📜</span>
-                    <span>5. Cek Riwayat Ngaji</span>
+                    <span>Cek Riwayat Ngaji</span>
                 </a>
 
                 <hr class="my-2 border-slate-100">
 
                 <p class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Manajemen System</p>
 
-                <!-- 6. ADMIN -->
                 <button onclick="bukaModalPin('ADMIN')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
                     <span class="text-base">⚙️</span>
-                    <span>6. Admin</span>
+                    <span>Admin</span>
                 </button>
 
-                <!-- 7. SUPERADMIN -->
                 <button onclick="bukaModalPin('SUPERADMIN')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-800 hover:bg-amber-50 transition text-left font-bold">
                     <span class="text-base">👑</span>
-                    <span>7. Superadmin</span>
+                    <span>Superadmin</span>
                 </button>
             </nav>
         </div>
@@ -222,11 +215,10 @@
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                 <input type="date" id="inputTanggalRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
                 
-                <!-- DROPDOWN PERSIS SEPERTI POINT 5 (A, B, C) -->
                 <select id="pilihanJenisRiwayat" class="sm:col-span-3 border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <option value="Kelompok">A. Pengajian Kelompok</option>
-                    <option value="Desa">B. Pengajian Desa</option>
-                    <option value="Daerah">C. Pengajian Daerah</option>
+                    <option value="Kelompok">Pengajian Kelompok</option>
+                    <option value="Desa">Pengajian Desa</option>
+                    <option value="Daerah">Pengajian Daerah</option>
                 </select>
 
                 <select id="pilihanSesiRiwayat" class="sm:col-span-3 border border-slate-300 rounded-lg p-2.5 text-xs bg-slate-50 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -274,7 +266,7 @@
 
     </div>
 
-    <!-- MODAL FORM INPUT ABSENSI HARIAN / DESA / DAERAH -->
+    <!-- MODAL FORM INPUT ABSENSI -->
     <div id="modalAbsenHarian" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 my-8 max-h-[90vh] flex flex-col justify-between">
             
@@ -415,7 +407,7 @@
             document.getElementById("pilihanJenisPengajian").value = jenis;
             
             const judul = document.getElementById("judulModalAbsen");
-            if (jenis === 'Kelompok') judul.innerHTML = "📋 <span>INPUT ABSEN HARIAN (KELOMPOK)</span>";
+            if (jenis === 'Kelompok') judul.innerHTML = "📋 <span>INPUT ABSEN HARIAN</span>";
             if (jenis === 'Desa') judul.innerHTML = "🏡 <span>INPUT ABSEN PENGAJIAN DESA</span>";
             if (jenis === 'Daerah') judul.innerHTML = "🏛️ <span>INPUT ABSEN PENGAJIAN DAERAH</span>";
 
