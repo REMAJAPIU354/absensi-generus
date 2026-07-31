@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ExcelJS & FileSaver Library untuk Mengolah & Menjaga Template Excel Asli -->
+    <!-- ExcelJS & FileSaver Library -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style> 
@@ -292,12 +292,12 @@
             }
         };
 
-        // EXPORT MENGGUNAKAN EXCELJS MEMBACA template_absensi.xlsx
+        // EXPORT EXCEL DENGAN PERBAIKAN URUTAN TANGGAL UTUH
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
                 if (!response.ok) {
-                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan di repositori! Pastikan nama file sudah benar.");
+                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan! Pastikan file sudah berada di repositori GitHub.");
                     return;
                 }
                 const arrayBuffer = await response.arrayBuffer();
@@ -357,39 +357,45 @@
             }
         };
 
+        // FUNGSI ISI SHEET 1 DENGAN URUTAN TANGGAL AKURAT
         function isiSubKategoriSheet1(ws, listSantri, startRow, dataAbsen) {
+            // Urutkan kunci berdasarkan tanggal (A-Z) agar tanggal 28 Juli pasti masuk
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes('_Kelompok_'))
                 .sort()
-                .slice(-6); // Ambil 6 sesi kelompok terakhir
+                .slice(-6); // Ambil 6 sesi kelompok terupdate
             
             listSantri.forEach((g, idx) => {
                 const row = ws.getRow(startRow + idx);
-                row.getCell(2).value = g.nama; // Kolom B: Nama Lengkap
+                row.getCell(2).value = g.nama; // Kolom B: Nama Santri
 
                 sessionKeys.forEach((key, colIdx) => {
-                    const rec = dataAbsen[key] ? dataAbsen[key][g.id] : null;
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[g.id];
                     if (rec && rec.status === 'Hadir') {
-                        row.getCell(4 + colIdx).value = 1; // Kolom D s/d I
+                        row.getCell(4 + colIdx).value = 1; // Kolom D s/d I (Angka 1)
                     }
                 });
             });
         }
 
+        // FUNGSI ISI SHEET 2 S/D 6 DENGAN URUTAN TANGGAL AKURAT
         function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
+            // Urutkan kunci berdasarkan tanggal (A-Z)
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
-                .slice(-8); // Ambil 8 sesi terakhir
+                .slice(-8); // Ambil 8 sesi terupdate
 
             listSantri.forEach((g, idx) => {
                 const row = ws.getRow(3 + idx);
-                row.getCell(2).value = g.nama; // Kolom B: Nama Lengkap
+                row.getCell(2).value = g.nama; // Kolom B: Nama Santri
 
                 sessionKeys.forEach((key, colIdx) => {
-                    const rec = dataAbsen[key] ? dataAbsen[key][g.id] : null;
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[g.id];
                     if (rec && rec.status === 'Hadir') {
-                        row.getCell(3 + colIdx).value = 1; // Kolom C s/d J
+                        row.getCell(3 + colIdx).value = 1; // Kolom C s/d J (Angka 1)
                     }
                 });
             });
