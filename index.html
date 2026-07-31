@@ -737,9 +737,9 @@
             hitungStatistikDashboard();
         };
 
-        // CEK RIWAYAT DENGAN DUKUNGAN PEMBACAAN FLEKSIBEL
+        // CEK RIWAYAT DENGAN PERBAIKAN FORMAT TANGGAL AUTO (YYYY-MM-DD)
         window.tampilkanRiwayatAbsen = async function() {
-            const tgl = document.getElementById("inputTanggalRiwayat").value;
+            let tglRaw = document.getElementById("inputTanggalRiwayat").value;
             const jenis = document.getElementById("pilihanJenisRiwayat").value;
             const sesi = document.getElementById("pilihanSesiRiwayat").value;
             
@@ -751,21 +751,38 @@
             containerMobile.innerHTML = "";
             tbodyDesktop.innerHTML = "";
 
-            if (!tgl) {
+            if (!tglRaw) {
                 alert("⚠️ Silakan pilih tanggal terlebih dahulu!");
                 return;
             }
 
-            // Kunci Pencarian Utama & Alternatif
-            const keyPath = `${tgl}_${jenis}_${sesi}`;
+            // AUTO FIX FORMAT TANGGAL KE YYYY-MM-DD
+            let tglFormatted = tglRaw;
+            if (tglRaw.includes('/')) {
+                const parts = tglRaw.split('/');
+                if (parts[0].length === 2 && parts[2].length === 4) {
+                    // Jika format MM/DD/YYYY
+                    tglFormatted = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                }
+            } else if (tglRaw.includes('-')) {
+                const parts = tglRaw.split('-');
+                if (parts[0].length === 4) {
+                    tglFormatted = tglRaw; // Sudah YYYY-MM-DD
+                } else if (parts[2].length === 4) {
+                    tglFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+
+            // Kunci Path Firebase yang Akurat
+            const keyPath = `${tglFormatted}_${jenis}_${sesi}`;
 
             let snapshot = await get(ref(db, `absensi/${keyPath}`));
             let dataAbsen = snapshot.val();
 
-            // Jika tidak ditemukan dengan sesi pilihan, coba periksa sesi alternatif
+            // Coba cek opsi sesi alternatif jika malam/sore belum ketemu
             if (!dataAbsen) {
                 const sesiAlt = (sesi === 'Malam') ? 'Sore' : 'Malam';
-                const keyAlt = `${tgl}_${jenis}_${sesiAlt}`;
+                const keyAlt = `${tglFormatted}_${jenis}_${sesiAlt}`;
                 const snapAlt = await get(ref(db, `absensi/${keyAlt}`));
                 if (snapAlt.exists()) {
                     dataAbsen = snapAlt.val();
@@ -774,9 +791,9 @@
 
             if (!dataAbsen) {
                 boxMateri.classList.add("hidden");
-                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat absensi tersimpan pada kriteria ini.</div>`;
+                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat absensi tersimpan pada kriteria tanggal ${tglFormatted} ini.</div>`;
                 containerMobile.innerHTML = pesanKosong;
-                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada kriteria ini.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada kriteria tanggal ${tglFormatted} ini.</td></tr>`;
                 return;
             }
 
