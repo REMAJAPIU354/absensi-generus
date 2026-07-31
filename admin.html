@@ -42,7 +42,7 @@
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
                     📊 Export Laporan Rekapitulasi Excel
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan nama santri, tanggal, dan rekap kehadiran.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan tata letak, warna, dan rekapitulasi presisi.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
@@ -296,7 +296,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT OTOMATIS: NAMA DARI FIREBASE, TANGGAL DARI FIREBASE/TEMPLATE
+        // EXPORT PRESISI POSISI LOKASI KATEGORI
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -320,10 +320,11 @@
                     const listGPNA = dataMaster.filter(g => normKat(g.kategori) === 'GPNA');
                     const listGPNB = dataMaster.filter(g => normKat(g.kategori) === 'GPNB');
 
-                    isiSheet1Auto(ws1, listAPR, 3, dataAbsen);
-                    isiSheet1Auto(ws1, listAR, 8, dataAbsen);
-                    isiSheet1Auto(ws1, listGPNA, 15, dataAbsen);
-                    isiSheet1Auto(ws1, listGPNB, 30, dataAbsen);
+                    // Baris Awal Presisi: APR=3 (max 5 baris), AR=8 (max 5 baris), GPNA=15 (max 10 baris), GPNB=30
+                    isiSubGroupSheet1Presisi(ws1, listAPR, 3, 5, dataAbsen);
+                    isiSubGroupSheet1Presisi(ws1, listAR, 8, 5, dataAbsen);
+                    isiSubGroupSheet1Presisi(ws1, listGPNA, 15, 10, dataAbsen);
+                    isiSubGroupSheet1Presisi(ws1, listGPNB, 30, 10, dataAbsen);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
@@ -366,8 +367,8 @@
             }
         };
 
-        // ENGINING PENULISAN NAMA & REKAP KEBACA DENGAN TANGGAL
-        function isiSheet1Auto(ws, listSantri, startRow, dataAbsen) {
+        // FUNGSI ISI SHEET 1 PRESISI BATAS KATEGORI
+        function isiSubGroupSheet1Presisi(ws, listGroup, startRow, maxRowsAllowed, dataAbsen) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes('_Kelompok_'))
                 .sort()
@@ -375,18 +376,18 @@
 
             // Isikan Header Tanggal di Baris 2 (Kolom D s/d I)
             sessionKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0]; // Ambil YYYY-MM-DD
+                const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
                 const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
                 ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
             });
 
-            // Tuliskan Nama Santri dan Rekap Angka Kehadirannya
-            listSantri.forEach((santri, idx) => {
+            // Tuliskan Nama Santri sesuai slot maksimalnya agar tidak meluap ke bawah
+            listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
                 const rowNum = startRow + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama; // Tulis Nama ke Kolom B
+                row.getCell(2).value = santri.nama; // Tulis Nama di Kolom B
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
@@ -416,13 +417,13 @@
                 const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama; // Tulis Nama ke Kolom B
+                row.getCell(2).value = santri.nama;
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(3 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
+                        row.getCell(3 + colIdx).value = 1;
                     }
                 });
             });
