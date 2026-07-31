@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js untuk Diagram Pie -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style> 
         body { font-family: 'Inter', sans-serif; } 
     </style>
@@ -17,7 +19,7 @@
     <!-- BACKDROP SIDEBAR (GELAP / BLUR) -->
     <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
 
-    <!-- SIDEBAR NAVIGASI (ALA GEMINI) -->
+    <!-- SIDEBAR NAVIGASI (ALA GEMINI / ZLEEPING UI) -->
     <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
         <div>
             <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
@@ -39,7 +41,7 @@
                 
                 <a href="#sectionDashboard" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📊</span>
-                    <span>Dashboard Presentasi</span>
+                    <span>Dashboard Analytics</span>
                 </a>
 
                 <a href="#sectionAbsen" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
@@ -100,43 +102,69 @@
             </button>
         </div>
 
-        <!-- DASHBOARD PRESENTASI KEHADIRAN GENERUS -->
-        <div id="sectionDashboard" class="bg-white rounded-2xl p-3.5 sm:p-5 border border-slate-200 shadow-sm space-y-3">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-                    📊 <span>Ringkasan Evaluasi Kehadiran Bulan Ini</span>
-                </h3>
-            </div>
-
+        <!-- DASHBOARD PRESENTASI & DIAGRAM PIE (SEPERTI REFERENSI GABUNGAN) -->
+        <div id="sectionDashboard" class="space-y-3">
+            
+            <!-- 4 KARTU RINGKASAN STATISTIK (STAT CARDS) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <!-- CARD APR - GPNB -->
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
-                    <p class="text-[10px] font-bold text-emerald-700 uppercase">APR s/d GPN-B</p>
-                    <h4 id="statPersenUtama" class="text-lg sm:text-2xl font-black text-emerald-900 mt-1">0%</h4>
-                    <p class="text-[9px] text-emerald-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                <!-- CARD TOTAL GENERUS -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Santri</p>
+                        <h4 id="statTotalSantri" class="text-xl sm:text-2xl font-black text-slate-800 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">
+                        👥
+                    </div>
                 </div>
 
-                <!-- CARD AR INTENSIF -->
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
-                    <p class="text-[10px] font-bold text-amber-700 uppercase">AR INTENSIF</p>
-                    <h4 id="statPersenIntensif" class="text-lg sm:text-2xl font-black text-amber-900 mt-1">0%</h4>
-                    <p class="text-[9px] text-amber-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                <!-- CARD HADIR -->
+                <div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Hadir</p>
+                        <h4 id="statTotalHadir" class="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">
+                        ✅
+                    </div>
                 </div>
 
-                <!-- CARD ACR -->
-                <div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-center">
-                    <p class="text-[10px] font-bold text-teal-700 uppercase">ACR (SORE & MALAM)</p>
-                    <h4 id="statPersenACR" class="text-lg sm:text-2xl font-black text-teal-900 mt-1">0%</h4>
-                    <p class="text-[9px] text-teal-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                <!-- CARD IZIN -->
+                <div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Izin</p>
+                        <h4 id="statTotalIzin" class="text-xl sm:text-2xl font-black text-amber-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">
+                        📩
+                    </div>
                 </div>
 
-                <!-- CARD SANTRI BARU < 6 BULAN -->
-                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center">
-                    <p class="text-[10px] font-bold text-indigo-700 uppercase">SANTRI BARU (&lt;6 BLN)</p>
-                    <h4 id="statTotalGenerusBaru" class="text-lg sm:text-2xl font-black text-indigo-900 mt-1">0 Orang</h4>
-                    <p class="text-[9px] text-indigo-600 font-semibold mt-0.5">Masa Adaptasi</p>
+                <!-- CARD ALPA -->
+                <div class="bg-white border border-red-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Alpa</p>
+                        <h4 id="statTotalAlpa" class="text-xl sm:text-2xl font-black text-red-700 mt-0.5">0</h4>
+                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-red-50 text-red-700 flex items-center justify-center text-lg">
+                        ❌
+                    </div>
                 </div>
             </div>
+
+            <!-- DAHBOARD DIAGRAM PIE PERSENTASE -->
+            <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">Status Kehadiran Bulan Ini</h3>
+                    <p id="teksTotalRecord" class="text-xs text-slate-400 mt-0.5">Total : 0 Record Presensi</p>
+                </div>
+
+                <!-- CANVAS DIAGRAM LINGKARAN (PIE CHART) -->
+                <div class="flex justify-center items-center py-2 relative" style="max-height: 240px;">
+                    <canvas id="chartPresensiPie"></canvas>
+                </div>
+            </div>
+
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden p-3.5 sm:p-6 space-y-5">
@@ -285,6 +313,7 @@
         let dataMasterGenerus = [];
         let statusAbsenTemp = {}; 
         let catatanIzinTemp = {};
+        let myPieChart = null;
 
         const today = new Date().toISOString().split('T')[0];
         document.getElementById("labelTanggalHariIni").innerText = today;
@@ -331,27 +360,24 @@
             }
         };
 
-        // Ambil Data Master Generus & Kalkulasi Dashboard
+        // Ambil Data Master Generus & Render Dashboard
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
             dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
+            document.getElementById("statTotalSantri").innerText = dataMasterGenerus.length;
+            
             muatDaftarAbsen();
             hitungStatistikDashboard();
         });
 
-        // KALKULASI DASHBOARD PRESENTASI
+        // KALKULASI DASHBOARD STAT CARDS & DIAGRAM PIE
         async function hitungStatistikDashboard() {
-            // Hitung Santri Baru < 6 Bulan
-            const totalBaru = dataMasterGenerus.filter(g => g.isGenerusBaru === true).length;
-            document.getElementById("statTotalGenerusBaru").innerText = `${totalBaru} Orang`;
-
-            // Ambil Seluruh Data Absen Bulan Ini
             const snapAbsen = await get(ref(db, 'absensi'));
             const dataAbsen = snapAbsen.val() || {};
 
-            let totalHadirUtama = 0, totalPeluangUtama = 0;
-            let totalHadirIntensif = 0, totalPeluangIntensif = 0;
-            let totalHadirACR = 0, totalPeluangACR = 0;
+            let totalHadir = 0;
+            let totalIzin = 0;
+            let totalAlpa = 0;
 
             const currentMonth = today.substring(0, 7); // YYYY-MM
 
@@ -362,30 +388,67 @@
                     dataMasterGenerus.forEach(g => {
                         const rec = sessionData[g.id];
                         if (rec && rec.status) {
-                            const kat = g.kategori || 'ACR';
-
-                            if (kat === 'ACR') {
-                                totalPeluangACR++;
-                                if (rec.status === 'Hadir') totalHadirACR++;
-                            } else if (kat === 'AR Intensif') {
-                                totalPeluangIntensif++;
-                                if (rec.status === 'Hadir') totalHadirIntensif++;
-                            } else {
-                                totalPeluangUtama++;
-                                if (rec.status === 'Hadir') totalHadirUtama++;
-                            }
+                            if (rec.status === 'Hadir') totalHadir++;
+                            if (rec.status === 'Izin') totalIzin++;
+                            if (rec.status === 'Alpa') totalAlpa++;
                         }
                     });
                 }
             });
 
-            const persenUtama = totalPeluangUtama > 0 ? Math.round((totalHadirUtama / totalPeluangUtama) * 100) : 0;
-            const persenIntensif = totalPeluangIntensif > 0 ? Math.round((totalHadirIntensif / totalPeluangIntensif) * 100) : 0;
-            const persenACR = totalPeluangACR > 0 ? Math.round((totalHadirACR / totalPeluangACR) * 100) : 0;
+            // Update Kartu Angka
+            document.getElementById("statTotalHadir").innerText = totalHadir;
+            document.getElementById("statTotalIzin").innerText = totalIzin;
+            document.getElementById("statTotalAlpa").innerText = totalAlpa;
 
-            document.getElementById("statPersenUtama").innerText = `${persenUtama}%`;
-            document.getElementById("statPersenIntensif").innerText = `${persenIntensif}%`;
-            document.getElementById("statPersenACR").innerText = `${persenACR}%`;
+            const totalRecord = totalHadir + totalIzin + totalAlpa;
+            document.getElementById("teksTotalRecord").innerText = `Total : ${totalRecord} Record Presensi Bulan Ini`;
+
+            // Render Diagram Pie
+            renderChartPie(totalHadir, totalIzin, totalAlpa);
+        }
+
+        function renderChartPie(hadir, izin, alpa) {
+            const ctx = document.getElementById('chartPresensiPie').getContext('2d');
+            
+            if (myPieChart) {
+                myPieChart.destroy();
+            }
+
+            myPieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hadir', 'Izin', 'Alpa'],
+                    datasets: [{
+                        data: [hadir, izin, alpa],
+                        backgroundColor: [
+                            '#10b981', // Emerald 500
+                            '#f59e0b', // Amber 500
+                            '#ef4444'  // Red 500
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 11,
+                                    weight: 'bold',
+                                    family: 'Inter'
+                                },
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
         }
 
         window.filterKategoriDiubah = function() {
