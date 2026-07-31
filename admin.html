@@ -296,7 +296,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT EXCEL KOORDINAT PRESISI AKURAT
+        // EXPORT EXCEL RAPI PER KATEGORI & MEMISAHKAN SANTRI BARU (SHEET 6)
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -312,53 +312,49 @@
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(arrayBuffer);
 
+                // --- PISAHKAN SANTRI LAMA & SANTRI BARU (< 6 BULAN) ---
+                const santriLama = dataMaster.filter(g => !hitungApakahSantriBaru(g.tglMasuk));
+                const santriBaru = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk));
+
+                const listAPR = santriLama.filter(g => normKat(g.kategori) === 'APR');
+                const listAR = santriLama.filter(g => normKat(g.kategori) === 'AR');
+                const listGPNA = santriLama.filter(g => normKat(g.kategori) === 'GPNA');
+                const listGPNB = santriLama.filter(g => normKat(g.kategori) === 'GPNB');
+
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    const listAPR = dataMaster.filter(g => normKat(g.kategori) === 'APR');
-                    const listAR = dataMaster.filter(g => normKat(g.kategori) === 'AR');
-                    const listGPNA = dataMaster.filter(g => normKat(g.kategori) === 'GPNA');
-                    const listGPNB = dataMaster.filter(g => normKat(g.kategori) === 'GPNB');
-
-                    // POSISI SLOTS PRESISI TEMPLATE UTAMA:
-                    // APR : Baris 3  (Maksimal 15 Santri, Baris 18 adalah Total)
-                    // AR  : Baris 20 (Maksimal 10 Santri, Baris 30 adalah Total)
-                    // GPNA: Baris 32 (Maksimal 16 Santri, Baris 48 adalah Total)
-                    // GPNB: Baris 50 (Maksimal 15 Santri)
-                    isiSubGroupSheet1Presisi(ws1, listAPR, 3, 15, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listAR, 20, 10, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listGPNA, 32, 16, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listGPNB, 50, 15, dataAbsen);
+                    isiBertingkatPresisi(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandarAuto(ws2, dataMaster.filter(g => normKat(g.kategori) === 'ARINTENSIF'), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws2, santriLama.filter(g => normKat(g.kategori) === 'ARINTENSIF'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarAuto(ws3, dataMaster.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiSheetStandarAuto(ws4, dataMaster, dataAbsen, 'Desa');
+                    isiBertingkatPresisi(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
                 }
 
                 // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiSheetStandarAuto(ws5, dataMaster, dataAbsen, 'Daerah');
+                    isiBertingkatPresisi(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
                 }
 
-                // --- SHEET 6: Absen Generus Baru ---
+                // --- SHEET 6: Absen Generus Baru (KHUSUS SANTRI BARU SEPERTI DISTI) ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarAuto(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws6, santriBaru, dataAbsen, 'Kelompok', 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -371,10 +367,10 @@
             }
         };
 
-        // FUNGSI ISI SHEET 1 SESUAI BLOK MASING-MASING
-        function isiSubGroupSheet1Presisi(ws, listGroup, startRow, maxRowsAllowed, dataAbsen) {
+        // FUNGSI KHUSUS SHEET BERTINGKAT (SHEET 1, SHEET 4, SHEET 5)
+        function isiBertingkatPresisi(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
             let sessionKeys = Object.keys(dataAbsen)
-                .filter(k => k.includes('_Kelompok_'))
+                .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
                 .slice(-6);
 
@@ -386,7 +382,20 @@
                 ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
             });
 
-            // Isikan nama dan kehadiran santri di blok masing-masing
+            // APR (Baris 3, Maksimal 15 Slot)
+            isiBlokGenerus(ws, listAPR, 3, 15, sessionKeys, dataAbsen);
+
+            // AR (Baris 20, Maksimal 10 Slot)
+            isiBlokGenerus(ws, listAR, 20, 10, sessionKeys, dataAbsen);
+
+            // GPNA (Baris 32, Maksimal 16 Slot)
+            isiBlokGenerus(ws, listGPNA, 32, 16, sessionKeys, dataAbsen);
+
+            // GPNB (Baris 50, Maksimal 15 Slot)
+            isiBlokGenerus(ws, listGPNB, 50, 15, sessionKeys, dataAbsen);
+        }
+
+        function isiBlokGenerus(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen) {
             listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
                 const rowNum = startRow + idx;
                 const row = ws.getRow(rowNum);
@@ -403,18 +412,21 @@
             });
         }
 
-        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilter) {
+        // FUNGSI UNTUK SHEET TIPE TUNGGAL (SHEET 2, 3, 6)
+        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilter, colStartOverride = null) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
                 .slice(-8);
 
-            // Isikan Header Tanggal di Baris 2 (Kolom C s/d J)
+            const colStart = colStartOverride || 3; // Sheet 6 memakai Kolom D (4)
+
+            // Isikan Header Tanggal di Baris 2
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
                 const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
+                ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
             });
 
             listSantri.forEach((santri, idx) => {
@@ -427,7 +439,7 @@
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(3 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
+                        row.getCell(colStart + colIdx).value = 1; // Masukkan angka 1 jika Hadir
                     }
                 });
             });
