@@ -40,9 +40,9 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel
+                    📊 Export Laporan Rekapitulasi Excel (Siklus 21 s/d 20)
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan tata letak, warna, dan rekapitulasi presisi.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Otomatis menyaring tanggal dari <span id="labelSiklusPeriode" class="font-bold text-emerald-800">21 Juli - 20 Agustus</span> dan mengisinya ke 6 Sheet Excel.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
@@ -160,6 +160,31 @@
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById("inputTglMasukGenerus").value = todayStr;
+
+        // FUNGSI RENTANG SIKLUS (TANGGAL 21 s/d TANGGAL 20)
+        function dapatkanRentangSiklusBerjalan() {
+            const skr = new Date();
+            const thn = skr.getFullYear();
+            const bln = skr.getMonth(); // 0-based
+            const tgl = skr.getDate();
+
+            let awal, akhir;
+            if (tgl >= 21) {
+                awal = new Date(thn, bln, 21);
+                akhir = new Date(thn, bln + 1, 20);
+            } else {
+                awal = new Date(thn, bln - 1, 21);
+                akhir = new Date(thn, bln, 20);
+            }
+
+            const strAwal = awal.toISOString().split('T')[0];
+            const strAkhir = akhir.toISOString().split('T')[0];
+
+            return { strAwal, strAkhir };
+        }
+
+        const siklus = dapatkanRentangSiklusBerjalan();
+        document.getElementById("labelSiklusPeriode").innerText = `${siklus.strAwal} s/d ${siklus.strAkhir}`;
 
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
@@ -289,7 +314,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT EXCEL DENGAN PEMISAHAN PERTEMUAN KELOMPOK VS AR INTENSIF
+        // EXPORT EXCEL KHUSUS SIKLUS 21 JULI S/D 20 AGUSTUS
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -305,7 +330,6 @@
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(arrayBuffer);
 
-                // --- PISAHKAN SANTRI LAMA & SANTRI BARU (< 6 BULAN) ---
                 const santriLama = dataMaster.filter(g => !hitungApakahSantriBaru(g.tglMasuk));
                 const santriBaru = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk));
 
@@ -314,41 +338,42 @@
                 const listGPNA = santriLama.filter(g => normKat(g.kategori) === 'GPNA');
                 const listGPNB = santriLama.filter(g => normKat(g.kategori) === 'GPNB');
 
-                // --- SHEET 1: Absensi APR - GPN B (Termasuk 1x Pengajian Kelompok Utama untuk AR) ---
+                const rentangSiklus = dapatkanRentangSiklusBerjalan();
+
+                // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiBertingkatPresisi(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
+                    isiBertingkatSiklus(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok', rentangSiklus);
                 }
 
-                // --- SHEET 2: Absensi AR Intensif (Khusus 2x Pertemuan AR Intensif) ---
+                // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    // Cari pertemuan ARIntensif, jika tidak ada fallback ke Kelompok khusus anak AR
-                    isiSheetStandarAuto(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
+                    isiSheetStandarSiklus(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok', null, rentangSiklus);
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarAuto(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarSiklus(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok', null, null, rentangSiklus);
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiBertingkatPresisi(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
+                    isiBertingkatSiklus(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa', rentangSiklus);
                 }
 
                 // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiBertingkatPresisi(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
+                    isiBertingkatSiklus(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah', rentangSiklus);
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarAuto(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
+                    isiSheetStandarSiklus(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4, rentangSiklus);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -361,11 +386,18 @@
             }
         };
 
-        function isiBertingkatPresisi(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
-            let sessionKeys = Object.keys(dataAbsen)
-                .filter(k => k.includes(`_${jenisFilter}_`))
-                .sort()
-                .slice(-6);
+        // FUNGSI MEMBERSIHKAN TANGGAL DALAM SIKLUS (>= 21 JULI DAN <= 20 AGUSTUS)
+        function murniAmbilTanggalDalamSiklus(dataAbsen, jenisFilter, rentangSiklus) {
+            return Object.keys(dataAbsen)
+                .filter(key => {
+                    const tglKey = key.substring(0, 10);
+                    return key.includes(`_${jenisFilter}_`) && (tglKey >= rentangSiklus.strAwal && tglKey <= rentangSiklus.strAkhir);
+                })
+                .sort();
+        }
+
+        function isiBertingkatSiklus(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter, rentangSiklus) {
+            let sessionKeys = murniAmbilTanggalDalamSiklus(dataAbsen, jenisFilter, rentangSiklus).slice(-6);
 
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
@@ -397,23 +429,17 @@
             });
         }
 
-        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
-            let sessionKeys = Object.keys(dataAbsen)
-                .filter(k => k.includes(`_${jenisFilterUtama}_`))
-                .sort()
-                .slice(-8);
+        function isiSheetStandarSiklus(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null, rentangSiklus) {
+            let sessionKeys = murniAmbilTanggalDalamSiklus(dataAbsen, jenisFilterUtama, rentangSiklus);
 
-            // Jika tidak ada data spesifik jenisFilterUtama, pakai fallback
             if (sessionKeys.length === 0 && jenisFilterFallback) {
-                sessionKeys = Object.keys(dataAbsen)
-                    .filter(k => k.includes(`_${jenisFilterFallback}_`))
-                    .sort()
-                    .slice(-8);
+                sessionKeys = murniAmbilTanggalDalamSiklus(dataAbsen, jenisFilterFallback, rentangSiklus);
             }
 
+            let displayKeys = sessionKeys.slice(-8);
             const colStart = colStartOverride || 3;
 
-            sessionKeys.forEach((key, colIdx) => {
+            displayKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
                 const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
@@ -426,7 +452,7 @@
 
                 row.getCell(2).value = santri.nama;
 
-                sessionKeys.forEach((key, colIdx) => {
+                displayKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
