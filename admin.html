@@ -40,9 +40,9 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel
+                    📊 Export Laporan Rekapitulasi Excel (Fitur H, I, A)
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis seluruh tanggal presensi yang tersimpan di Firebase ke 6 Sheet Excel.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Menampilkan status H, I, A di tabel, dan hanya menghitung huruf "H" untuk akumulasi persentase kehadiran.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
@@ -289,7 +289,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT UNIVERSAL MENDETEKSI SEMUA KUNCI TANGGAL FIREBASE (TERMASUK TANGGAL 28)
+        // EXPORT DENGAN HURUF STATUS H, I, A & RUMUS HANYA MENGHITUNG "H"
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -316,37 +316,37 @@
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiBertingkatUniversal(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
+                    isiBertingkatHIA(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandarUniversal(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
+                    isiSheetStandarHIA(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarUniversal(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarHIA(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiBertingkatUniversal(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
+                    isiBertingkatHIA(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
                 }
 
                 // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiBertingkatUniversal(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
+                    isiBertingkatHIA(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarUniversal(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
+                    isiSheetStandarHIA(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -359,28 +359,20 @@
             }
         };
 
-        // FUNGSI UNIVERSAL PEMBACA SEMUA KEY TANGGAL DARI FIREBASE
         function ambilSemuaKunciSesiValid(dataAbsen, jenisFilter) {
             let allKeys = Object.keys(dataAbsen);
-            
-            // Filter key yang relevan
             let filtered = allKeys.filter(k => k.toLowerCase().includes(jenisFilter.toLowerCase()));
-            
-            // Jika kosong, ambil semua key yang punya isi data
             if (filtered.length === 0) {
                 filtered = allKeys.filter(k => !k.startsWith('_'));
             }
-
-            // Urutkan berdasarkan tanggal
             return filtered.sort();
         }
 
-        function isiBertingkatUniversal(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
+        function isiBertingkatHIA(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
             let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilter);
-
-            // Ambil maksimal 6 tanggal terisi untuk header
             let displayKeys = sessionKeys.slice(-6);
 
+            // Tulis Header Tanggal di Baris 2
             displayKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -388,13 +380,13 @@
                 ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
             });
 
-            isiBlokGenerus(ws, listAPR, 3, 15, displayKeys, dataAbsen);
-            isiBlokGenerus(ws, listAR, 20, 10, displayKeys, dataAbsen);
-            isiBlokGenerus(ws, listGPNA, 32, 16, displayKeys, dataAbsen);
-            isiBlokGenerus(ws, listGPNB, 50, 15, displayKeys, dataAbsen);
+            isiBlokHIA(ws, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
+            isiBlokHIA(ws, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
+            isiBlokHIA(ws, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
+            isiBlokHIA(ws, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
         }
 
-        function isiBlokGenerus(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen) {
+        function isiBlokHIA(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen, colStartLetter, colEndLetter, colAkumulasi) {
             listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
                 const rowNum = startRow + idx;
                 const row = ws.getRow(rowNum);
@@ -404,14 +396,25 @@
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
-                    if (rec && rec.status && rec.status.toString().toLowerCase() === 'hadir') {
-                        row.getCell(4 + colIdx).value = 1;
+                    if (rec && rec.status) {
+                        const st = rec.status.toString().toLowerCase();
+                        let kode = '';
+                        if (st === 'hadir') kode = 'H';
+                        else if (st === 'izin') kode = 'I';
+                        else if (st === 'alpa') kode = 'A';
+
+                        if (kode !== '') {
+                            row.getCell(4 + colIdx).value = kode; // Tulis huruf H, I, atau A
+                        }
                     }
                 });
+
+                // PERBAIKAN RUMUS AKUMULASI: HANYA MENGHITUNG HURUF "H" SANA!
+                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
             });
         }
 
-        function isiSheetStandarUniversal(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
+        function isiSheetStandarHIA(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
             let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterUtama);
 
             if (sessionKeys.length === 0 && jenisFilterFallback) {
@@ -420,6 +423,9 @@
 
             let displayKeys = sessionKeys.slice(-8);
             const colStart = colStartOverride || 3;
+            const colStartLetter = colStart === 4 ? 'D' : 'C';
+            const colEndLetter = colStart === 4 ? 'K' : 'J';
+            const colAkumulasi = colStart === 4 ? 12 : 11;
 
             displayKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
@@ -437,10 +443,21 @@
                 displayKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
-                    if (rec && rec.status && rec.status.toString().toLowerCase() === 'hadir') {
-                        row.getCell(colStart + colIdx).value = 1;
+                    if (rec && rec.status) {
+                        const st = rec.status.toString().toLowerCase();
+                        let kode = '';
+                        if (st === 'hadir') kode = 'H';
+                        else if (st === 'izin') kode = 'I';
+                        else if (st === 'alpa') kode = 'A';
+
+                        if (kode !== '') {
+                            row.getCell(colStart + colIdx).value = kode; // Tulis huruf H, I, atau A
+                        }
                     }
                 });
+
+                // PERBAIKAN RUMUS AKUMULASI: HANYA MENGHITUNG HURUF "H"
+                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
             });
         }
     </script>
