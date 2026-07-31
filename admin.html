@@ -292,7 +292,7 @@
             }
         };
 
-        // EXPORT TANPA MERUSAK RUMUS ASLI TEMPLATE
+        // EXPORT DENGAN MATCHING EKSTRA PRESISI (TANGGAL 28 DIJAMIN REKAP)
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -311,7 +311,7 @@
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiSubKategoriSheet1(ws1, dataMaster, dataAbsen);
+                    isiSubKategoriSheet1Akurat(ws1, dataMaster, dataAbsen);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
@@ -354,14 +354,20 @@
             }
         };
 
-        // FUNGSI ISI SHEET 1 AMAN
-        function isiSubKategoriSheet1(ws, allSantri, dataAbsen) {
+        // Helper membersihkan string nama
+        function cleanStr(str) {
+            return (str || "").toString().toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        // FUNGSI ISI SHEET 1 DENGAN MATCHING NAMA PRESISI
+        function isiSubKategoriSheet1Akurat(ws, allSantri, dataAbsen) {
+            // Urutkan kunci berdasarkan tanggal agar tanggal 28 Juli pasti masuk
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes('_Kelompok_'))
                 .sort()
                 .slice(-6);
 
-            // 1. Tulis Header Tanggal di Baris 1/2
+            // 1. Tulis Header Tanggal di Baris 1 atau 2 (Kolom D s/d I)
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -369,20 +375,25 @@
                 ws.getRow(1).getCell(4 + colIdx).value = labelTgl;
             });
 
-            // 2. Tulis Nilai Kehadiran (1) Tanpa Menyentuh Rumus
+            // 2. Loop Baris Template & Cocokkan Nama Santri
             const maxRows = ws.rowCount || 60;
             for (let r = 3; r <= maxRows; r++) {
                 const row = ws.getRow(r);
                 const cellB = row.getCell(2).value;
 
                 if (cellB && typeof cellB === 'string' && cellB.trim() !== '') {
-                    const santriFound = allSantri.find(g => g.nama.trim().toLowerCase() === cellB.trim().toLowerCase());
+                    const namaCleanExcel = cleanStr(cellB);
+
+                    // Cari santri yang namanya mirip di database
+                    const santriFound = allSantri.find(g => cleanStr(g.nama) === namaCleanExcel);
 
                     if (santriFound) {
                         sessionKeys.forEach((key, colIdx) => {
                             const sessionData = dataAbsen[key] || {};
                             const rec = sessionData[santriFound.id];
-                            if (rec && rec.status === 'Hadir') {
+                            
+                            // Jika ada status Hadir, masukkan angka 1
+                            if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
                                 row.getCell(4 + colIdx).value = 1;
                             }
                         });
@@ -391,14 +402,14 @@
             }
         }
 
-        // FUNGSI ISI SHEET STANDAR AMAN
+        // FUNGSI ISI SHEET STANDAR AKURAT
         function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
                 .slice(-8);
 
-            // Header Tanggal
+            // Header Tanggal (Kolom C s/d J)
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -413,7 +424,7 @@
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[g.id];
-                    if (rec && rec.status === 'Hadir') {
+                    if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
                         row.getCell(3 + colIdx).value = 1;
                     }
                 });
