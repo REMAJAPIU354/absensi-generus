@@ -42,7 +42,7 @@
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
                     📊 Export Laporan Rekapitulasi Excel
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan tata letak, warna, dan rumus asli.</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan nama santri, tanggal, dan rekap kehadiran.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
@@ -292,12 +292,16 @@
             }
         };
 
-        // EXPORT DENGAN MATCHING EKSTRA PRESISI (TANGGAL 28 DIJAMIN REKAP)
+        function normKat(k) {
+            return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
+        }
+
+        // EXPORT OTOMATIS: NAMA DARI FIREBASE, TANGGAL DARI FIREBASE/TEMPLATE
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
                 if (!response.ok) {
-                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan! Pastikan nama file di GitHub sudah pas.");
+                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan!");
                     return;
                 }
                 const arrayBuffer = await response.arrayBuffer();
@@ -311,37 +315,45 @@
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiSubKategoriSheet1Akurat(ws1, dataMaster, dataAbsen);
+                    const listAPR = dataMaster.filter(g => normKat(g.kategori) === 'APR');
+                    const listAR = dataMaster.filter(g => normKat(g.kategori) === 'AR');
+                    const listGPNA = dataMaster.filter(g => normKat(g.kategori) === 'GPNA');
+                    const listGPNB = dataMaster.filter(g => normKat(g.kategori) === 'GPNB');
+
+                    isiSheet1Auto(ws1, listAPR, 3, dataAbsen);
+                    isiSheet1Auto(ws1, listAR, 8, dataAbsen);
+                    isiSheet1Auto(ws1, listGPNA, 15, dataAbsen);
+                    isiSheet1Auto(ws1, listGPNB, 30, dataAbsen);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandar(ws2, dataMaster.filter(g => g.kategori === 'AR Intensif'), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws2, dataMaster.filter(g => normKat(g.kategori) === 'ARINTENSIF'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandar(ws3, dataMaster.filter(g => g.kategori === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws3, dataMaster.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiSheetStandar(ws4, dataMaster, dataAbsen, 'Desa');
+                    isiSheetStandarAuto(ws4, dataMaster, dataAbsen, 'Desa');
                 }
 
                 // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiSheetStandar(ws5, dataMaster, dataAbsen, 'Daerah');
+                    isiSheetStandarAuto(ws5, dataMaster, dataAbsen, 'Daerah');
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandar(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
+                    isiSheetStandarAuto(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -354,78 +366,63 @@
             }
         };
 
-        // Helper membersihkan string nama
-        function cleanStr(str) {
-            return (str || "").toString().toLowerCase().replace(/\s+/g, ' ').trim();
-        }
-
-        // FUNGSI ISI SHEET 1 DENGAN MATCHING NAMA PRESISI
-        function isiSubKategoriSheet1Akurat(ws, allSantri, dataAbsen) {
-            // Urutkan kunci berdasarkan tanggal agar tanggal 28 Juli pasti masuk
+        // ENGINING PENULISAN NAMA & REKAP KEBACA DENGAN TANGGAL
+        function isiSheet1Auto(ws, listSantri, startRow, dataAbsen) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes('_Kelompok_'))
                 .sort()
                 .slice(-6);
 
-            // 1. Tulis Header Tanggal di Baris 1 atau 2 (Kolom D s/d I)
+            // Isikan Header Tanggal di Baris 2 (Kolom D s/d I)
             sessionKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
+                const tglString = key.split('_')[0]; // Ambil YYYY-MM-DD
                 const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[2]}/${parts[1]}` : tglString;
-                ws.getRow(1).getCell(4 + colIdx).value = labelTgl;
+                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
             });
 
-            // 2. Loop Baris Template & Cocokkan Nama Santri
-            const maxRows = ws.rowCount || 60;
-            for (let r = 3; r <= maxRows; r++) {
-                const row = ws.getRow(r);
-                const cellB = row.getCell(2).value;
+            // Tuliskan Nama Santri dan Rekap Angka Kehadirannya
+            listSantri.forEach((santri, idx) => {
+                const rowNum = startRow + idx;
+                const row = ws.getRow(rowNum);
 
-                if (cellB && typeof cellB === 'string' && cellB.trim() !== '') {
-                    const namaCleanExcel = cleanStr(cellB);
+                row.getCell(2).value = santri.nama; // Tulis Nama ke Kolom B
 
-                    // Cari santri yang namanya mirip di database
-                    const santriFound = allSantri.find(g => cleanStr(g.nama) === namaCleanExcel);
-
-                    if (santriFound) {
-                        sessionKeys.forEach((key, colIdx) => {
-                            const sessionData = dataAbsen[key] || {};
-                            const rec = sessionData[santriFound.id];
-                            
-                            // Jika ada status Hadir, masukkan angka 1
-                            if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                                row.getCell(4 + colIdx).value = 1;
-                            }
-                        });
+                sessionKeys.forEach((key, colIdx) => {
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[santri.id];
+                    if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
+                        row.getCell(4 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
                     }
-                }
-            }
+                });
+            });
         }
 
-        // FUNGSI ISI SHEET STANDAR AKURAT
-        function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
+        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilter) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
                 .slice(-8);
 
-            // Header Tanggal (Kolom C s/d J)
+            // Isikan Header Tanggal di Baris 2 (Kolom C s/d J)
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[2]}/${parts[1]}` : tglString;
+                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
                 ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
             });
 
-            listSantri.forEach((g, idx) => {
+            listSantri.forEach((santri, idx) => {
                 const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
 
+                row.getCell(2).value = santri.nama; // Tulis Nama ke Kolom B
+
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[g.id];
+                    const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(3 + colIdx).value = 1;
+                        row.getCell(3 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
                     }
                 });
             });
