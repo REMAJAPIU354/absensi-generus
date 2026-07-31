@@ -737,7 +737,7 @@
             hitungStatistikDashboard();
         };
 
-        // CEK RIWAYAT DENGAN PERBAIKAN FORMAT TANGGAL AUTO (YYYY-MM-DD)
+        // CEK RIWAYAT ABSENSI & MATERI PENGAJIAN CERDAS
         window.tampilkanRiwayatAbsen = async function() {
             let tglRaw = document.getElementById("inputTanggalRiwayat").value;
             const jenis = document.getElementById("pilihanJenisRiwayat").value;
@@ -756,53 +756,52 @@
                 return;
             }
 
-            // AUTO FIX FORMAT TANGGAL KE YYYY-MM-DD
+            // Normalisasi Tanggal ke YYYY-MM-DD
             let tglFormatted = tglRaw;
             if (tglRaw.includes('/')) {
                 const parts = tglRaw.split('/');
                 if (parts[0].length === 2 && parts[2].length === 4) {
-                    // Jika format MM/DD/YYYY
                     tglFormatted = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
                 }
-            } else if (tglRaw.includes('-')) {
-                const parts = tglRaw.split('-');
-                if (parts[0].length === 4) {
-                    tglFormatted = tglRaw; // Sudah YYYY-MM-DD
-                } else if (parts[2].length === 4) {
-                    tglFormatted = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                }
             }
 
-            // Kunci Path Firebase yang Akurat
-            const keyPath = `${tglFormatted}_${jenis}_${sesi}`;
-
-            let snapshot = await get(ref(db, `absensi/${keyPath}`));
-            let dataAbsen = snapshot.val();
-
-            // Coba cek opsi sesi alternatif jika malam/sore belum ketemu
-            if (!dataAbsen) {
-                const sesiAlt = (sesi === 'Malam') ? 'Sore' : 'Malam';
-                const keyAlt = `${tglFormatted}_${jenis}_${sesiAlt}`;
-                const snapAlt = await get(ref(db, `absensi/${keyAlt}`));
-                if (snapAlt.exists()) {
-                    dataAbsen = snapAlt.val();
-                }
+            // 1. Pastikan Master Data Terisi
+            if (!dataMasterGenerus || dataMasterGenerus.length === 0) {
+                const snapMaster = await get(ref(db, 'master'));
+                const masterVal = snapMaster.val() || {};
+                dataMasterGenerus = Object.values(masterVal).filter(item => item && typeof item === 'object');
             }
 
-            if (!dataAbsen) {
+            // 2. Ambil Semua Data Absensi Firebase
+            const snapAllAbsen = await get(ref(db, 'absensi'));
+            const allAbsenData = snapAllAbsen.val() || {};
+
+            // Cari kunci yang sesuai dengan tanggal
+            let matchedKeys = Object.keys(allAbsenData).filter(k => k.startsWith(tglFormatted));
+
+            if (matchedKeys.length === 0) {
                 boxMateri.classList.add("hidden");
-                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat absensi tersimpan pada kriteria tanggal ${tglFormatted} ini.</div>`;
+                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat absensi tersimpan pada tanggal ${tglFormatted}.</div>`;
                 containerMobile.innerHTML = pesanKosong;
-                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada kriteria tanggal ${tglFormatted} ini.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada riwayat absensi tersimpan pada tanggal ${tglFormatted}.</td></tr>`;
                 return;
             }
 
-            if (dataAbsen._materi) {
-                teksMateri.innerText = `[Pengajian ${jenis}] ${dataAbsen._materi}`;
-                boxMateri.classList.remove("hidden");
+            // Pilih sesi yang paling cocok
+            let targetKey = matchedKeys.find(k => k.includes(`_${jenis}_${sesi}`)) 
+                         || matchedKeys.find(k => k.includes(`_${jenis}_`)) 
+                         || matchedKeys[0];
+
+            const dataAbsen = allAbsenData[targetKey];
+
+            // Tampilkan Catatan Materi
+            const materiTersimpan = dataAbsen._materi || dataAbsen.materi || "-";
+            if (materiTersimpan !== "-") {
+                teksMateri.innerText = `[${targetKey.replaceAll('_', ' ')}] : ${materiTersimpan}`;
             } else {
-                boxMateri.classList.add("hidden");
+                teksMateri.innerText = `[${targetKey.replaceAll('_', ' ')}] : (Materi pengajian tidak diisi saat simpan absen)`;
             }
+            boxMateri.classList.remove("hidden");
 
             let no = 1;
             let adaData = false;
@@ -812,7 +811,7 @@
                 if (rec) {
                     adaData = true;
                     const st = rec.status || '-';
-                    const catatan = rec.catatan || '-';
+                    const catatan = rec.catatan || rec.keterangan || '-';
                     const jam = dataAbsen._timestamp || '-';
 
                     let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
@@ -849,9 +848,9 @@
             });
 
             if (!adaData) {
-                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Tidak ada data kehadiran yang tercatat.</div>`;
+                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Tidak ada rincian santri tersimpan pada ${targetKey.replaceAll('_', ' ')}.</div>`;
                 containerMobile.innerHTML = pesanKosong;
-                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Tidak ada data kehadiran yang tercatat.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Tidak ada rincian santri tersimpan pada ${targetKey.replaceAll('_', ' ')}.</td></tr>`;
             }
         };
     </script>
