@@ -8,9 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ExcelJS Library untuk Mengolah & Menjaga Template Excel Asli -->
+    <!-- ExcelJS & FileSaver Library untuk Mengolah & Menjaga Template Excel Asli -->
     <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
-    <!-- FileSaver Library untuk Download File Excel -->
     <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style> 
         body { font-family: 'Inter', sans-serif; } 
@@ -23,9 +22,7 @@
         <!-- HEADER PANEL ADMIN -->
         <div class="bg-gradient-to-r from-slate-800 to-emerald-900 rounded-2xl p-4 sm:p-5 text-white shadow-lg flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div id="badgeRoleIcon" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl border border-white/20">
-                    🔑
-                </div>
+                <div id="badgeRoleIcon" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl border border-white/20">🔑</div>
                 <div>
                     <h1 class="text-base sm:text-xl font-black tracking-wide flex items-center gap-2">
                         PANEL MANAGEMENT <span id="labelRoleAkses" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500 text-white">ADMIN</span>
@@ -43,7 +40,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel (Sesuai Template Master)
+                    📊 Export Laporan Rekapitulasi Excel
                 </h3>
                 <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan tata letak, warna, dan rumus asli.</p>
             </div>
@@ -51,7 +48,7 @@
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
                 <button onclick="exportKeExcelSesuaiTemplate()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
                     <span>📑</span>
-                    <span>Download Rekap Excel Master (6 Sheet)</span>
+                    <span>Export file</span>
                 </button>
             </div>
         </div>
@@ -59,12 +56,8 @@
         <!-- FORM TAMBAH / EDIT DATA GENERUS -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
             <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
-                <h3 id="judulFormGenerus" class="font-bold text-slate-800 text-xs sm:text-sm">
-                    ➕ Tambah Generus Baru
-                </h3>
-                <button id="btnBatalEdit" onclick="resetFormGenerus()" class="hidden text-xs text-red-600 font-bold hover:underline">
-                    Batal Edit
-                </button>
+                <h3 id="judulFormGenerus" class="font-bold text-slate-800 text-xs sm:text-sm">➕ Tambah Generus Baru</h3>
+                <button id="btnBatalEdit" onclick="resetFormGenerus()" class="hidden text-xs text-red-600 font-bold hover:underline">Batal Edit</button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -93,9 +86,7 @@
                 </div>
 
                 <div class="sm:col-span-2 flex items-end">
-                    <button onclick="simpanDataGenerus()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
-                        💾 Simpan
-                    </button>
+                    <button onclick="simpanDataGenerus()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">💾 Simpan</button>
                 </div>
             </div>
         </div>
@@ -301,65 +292,61 @@
             }
         };
 
-        // INTEGRASI DENGAN FILE TEMPLATE MASTER EXCEL (EXCELJS)
+        // EXPORT MENGGUNAKAN EXCELJS MEMBACA template_absensi.xlsx
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
-                // 1. AMBIL FILE TEMPLATE
                 const response = await fetch('template_absensi.xlsx');
                 if (!response.ok) {
-                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan di server! Pastikan file sudah di-upload ke GitHub.");
+                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan di repositori! Pastikan nama file sudah benar.");
                     return;
                 }
                 const arrayBuffer = await response.arrayBuffer();
 
-                // 2. AMBIL DATA ABSENSI DARI FIREBASE
                 const snapAbsen = await get(ref(db, 'absensi'));
                 const dataAbsen = snapAbsen.val() || {};
 
-                // 3. LOAD WORKBOOK PAKAI EXCELJS
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(arrayBuffer);
 
-                // --- PROSES SHEET 1: Absensi APR - GPN B ---
+                // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'APR'), 3, dataAbsen);
-                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'AR'), 8, dataAbsen);
-                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'GPNA' || g.kategori === 'GPN-A'), 15, dataAbsen);
-                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'GPNB' || g.kategori === 'GPN-B'), 30, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','').toUpperCase() === 'APR'), 3, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','').toUpperCase() === 'AR'), 8, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => ['GPNA','GPN-A'].includes((g.kategori || '').toUpperCase())), 15, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => ['GPNB','GPN-B'].includes((g.kategori || '').toUpperCase())), 30, dataAbsen);
                 }
 
-                // --- PROSES SHEET 2: Absensi AR Intensif ---
+                // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
                     isiSheetStandar(ws2, dataMaster.filter(g => g.kategori === 'AR Intensif'), dataAbsen, 'Kelompok');
                 }
 
-                // --- PROSES SHEET 3: Absensi ACR ---
+                // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
                     isiSheetStandar(ws3, dataMaster.filter(g => g.kategori === 'ACR'), dataAbsen, 'Kelompok');
                 }
 
-                // --- PROSES SHEET 4: Pengajian Desa ---
+                // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
                     isiSheetStandar(ws4, dataMaster, dataAbsen, 'Desa');
                 }
 
-                // --- PROSES SHEET 5: Pengajian Daerah ---
+                // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
                     isiSheetStandar(ws5, dataMaster, dataAbsen, 'Daerah');
                 }
 
-                // --- PROSES SHEET 6: Absen Generus Baru ---
+                // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
                     isiSheetStandar(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
                 }
 
-                // 4. DOWNLOAD FILE EXCEL HASIL ISIAN
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 saveAs(blob, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
@@ -371,29 +358,39 @@
         };
 
         function isiSubKategoriSheet1(ws, listSantri, startRow, dataAbsen) {
+            let sessionKeys = Object.keys(dataAbsen)
+                .filter(k => k.includes('_Kelompok_'))
+                .sort()
+                .slice(-6); // Ambil 6 sesi kelompok terakhir
+            
             listSantri.forEach((g, idx) => {
                 const row = ws.getRow(startRow + idx);
-                row.getCell(2).value = g.nama; // Kolom B: Nama
+                row.getCell(2).value = g.nama; // Kolom B: Nama Lengkap
 
-                // Ambil 6 sesi terakhir untuk mengisi Tanggal Hadir (Kolom D s/d I)
-                let sessionKeys = Object.keys(dataAbsen).filter(k => k.includes('_Kelompok_')).slice(-6);
                 sessionKeys.forEach((key, colIdx) => {
-                    const st = dataAbsen[key] && dataAbsen[key][g.id] ? dataAbsen[key][g.id].status : '';
-                    if (st === 'Hadir') row.getCell(4 + colIdx).value = 1;
+                    const rec = dataAbsen[key] ? dataAbsen[key][g.id] : null;
+                    if (rec && rec.status === 'Hadir') {
+                        row.getCell(4 + colIdx).value = 1; // Kolom D s/d I
+                    }
                 });
             });
         }
 
         function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
+            let sessionKeys = Object.keys(dataAbsen)
+                .filter(k => k.includes(`_${jenisFilter}_`))
+                .sort()
+                .slice(-8); // Ambil 8 sesi terakhir
+
             listSantri.forEach((g, idx) => {
                 const row = ws.getRow(3 + idx);
-                row.getCell(2).value = g.nama; // Kolom B: Nama
+                row.getCell(2).value = g.nama; // Kolom B: Nama Lengkap
 
-                // Ambil 8 sesi terakhir untuk mengisi Tanggal Absen (Kolom C s/d J)
-                let sessionKeys = Object.keys(dataAbsen).filter(k => k.includes(`_${jenisFilter}_`)).slice(-8);
                 sessionKeys.forEach((key, colIdx) => {
-                    const st = dataAbsen[key] && dataAbsen[key][g.id] ? dataAbsen[key][g.id].status : '';
-                    if (st === 'Hadir') row.getCell(3 + colIdx).value = 1;
+                    const rec = dataAbsen[key] ? dataAbsen[key][g.id] : null;
+                    if (rec && rec.status === 'Hadir') {
+                        row.getCell(3 + colIdx).value = 1; // Kolom C s/d J
+                    }
                 });
             });
         }
