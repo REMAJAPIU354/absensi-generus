@@ -285,18 +285,11 @@
             document.getElementById("btnBatalEdit").classList.add("hidden");
         };
 
-        window.hapusGenerus = async function(id) {
-            if (confirm("⚠️ Apakah Anda yakin ingin menghapus permanen data generus ini?")) {
-                await remove(ref(db, `master/${id}`));
-                alert("🗑️ Data generus berhasil dihapus.");
-            }
-        };
-
         function normKat(k) {
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT EXCEL RAPI PER KATEGORI & MEMISAHKAN SANTRI BARU (SHEET 6)
+        // EXPORT EXCEL DENGAN PEMISAHAN PERTEMUAN KELOMPOK VS AR INTENSIF
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -317,20 +310,21 @@
                 const santriBaru = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk));
 
                 const listAPR = santriLama.filter(g => normKat(g.kategori) === 'APR');
-                const listAR = santriLama.filter(g => normKat(g.kategori) === 'AR');
+                const listAR = santriLama.filter(g => normKat(g.kategori) === 'AR' || normKat(g.kategori) === 'ARINTENSIF');
                 const listGPNA = santriLama.filter(g => normKat(g.kategori) === 'GPNA');
                 const listGPNB = santriLama.filter(g => normKat(g.kategori) === 'GPNB');
 
-                // --- SHEET 1: Absensi APR - GPN B ---
+                // --- SHEET 1: Absensi APR - GPN B (Termasuk 1x Pengajian Kelompok Utama untuk AR) ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
                     isiBertingkatPresisi(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
                 }
 
-                // --- SHEET 2: Absensi AR Intensif ---
+                // --- SHEET 2: Absensi AR Intensif (Khusus 2x Pertemuan AR Intensif) ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandarAuto(ws2, santriLama.filter(g => normKat(g.kategori) === 'ARINTENSIF'), dataAbsen, 'Kelompok');
+                    // Cari pertemuan ARIntensif, jika tidak ada fallback ke Kelompok khusus anak AR
+                    isiSheetStandarAuto(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
                 }
 
                 // --- SHEET 3: Absensi ACR ---
@@ -351,10 +345,10 @@
                     isiBertingkatPresisi(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
                 }
 
-                // --- SHEET 6: Absen Generus Baru (KHUSUS SANTRI BARU SEPERTI DISTI) ---
+                // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarAuto(ws6, santriBaru, dataAbsen, 'Kelompok', 4);
+                    isiSheetStandarAuto(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -367,14 +361,12 @@
             }
         };
 
-        // FUNGSI KHUSUS SHEET BERTINGKAT (SHEET 1, SHEET 4, SHEET 5)
         function isiBertingkatPresisi(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
                 .slice(-6);
 
-            // Isikan Header Tanggal di Baris 2 (Kolom D s/d I)
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -382,16 +374,9 @@
                 ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
             });
 
-            // APR (Baris 3, Maksimal 15 Slot)
             isiBlokGenerus(ws, listAPR, 3, 15, sessionKeys, dataAbsen);
-
-            // AR (Baris 20, Maksimal 10 Slot)
             isiBlokGenerus(ws, listAR, 20, 10, sessionKeys, dataAbsen);
-
-            // GPNA (Baris 32, Maksimal 16 Slot)
             isiBlokGenerus(ws, listGPNA, 32, 16, sessionKeys, dataAbsen);
-
-            // GPNB (Baris 50, Maksimal 15 Slot)
             isiBlokGenerus(ws, listGPNB, 50, 15, sessionKeys, dataAbsen);
         }
 
@@ -400,28 +385,34 @@
                 const rowNum = startRow + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama; // Tulis Nama di Kolom B
+                row.getCell(2).value = santri.nama;
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(4 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
+                        row.getCell(4 + colIdx).value = 1;
                     }
                 });
             });
         }
 
-        // FUNGSI UNTUK SHEET TIPE TUNGGAL (SHEET 2, 3, 6)
-        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilter, colStartOverride = null) {
+        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
             let sessionKeys = Object.keys(dataAbsen)
-                .filter(k => k.includes(`_${jenisFilter}_`))
+                .filter(k => k.includes(`_${jenisFilterUtama}_`))
                 .sort()
                 .slice(-8);
 
-            const colStart = colStartOverride || 3; // Sheet 6 memakai Kolom D (4)
+            // Jika tidak ada data spesifik jenisFilterUtama, pakai fallback
+            if (sessionKeys.length === 0 && jenisFilterFallback) {
+                sessionKeys = Object.keys(dataAbsen)
+                    .filter(k => k.includes(`_${jenisFilterFallback}_`))
+                    .sort()
+                    .slice(-8);
+            }
 
-            // Isikan Header Tanggal di Baris 2
+            const colStart = colStartOverride || 3;
+
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -433,13 +424,13 @@
                 const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama; // Tulis Nama di Kolom B
+                row.getCell(2).value = santri.nama;
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[santri.id];
                     if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(colStart + colIdx).value = 1; // Masukkan angka 1 jika Hadir
+                        row.getCell(colStart + colIdx).value = 1;
                     }
                 });
             });
