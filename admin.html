@@ -292,7 +292,7 @@
             }
         };
 
-        // EXPORT MENGISI NAMA, HEADER TANGGAL, RUMUS PRESENTASE & ANGKA HADIR LENGKAP
+        // EXPORT TANPA MERUSAK RUMUS ASLI TEMPLATE
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -311,8 +311,7 @@
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    // Isi Sub Kategori dengan aman tanpa merusak struktur
-                    isiSubKategoriSheet1Dynamic(ws1, dataMaster, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster, dataAbsen);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
@@ -355,14 +354,14 @@
             }
         };
 
-        // FUNGSI KHUSUS SHEET 1 DENGAN MATCHING BARIS DAN REKAP RUMUS AUTOMATIS
-        function isiSubKategoriSheet1Dynamic(ws, allSantri, dataAbsen) {
+        // FUNGSI ISI SHEET 1 AMAN
+        function isiSubKategoriSheet1(ws, allSantri, dataAbsen) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes('_Kelompok_'))
                 .sort()
                 .slice(-6);
 
-            // 1. Tulis Header Tanggal di Baris 1/2 (Kolom D s/d I)
+            // 1. Tulis Header Tanggal di Baris 1/2
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -370,21 +369,16 @@
                 ws.getRow(1).getCell(4 + colIdx).value = labelTgl;
             });
 
-            const totalSesi = sessionKeys.length || 1;
-
-            // 2. Loop Semua Baris di Sheet 1 untuk Mengisi Nama, Kategori, Rumus & Hadir
-            const maxRows = ws.rowCount || 50;
+            // 2. Tulis Nilai Kehadiran (1) Tanpa Menyentuh Rumus
+            const maxRows = ws.rowCount || 60;
             for (let r = 3; r <= maxRows; r++) {
                 const row = ws.getRow(r);
-                const cellB = row.getCell(2).value; // Nama Santri di template
-                const cellC = row.getCell(3).value; // Kategori di template
+                const cellB = row.getCell(2).value;
 
                 if (cellB && typeof cellB === 'string' && cellB.trim() !== '') {
-                    // Cari santri di master berdasarkan Nama
                     const santriFound = allSantri.find(g => g.nama.trim().toLowerCase() === cellB.trim().toLowerCase());
 
                     if (santriFound) {
-                        // Isi data kehadiran per tanggal
                         sessionKeys.forEach((key, colIdx) => {
                             const sessionData = dataAbsen[key] || {};
                             const rec = sessionData[santriFound.id];
@@ -393,16 +387,11 @@
                             }
                         });
                     }
-
-                    // Pastikan Rumus Jumlah Pertemuan (Kolom K) & Presentase (Kolom L) Terisi & Kebaca
-                    row.getCell(10).value = { formula: `=COUNTA(D${r}:I${r})` }; // Akumulasi
-                    row.getCell(11).value = totalSesi; // Jumlah Pertemuan
-                    row.getCell(12).value = { formula: `=J${r}/K${r}` }; // Presentase Kebaca
                 }
             }
         }
 
-        // FUNGSI ISI SHEET 2 S/D 6 DENGAN TANGGAL & RUMUS LENGKAP
+        // FUNGSI ISI SHEET STANDAR AMAN
         function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
@@ -417,27 +406,17 @@
                 ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
             });
 
-            const totalSesi = sessionKeys.length || 1;
-
             listSantri.forEach((g, idx) => {
                 const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
-                
-                row.getCell(1).value = idx + 1; // No
-                row.getCell(2).value = g.nama; // Nama
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[g.id];
                     if (rec && rec.status === 'Hadir') {
-                        row.getCell(3 + colIdx).value = 1; // Kolom C s/d J
+                        row.getCell(3 + colIdx).value = 1;
                     }
                 });
-
-                // Rumus Rekap & Presentase Kebaca
-                row.getCell(11).value = { formula: `=COUNTA(C${rowNum}:J${rowNum})` };
-                row.getCell(12).value = totalSesi;
-                row.getCell(13).value = { formula: `=K${rowNum}/L${rowNum}` };
             });
         }
     </script>
