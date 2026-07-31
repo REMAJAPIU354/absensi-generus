@@ -3,57 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin Master Generus PIU</title>
+    <title>Panel Admin - Absensi Generus PIU</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS CDN untuk Export File Excel -->
+    <!-- SheetJS (XLSX) Library untuk Export Multi-Sheet Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-2 sm:p-6 text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800 p-2 sm:p-6">
 
-    <div class="max-w-md sm:max-w-5xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div class="max-w-4xl mx-auto space-y-4">
         
-        <!-- HEADER ADMIN -->
-        <div class="bg-gradient-to-r from-slate-800 via-slate-900 to-emerald-950 p-4 sm:p-5 text-white flex justify-between items-center">
-            <div>
-                <h1 class="text-base sm:text-2xl font-black tracking-wide flex items-center gap-2">
-                    ⚙️ <span>PANEL MASTER DATA GENERUS</span>
-                </h1>
-                <p class="text-slate-300 text-[10px] sm:text-xs">Kelola Anggota & Export Rekapitulasi Excel 4 Sheet</p>
+        <!-- HEADER PANEL ADMIN -->
+        <div class="bg-gradient-to-r from-slate-800 to-emerald-900 rounded-2xl p-4 sm:p-5 text-white shadow-lg flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="badgeRoleIcon" class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl border border-white/20">
+                    🔑
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-xl font-black tracking-wide flex items-center gap-2">
+                        PANEL MANAGEMENT <span id="labelRoleAkses" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500 text-white">ADMIN</span>
+                    </h1>
+                    <p class="text-slate-300 text-[10px] sm:text-xs">Kelola Data Master Generus & Download Laporan 6 Sheet Excel</p>
+                </div>
             </div>
-            <a href="index.html" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition flex items-center gap-1">
-                ⬅️ <span>Kembali</span>
+
+            <a href="index.html" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 flex items-center gap-1">
+                ⬅️ <span>Ke Dashboard</span>
             </a>
         </div>
 
-        <div class="p-3.5 sm:p-6 space-y-5">
-
-            <!-- STAT KET USER ROLE -->
-            <div id="badgeStatusRole" class="p-3 rounded-xl border text-xs font-bold flex justify-between items-center bg-slate-50 border-slate-200 text-slate-700">
-                <span>Akses Mode: <strong id="teksUserRole">ADMIN (TERBATAS)</strong></span>
-                <button onclick="logoutRole()" class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded border border-red-200">Logout Akses</button>
+        <!-- BOX FITUR EXPORT 6 SHEET EXCEL MASTER -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
+            <div>
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                    📊 Export Laporan Rekapitulasi Excel (6 Sheet)
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Menghasilkan 6 Sheet terpisah: APR-GPNB, AR Intensif, ACR, Pengajian Desa, Pengajian Daerah, dan Santri Baru (&lt; 6 Bln).</p>
             </div>
 
-            <!-- EXPORT EXCEL 4 SHEET -->
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div>
-                    <h3 class="font-bold text-emerald-900 text-xs sm:text-sm">📊 Export Rekap Kehadiran Excel (4 Sheet)</h3>
-                    <p class="text-[11px] text-emerald-700">Otomatis dipisah ke 4 Sheet: <strong>APR-GPNB, AR Intensif, Absensi ACR, & Ringkasan Presentasi</strong></p>
-                </div>
-                <button onclick="exportKeExcel4Sheet()" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs shadow-md transition shrink-0 flex items-center justify-center gap-2">
-                    📥 DOWNLOAD EXCEL 4 SHEET
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                <button onclick="exportKeExcel6Sheet()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
+                    <span>📑</span>
+                    <span>Download Rekap Excel Master (6 Sheet)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- FORM TAMBAH / EDIT DATA GENERUS -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
+            <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
+                <h3 id="judulFormGenerus" class="font-bold text-slate-800 text-xs sm:text-sm">
+                    ➕ Tambah Generus Baru
+                </h3>
+                <button id="btnBatalEdit" onclick="resetFormGenerus()" class="hidden text-xs text-red-600 font-bold hover:underline">
+                    Batal Edit
                 </button>
             </div>
 
-            <!-- FORM TAMBAH GENERUS BARU -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
-                <h3 class="font-bold text-slate-800 text-xs sm:text-sm">➕ Tambah Generus Baru</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                    <input type="text" id="inputNamaGenerus" placeholder="Nama Lengkap..." class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <select id="inputKategoriGenerus" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <input type="hidden" id="inputIdGenerus">
+                
+                <div class="sm:col-span-4">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Lengkap Santri:</label>
+                    <input type="text" id="inputNamaGenerus" placeholder="Contoh: Ahmad Fauzi" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="sm:col-span-3">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Kategori Generus:</label>
+                    <select id="inputKategoriGenerus" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
                         <option value="ACR">ACR (Anak Caberawit)</option>
                         <option value="APR">APR (Pra Remaja)</option>
                         <option value="AR">AR (Remaja)</option>
@@ -61,54 +83,65 @@
                         <option value="GPN-A">GPN-A (Pra Nikah A)</option>
                         <option value="GPN-B">GPN-B (Pra Nikah B)</option>
                     </select>
-                    <button onclick="tambahGenerus()" class="sm:col-span-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm">
-                        Simpan Santri
+                </div>
+
+                <div class="sm:col-span-3">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Bergabung:</label>
+                    <input type="date" id="inputTglMasukGenerus" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="sm:col-span-2 flex items-end">
+                    <button onclick="simpanDataGenerus()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+                        💾 Simpan
                     </button>
                 </div>
             </div>
-
-            <!-- TABEL MASTER GENERUS -->
-            <div class="space-y-3">
-                <h3 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider">Daftar Master Data Generus</h3>
-                
-                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold uppercase">
-                                <th class="p-3 text-center w-10">No</th>
-                                <th class="p-3">Nama Lengkap</th>
-                                <th class="p-3 text-center">Kategori</th>
-                                <th class="p-3 text-center">Masa Keanggotaan</th>
-                                <th class="p-3 text-center fit-superadmin">Aksi Superadmin</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelMasterBody" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="5" class="p-4 text-center text-slate-400">Memuat data master...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- DANGER ZONE: RESET DATABASE (KHUSUS SUPERADMIN) -->
-            <div class="fit-superadmin bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
-                <h4 class="font-bold text-red-900 text-xs">⚠️ Zona Bahaya (Khusus Superadmin)</h4>
-                <p class="text-[11px] text-red-700">Mereset seluruh riwayat absensi atau menghapus seluruh master data secara permanen.</p>
-                <div class="flex gap-2">
-                    <button onclick="resetRiwayatAbsen()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">
-                        Reset Seluruh Riwayat Absen
-                    </button>
-                </div>
-            </div>
-
         </div>
+
+        <!-- TABEL DATA MASTER GENERUS -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-xs sm:text-sm">👥 Master Data Generus PIU</h3>
+                    <p class="text-[11px] text-slate-400">Total terdaftar: <span id="labelJumlahSantri" class="font-bold text-emerald-700">0</span> santri</p>
+                </div>
+
+                <input type="text" id="inputCariMaster" onkeyup="filterMasterGenerus()" placeholder="🔍 Cari nama santri..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none sm:w-60">
+            </div>
+
+            <!-- TAMPILAN MOBILE LIST -->
+            <div id="listMasterMobile" class="block sm:hidden space-y-2">
+                <p class="text-center text-xs text-slate-400 py-4">Memuat data...</p>
+            </div>
+
+            <!-- TAMPILAN DESKTOP TABEL -->
+            <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-xl bg-white">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
+                            <th class="p-3 text-center w-10">No</th>
+                            <th class="p-3">Nama Lengkap Santri</th>
+                            <th class="p-3 text-center">Kategori</th>
+                            <th class="p-3 text-center">Tanggal Masuk</th>
+                            <th class="p-3 text-center">Status Keanggotaan</th>
+                            <th class="p-3 text-center w-28">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelMasterDesktop" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="6" class="p-4 text-center text-slate-400">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -123,162 +156,236 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let currentUserRole = sessionStorage.getItem("userRole") || "ADMIN";
-        let dataMasterGenerus = [];
+        let dataMaster = [];
+        const roleAkses = sessionStorage.getItem("userRole") || "ADMIN";
 
-        // CEK AKSES ROLE USER
-        function sesuaikanTampilanRole() {
-            document.getElementById("teksUserRole").innerText = currentUserRole === "SUPERADMIN" ? "SUPERADMIN (AKSES FULL)" : "ADMIN (TERBATAS)";
-            
-            const elemenSuperadmin = document.querySelectorAll(".fit-superadmin");
-            elemenSuperadmin.forEach(el => {
-                if (currentUserRole === "SUPERADMIN") {
-                    el.classList.remove("hidden");
-                } else {
-                    el.classList.add("hidden");
-                }
-            });
+        // TAMPILKAN STATUS ROLE
+        document.getElementById("labelRoleAkses").innerText = roleAkses;
+        if (roleAkses === "SUPERADMIN") {
+            document.getElementById("labelRoleAkses").className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-500 text-white";
+            document.getElementById("badgeRoleIcon").innerText = "👑";
         }
 
-        window.logoutRole = function() {
-            sessionStorage.removeItem("userRole");
-            window.location.href = "index.html";
-        };
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById("inputTglMasukGenerus").value = todayStr;
 
-        // Ambil Data Master
+        // BACA DATA MASTER GENERUS FROM FIREBASE
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
-            dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
-            renderTabelMaster();
+            dataMaster = Object.values(data).filter(item => item && typeof item === 'object');
+            document.getElementById("labelJumlahSantri").innerText = dataMaster.length;
+            tampilkanMasterTabel(dataMaster);
         });
 
-        function renderTabelMaster() {
-            const tbody = document.getElementById("tabelMasterBody");
-            tbody.innerHTML = "";
+        window.filterMasterGenerus = function() {
+            const keyword = document.getElementById("inputCariMaster").value.toLowerCase();
+            const hasilFilter = dataMaster.filter(g => g.nama.toLowerCase().includes(keyword));
+            tampilkanMasterTabel(hasilFilter);
+        };
 
-            if (dataMasterGenerus.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data generus.</td></tr>`;
+        function hitungApakahSantriBaru(tglMasuk) {
+            if (!tglMasuk) return false;
+            const tglAwal = new Date(tglMasuk);
+            const skr = new Date();
+            const diffBulan = (skr.getFullYear() - tglAwal.getFullYear()) * 12 + (skr.getMonth() - tglAwal.getMonth());
+            return diffBulan < 6;
+        }
+
+        function tampilkanMasterTabel(list) {
+            const mob = document.getElementById("listMasterMobile");
+            const desk = document.getElementById("tabelMasterDesktop");
+
+            mob.innerHTML = "";
+            desk.innerHTML = "";
+
+            if (list.length === 0) {
+                mob.innerHTML = `<div class="p-4 text-center text-xs text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">Tidak ada data generus ditemukan.</div>`;
+                desk.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Tidak ada data generus ditemukan.</td></tr>`;
                 return;
             }
 
             let no = 1;
-            dataMasterGenerus.forEach(item => {
-                const isBaru = item.isGenerusBaru === true;
-                const statusKetik = isBaru ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-200">Santri Baru (&lt;6 Bln)</span>` : `<span class="bg-slate-100 text-slate-600 text-[10px] font-semibold px-2 py-0.5 rounded-full">Lama (&gt;6 Bln)</span>`;
+            list.forEach(g => {
+                const isBaru = hitungApakahSantriBaru(g.tglMasuk);
+                const badgeBaru = isBaru 
+                    ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200">Santri Baru (&lt; 6 Bln)</span>`
+                    : `<span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-slate-200">Lama</span>`;
 
-                tbody.innerHTML += `
+                const btnHapusSuperadmin = roleAkses === "SUPERADMIN" 
+                    ? `<button onclick="hapusGenerus('${g.id}')" class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-bold text-[10px] transition">Hapus</button>`
+                    : '';
+
+                mob.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-xs">${no}. ${g.nama}</h4>
+                                <span class="bg-emerald-50 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200">${g.kategori || 'ACR'}</span>
+                            </div>
+                            ${badgeBaru}
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-[10px] text-slate-500">
+                            <span>Masuk: ${g.tglMasuk || '-'}</span>
+                            <div class="flex gap-1">
+                                <button onclick="editGenerus('${g.id}')" class="px-2 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold transition">Edit</button>
+                                ${btnHapusSuperadmin}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                desk.innerHTML += `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="p-2.5 text-center font-bold text-slate-400">${no++}</td>
-                        <td class="p-2.5 font-semibold text-slate-800">${item.nama}</td>
-                        <td class="p-2.5 text-center"><span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full text-[10px] border border-slate-200">${item.kategori || 'ACR'}</span></td>
-                        <td class="p-2.5 text-center">${statusKetik}</td>
-                        <td class="p-2.5 text-center fit-superadmin">
-                            <div class="flex items-center justify-center gap-1">
-                                <button onclick="toggleStatusMasaBaru('${item.id}', ${isBaru})" class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-indigo-700 transition">Toggle Status</button>
-                                <button onclick="hapusGenerus('${item.id}')" class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-red-700 transition">Hapus</button>
+                        <td class="p-3 text-center font-bold text-slate-400">${no}</td>
+                        <td class="p-3 font-bold text-slate-800">${g.nama}</td>
+                        <td class="p-3 text-center"><span class="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">${g.kategori || 'ACR'}</span></td>
+                        <td class="p-3 text-center text-slate-600 font-medium">${g.tglMasuk || '-'}</td>
+                        <td class="p-3 text-center">${badgeBaru}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex justify-center gap-1">
+                                <button onclick="editGenerus('${g.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-[11px] transition">Edit</button>
+                                ${btnHapusSuperadmin}
                             </div>
                         </td>
                     </tr>
                 `;
-            });
 
-            sesuaikanTampilanRole();
+                no++;
+            });
         }
 
-        window.tambahGenerus = async function() {
+        window.simpanDataGenerus = async function() {
+            const id = document.getElementById("inputIdGenerus").value || 'GEN_' + Date.now();
             const nama = document.getElementById("inputNamaGenerus").value.trim();
             const kategori = document.getElementById("inputKategoriGenerus").value;
+            const tglMasuk = document.getElementById("inputTglMasukGenerus").value;
 
             if (!nama) {
-                alert("⚠️ Masukkan nama generus!");
+                alert("⚠️ Masukkan nama lengkap santri!");
                 return;
             }
 
-            const id = 'GEN_' + Date.now();
-            await set(ref(db, `master/${id}`), {
-                id: id,
-                nama: nama,
-                kategori: kategori,
-                isGenerusBaru: true,
-                tglMasuk: new Date().toISOString().split('T')[0]
-            });
-
-            document.getElementById("inputNamaGenerus").value = "";
-            alert("✅ Generus berhasil ditambahkan!");
+            const payload = { id, nama, kategori, tglMasuk };
+            await set(ref(db, `master/${id}`), payload);
+            alert("✅ Data generus berhasil disimpan!");
+            resetFormGenerus();
         };
 
-        window.toggleStatusMasaBaru = async function(id, statusSaatIni) {
-            await set(ref(db, `master/${id}/isGenerusBaru`), !statusSaatIni);
+        window.editGenerus = function(id) {
+            const item = dataMaster.find(g => g.id === id);
+            if (!item) return;
+
+            document.getElementById("inputIdGenerus").value = item.id;
+            document.getElementById("inputNamaGenerus").value = item.nama;
+            document.getElementById("inputKategoriGenerus").value = item.kategori || 'ACR';
+            document.getElementById("inputTglMasukGenerus").value = item.tglMasuk || todayStr;
+
+            document.getElementById("judulFormGenerus").innerText = "✏️ Edit Data Generus";
+            document.getElementById("btnBatalEdit").classList.remove("hidden");
+        };
+
+        window.resetFormGenerus = function() {
+            document.getElementById("inputIdGenerus").value = "";
+            document.getElementById("inputNamaGenerus").value = "";
+            document.getElementById("inputKategoriGenerus").value = "ACR";
+            document.getElementById("inputTglMasukGenerus").value = todayStr;
+
+            document.getElementById("judulFormGenerus").innerText = "➕ Tambah Generus Baru";
+            document.getElementById("btnBatalEdit").classList.add("hidden");
         };
 
         window.hapusGenerus = async function(id) {
-            if (confirm("⚠️ Yakin ingin menghapus generus ini dari database?")) {
+            if (confirm("⚠️ Apakah Anda yakin ingin menghapus permanen data generus ini?")) {
                 await remove(ref(db, `master/${id}`));
+                alert("🗑️ Data generus berhasil dihapus.");
             }
         };
 
-        window.resetRiwayatAbsen = async function() {
-            if (confirm("⚠️ APABILA DIRESET, SELURUH RIWAYAT ABSENSI AKAN DELETED PERMANEN! Lanjutkan?")) {
-                await remove(ref(db, 'absensi'));
-                alert("✅ Riwayat absensi berhasil direset!");
-            }
-        };
-
-        // EKSPOR EXCEL 4 SHEET
-        window.exportKeExcel4Sheet = async function() {
+        // EXPORT REKAP MASTER EXCEL (6 SHEET UTUH)
+        window.exportKeExcel6Sheet = async function() {
             const snapAbsen = await get(ref(db, 'absensi'));
             const dataAbsen = snapAbsen.val() || {};
 
-            const workbook = XLSX.utils.book_new();
+            if (dataMaster.length === 0) {
+                alert("⚠️ Tidak ada data master generus untuk diexport!");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
 
             // SHEET 1: APR - GPNB
-            const dataUtama = dataMasterGenerus.filter(g => g.kategori !== 'ACR' && g.kategori !== 'AR Intensif');
-            const sheetUtama = buatSheetExcel(dataUtama, dataAbsen);
-            XLSX.utils.book_append_sheet(workbook, sheetUtama, "APR - GPNB");
+            const rows1 = dataMaster.filter(g => ['APR', 'AR', 'GPN-A', 'GPN-B'].includes(g.kategori)).map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows1.length ? rows1 : [pesanKosongExcel()]), "APR - GPNB");
 
-            // SHEET 2: AR INTENSIF
-            const dataIntensif = dataMasterGenerus.filter(g => g.kategori === 'AR Intensif');
-            const sheetIntensif = buatSheetExcel(dataIntensif, dataAbsen);
-            XLSX.utils.book_append_sheet(workbook, sheetIntensif, "AR Intensif");
+            // SHEET 2: AR Intensif
+            const rows2 = dataMaster.filter(g => g.kategori === 'AR Intensif').map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows2.length ? rows2 : [pesanKosongExcel()]), "AR Intensif");
 
-            // SHEET 3: ABSENSI ACR
-            const dataACR = dataMasterGenerus.filter(g => g.kategori === 'ACR');
-            const sheetACR = buatSheetExcel(dataACR, dataAbsen, true);
-            XLSX.utils.book_append_sheet(workbook, sheetACR, "Absensi ACR");
+            // SHEET 3: Absensi ACR
+            const rows3 = dataMaster.filter(g => g.kategori === 'ACR').map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows3.length ? rows3 : [pesanKosongExcel()]), "Absensi ACR");
 
-            XLSX.writeFile(workbook, `Rekap_Absensi_Generus_PIU_${new Date().toISOString().split('T')[0]}.xlsx`);
+            // SHEET 4: Pengajian Desa
+            const rows4 = dataMaster.map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Desa');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows4), "Pengajian Desa");
+
+            // SHEET 5: Pengajian Daerah
+            const rows5 = dataMaster.map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Daerah');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows5), "Pengajian Daerah");
+
+            // SHEET 6: Santri Baru (< 6 Bln)
+            const rows6 = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)).map((g, idx) => {
+                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows6.length ? rows6 : [pesanKosongExcel()]), "Santri Baru (< 6 Bln)");
+
+            XLSX.writeFile(wb, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
         };
 
-        function buatSheetExcel(listGenerus, dataAbsen, isACR = false) {
-            const keys = Object.keys(dataAbsen).sort();
-            const headers = ["No", "Nama Lengkap", "Kategori"];
+        function hitungRecordSantri(g, no, dataAbsen, jenisFilter) {
+            let h = 0, i = 0, a = 0;
 
-            keys.forEach(k => headers.push(k));
-            headers.push("Total Hadir (H)", "Total Pertemuan", "Presentase");
-
-            const rows = [headers];
-
-            let no = 1;
-            listGenerus.forEach(g => {
-                const row = [no++, g.nama, g.kategori || 'ACR'];
-                let totalHadir = 0;
-                let totalPertemuan = keys.length;
-
-                keys.forEach(k => {
-                    const st = (dataAbsen[k] && dataAbsen[k][g.id]) ? dataAbsen[k][g.id].status : '-';
-                    row.push(st === 'Hadir' ? 'H' : (st === 'Izin' ? 'I' : (st === 'Alpa' ? 'A' : '-')));
-                    if (st === 'Hadir') totalHadir++;
-                });
-
-                const persen = totalPertemuan > 0 ? `${Math.round((totalHadir / totalPertemuan) * 100)}%` : '0%';
-                row.push(totalHadir, totalPertemuan, persen);
-                rows.push(row);
+            Object.keys(dataAbsen).forEach(keyPath => {
+                if (keyPath.includes(`_${jenisFilter}_`)) {
+                    const session = dataAbsen[keyPath];
+                    if (session[g.id] && session[g.id].status) {
+                        const st = session[g.id].status;
+                        if (st === 'Hadir') h++;
+                        if (st === 'Izin') i++;
+                        if (st === 'Alpa') a++;
+                    }
+                }
             });
 
-            return XLSX.utils.aoa_to_sheet(rows);
+            const total = h + i + a;
+            const persen = total > 0 ? Math.round((h / total) * 100) + '%' : '0%';
+
+            return {
+                "No": no,
+                "Nama Lengkap": g.nama,
+                "Kategori": g.kategori || 'ACR',
+                "Tanggal Masuk": g.tglMasuk || '-',
+                "Hadir": h,
+                "Izin": i,
+                "Alpa": a,
+                "Total Pertemuan": total,
+                "Persentase Kehadiran": persen
+            };
         }
 
-        sesuaikanTampilanRole();
+        function pesanKosongExcel() {
+            return { "Info": "Belum ada data pada kategori/sheet ini." };
+        }
     </script>
 </body>
 </html>
