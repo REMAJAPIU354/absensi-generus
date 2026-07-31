@@ -45,7 +45,6 @@
                     <span>Dashboard Analytics</span>
                 </a>
 
-                <!-- MENU ABSENSI HARIAN YANG KITA TAMBAHKAN -->
                 <button onclick="bukaModalAbsenHarian()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
                     <span class="text-base">📋</span>
                     <span>Input Absensi Harian</span>
@@ -144,6 +143,8 @@
 
             <!-- GRID 4 DIAGRAM LINGKARAN -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- DIAGRAM 1: KESELURUHAN GENERUS -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 1. Total Keseluruhan Generus</h3>
@@ -154,6 +155,7 @@
                     </div>
                 </div>
 
+                <!-- DIAGRAM 2: KELOMPOK APR S/D GPN-B -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 2. Kelompok APR s/d GPN-B</h3>
@@ -164,6 +166,7 @@
                     </div>
                 </div>
 
+                <!-- DIAGRAM 3: KELOMPOK AR INTENSIF -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 3. Kelompok AR Intensif</h3>
@@ -174,6 +177,7 @@
                     </div>
                 </div>
 
+                <!-- DIAGRAM 4: KELOMPOK ACR (SORE & MALAM) -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 4. Kelompok ACR (Sore & Malam)</h3>
@@ -183,6 +187,7 @@
                         <canvas id="chartACR"></canvas>
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -257,7 +262,7 @@
             </div>
 
             <div class="space-y-4 overflow-y-auto pr-1">
-                <!-- FILTER KATEGORI & SESI -->
+                <!-- FILTER KATEGORI (DENGAN AR INTENSIF) -->
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -288,7 +293,6 @@
                     </div>
                 </div>
 
-                <!-- DAFTAR NAMA GENERUS HARIAN -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center px-1">
                         <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Daftar Kehadiran Santri</h4>
@@ -354,7 +358,6 @@
         document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputTanggalRiwayat").value = today;
 
-        // FUNGSI SIDEBAR
         window.bukaSidebar = function() {
             const sidebar = document.getElementById("sidebarMenu");
             const backdrop = document.getElementById("sidebarBackdrop");
@@ -371,7 +374,6 @@
             setTimeout(() => backdrop.classList.add("hidden"), 300);
         };
 
-        // FUNGSI MODAL ABSEN HARIAN
         window.bukaModalAbsenHarian = function() {
             tutupSidebar();
             muatDaftarAbsen();
@@ -382,7 +384,6 @@
             document.getElementById("modalAbsenHarian").classList.add("hidden");
         };
 
-        // FUNGSI MODAL PIN DUAL ACCESS
         window.bukaModalPinAdmin = function() {
             tutupSidebar();
             document.getElementById("inputPinAkses").value = "";
@@ -406,7 +407,6 @@
             }
         };
 
-        // Ambil Data Master Generus & Render Dashboard
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
             dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
