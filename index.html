@@ -8,31 +8,100 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-2 sm:p-6 text-slate-800">
+<body class="bg-slate-100 min-h-screen text-slate-800 relative overflow-x-hidden">
 
-    <div class="max-w-md sm:max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <!-- BACKDROP SIDEBAR (GELAP / BLUR) -->
+    <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- SIDEBAR NAVIGASI (ALA GEMINI) -->
+    <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
         
-        <!-- HEADER APLIKASI -->
-        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 p-4 sm:p-5 text-white">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div class="text-center sm:text-left">
-                    <h1 class="text-lg sm:text-2xl font-black tracking-wide flex items-center justify-center sm:justify-start gap-2">
-                        📋 <span>ABSENSI GENERUS PIU</span>
-                    </h1>
-                    <p class="text-emerald-100 text-[11px] sm:text-xs mt-0.5">Majelis Ta'lim & Pengajian Generus</p>
+        <!-- HEADER SIDEBAR -->
+        <div>
+            <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🕌</span>
+                    <div>
+                        <h2 class="font-bold text-sm leading-tight">Generus PIU</h2>
+                        <p class="text-[10px] text-emerald-200">Majelis Ta'lim & Pengajian</p>
+                    </div>
                 </div>
-                <a href="admin.html" class="bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg border border-white/20 transition shadow-sm flex items-center gap-1.5 shrink-0">
-                    ⚙️ <span>Panel Admin</span>
-                </a>
+                <button onclick="tutupSidebar()" class="p-1 rounded-lg hover:bg-white/10 text-white transition text-lg">
+                    ✕
+                </button>
             </div>
+
+            <!-- LIST MENU NAVIGASI -->
+            <nav class="p-3 space-y-1 text-xs font-semibold">
+                <p class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigasi Utama</p>
+                
+                <a href="#sectionAbsen" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                    <span class="text-base">📋</span>
+                    <span>Absensi Harian</span>
+                </a>
+
+                <a href="#sectionRiwayat" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                    <span class="text-base">📜</span>
+                    <span>Cek Riwayat & Ngaji</span>
+                </a>
+
+                <hr class="my-2 border-slate-100">
+
+                <p class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kelola Data</p>
+
+                <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                    <span class="text-base">⚙️</span>
+                    <span>Panel Admin (Master)</span>
+                </a>
+            </nav>
         </div>
 
-        <div class="p-3.5 sm:p-6 space-y-5">
+        <!-- FOOTER SIDEBAR (SLOT PROFIL PENGURUS / LOGIN) -->
+        <div class="p-3.5 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <div class="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">
+                    P
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <h4 class="text-xs font-bold text-slate-800 truncate">Pengurus PIU</h4>
+                    <p class="text-[10px] text-slate-400 truncate">Mode Pengurus Saja</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- WRAPPER KONTEN UTAMA -->
+    <div class="max-w-md sm:max-w-3xl mx-auto p-2 sm:p-6 space-y-4">
+        
+        <!-- HEADER APLIKASI UTAMA (DENGAN TOMBOL HAMBURGER ☰) -->
+        <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl p-3.5 sm:p-5 text-white shadow-lg flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <button onclick="bukaSidebar()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white transition border border-white/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div>
+                    <h1 class="text-base sm:text-2xl font-black tracking-wide">
+                        ABSENSI GENERUS PIU
+                    </h1>
+                    <p class="text-emerald-100 text-[10px] sm:text-xs">Majelis Ta'lim & Pengajian Generus</p>
+                </div>
+            </div>
+            
+            <a href="admin.html" title="Buka Panel Admin" class="hidden sm:flex bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition items-center gap-1.5">
+                ⚙️ <span>Admin</span>
+            </a>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden p-3.5 sm:p-6 space-y-5">
 
             <!-- FILTER & PILIHAN SESI ABSENSI -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
+            <div id="sectionAbsen" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
@@ -84,7 +153,7 @@
             <hr class="border-slate-200 my-5">
 
             <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
+            <div id="sectionRiwayat" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
                 <div>
                     <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
                         📋 Cek Riwayat Absensi Tanggal Lain
@@ -169,6 +238,25 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputTanggalRiwayat").value = today;
+
+        // FUNGSI BUAT SIDEBAR
+        window.bukaSidebar = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const backdrop = document.getElementById("sidebarBackdrop");
+
+            sidebar.classList.remove("-translate-x-full");
+            backdrop.classList.remove("hidden");
+            setTimeout(() => backdrop.classList.add("opacity-100"), 10);
+        };
+
+        window.tutupSidebar = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const backdrop = document.getElementById("sidebarBackdrop");
+
+            sidebar.classList.add("-translate-x-full");
+            backdrop.classList.remove("opacity-100");
+            setTimeout(() => backdrop.classList.add("hidden"), 300);
+        };
 
         // Ambil Data Master Generus
         onValue(ref(db, 'master'), (snap) => {
