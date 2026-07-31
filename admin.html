@@ -292,16 +292,22 @@
             }
         };
 
-        function normKat(k) {
-            return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
+        // FUNGSI CLEANSING TERPINTAR: Membersihkan spasi, enter, dan karakter gaib \u2060
+        function cleanStrSmart(str) {
+            return (str || "")
+                .toString()
+                .replace(/[\u200B-\u200D\uFEFF\u2060]/g, '') // Hapus karakter tersembunyi \u2060
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .trim();
         }
 
-        // EXPORT PRESISI POSISI LOKASI KATEGORI
+        // EXPORT EXCEL DENGAN PENCOCOKAN TEPAT SASARAN
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
                 if (!response.ok) {
-                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan!");
+                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan! Pastikan nama file di GitHub sudah pas.");
                     return;
                 }
                 const arrayBuffer = await response.arrayBuffer();
@@ -315,46 +321,37 @@
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    const listAPR = dataMaster.filter(g => normKat(g.kategori) === 'APR');
-                    const listAR = dataMaster.filter(g => normKat(g.kategori) === 'AR');
-                    const listGPNA = dataMaster.filter(g => normKat(g.kategori) === 'GPNA');
-                    const listGPNB = dataMaster.filter(g => normKat(g.kategori) === 'GPNB');
-
-                    // Baris Awal Presisi: APR=3 (max 5 baris), AR=8 (max 5 baris), GPNA=15 (max 10 baris), GPNB=30
-                    isiSubGroupSheet1Presisi(ws1, listAPR, 3, 5, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listAR, 8, 5, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listGPNA, 15, 10, dataAbsen);
-                    isiSubGroupSheet1Presisi(ws1, listGPNB, 30, 10, dataAbsen);
+                    isiSheetBerdasarkanNamaTemplate(ws1, dataMaster, dataAbsen, 'Kelompok', 4);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandarAuto(ws2, dataMaster.filter(g => normKat(g.kategori) === 'ARINTENSIF'), dataAbsen, 'Kelompok');
+                    isiSheetBerdasarkanNamaTemplate(ws2, dataMaster, dataAbsen, 'Kelompok', 3);
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarAuto(ws3, dataMaster.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetBerdasarkanNamaTemplate(ws3, dataMaster, dataAbsen, 'Kelompok', 3);
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiSheetStandarAuto(ws4, dataMaster, dataAbsen, 'Desa');
+                    isiSheetBerdasarkanNamaTemplate(ws4, dataMaster, dataAbsen, 'Desa', 4);
                 }
 
                 // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiSheetStandarAuto(ws5, dataMaster, dataAbsen, 'Daerah');
+                    isiSheetBerdasarkanNamaTemplate(ws5, dataMaster, dataAbsen, 'Daerah', 4);
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarAuto(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
+                    isiSheetBerdasarkanNamaTemplate(ws6, dataMaster, dataAbsen, 'Kelompok', 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -367,66 +364,46 @@
             }
         };
 
-        // FUNGSI ISI SHEET 1 PRESISI BATAS KATEGORI
-        function isiSubGroupSheet1Presisi(ws, listGroup, startRow, maxRowsAllowed, dataAbsen) {
-            let sessionKeys = Object.keys(dataAbsen)
-                .filter(k => k.includes('_Kelompok_'))
-                .sort()
-                .slice(-6);
-
-            // Isikan Header Tanggal di Baris 2 (Kolom D s/d I)
-            sessionKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
-                const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
-            });
-
-            // Tuliskan Nama Santri sesuai slot maksimalnya agar tidak meluap ke bawah
-            listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
-                const rowNum = startRow + idx;
-                const row = ws.getRow(rowNum);
-
-                row.getCell(2).value = santri.nama; // Tulis Nama di Kolom B
-
-                sessionKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
-                    if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(4 + colIdx).value = 1; // Masukkan angka 1 jika Hadir
-                    }
-                });
-            });
-        }
-
-        function isiSheetStandarAuto(ws, listSantri, dataAbsen, jenisFilter) {
+        // FUNGSI ISI ABSENSI PRESISI DENGAN PEMBERSIH KARAKTER \u2060
+        function isiSheetBerdasarkanNamaTemplate(ws, allSantri, dataAbsen, jenisFilter, colStart) {
             let sessionKeys = Object.keys(dataAbsen)
                 .filter(k => k.includes(`_${jenisFilter}_`))
                 .sort()
-                .slice(-8);
+                .slice(colStart === 4 ? -6 : -8);
 
-            // Isikan Header Tanggal di Baris 2 (Kolom C s/d J)
+            // Tulis Header Tanggal di Baris 2
             sessionKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
                 const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
+                ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
             });
 
-            listSantri.forEach((santri, idx) => {
-                const rowNum = 3 + idx;
-                const row = ws.getRow(rowNum);
+            // Loop Baris Template (BACA DARI KOLOM B TEMPLATE KELUARANNYA)
+            const maxRows = ws.rowCount || 60;
+            for (let r = 3; r <= maxRows; r++) {
+                const row = ws.getRow(r);
+                const cellB = row.getCell(2).value;
 
-                row.getCell(2).value = santri.nama;
+                if (cellB && typeof cellB === 'string') {
+                    const namaExcelClean = cleanStrSmart(cellB);
 
-                sessionKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
-                    if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
-                        row.getCell(3 + colIdx).value = 1;
+                    if (namaExcelClean.length > 0) {
+                        // Cari santri yang cocok dari database
+                        const santri = allSantri.find(g => cleanStrSmart(g.nama) === namaExcelClean);
+
+                        if (santri) {
+                            sessionKeys.forEach((key, colIdx) => {
+                                const sessionData = dataAbsen[key] || {};
+                                const rec = sessionData[santri.id];
+                                if (rec && (rec.status === 'Hadir' || rec.status === 'hadir')) {
+                                    row.getCell(colStart + colIdx).value = 1; // Masukkan nilai 1 jika Hadir
+                                }
+                            });
+                        }
                     }
-                });
-            });
+                }
+            }
         }
     </script>
 </body>
