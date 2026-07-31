@@ -737,15 +737,12 @@
             hitungStatistikDashboard();
         };
 
+        // CEK RIWAYAT DENGAN DUKUNGAN PEMBACAAN FLEKSIBEL
         window.tampilkanRiwayatAbsen = async function() {
             const tgl = document.getElementById("inputTanggalRiwayat").value;
             const jenis = document.getElementById("pilihanJenisRiwayat").value;
             const sesi = document.getElementById("pilihanSesiRiwayat").value;
-            const keyPath = `${tgl}_${jenis}_${sesi}`;
-
-            const snapshot = await get(ref(db, `absensi/${keyPath}`));
-            const dataAbsen = snapshot.val();
-
+            
             const containerMobile = document.getElementById("listRiwayatMobile");
             const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
             const boxMateri = document.getElementById("boxInfoMateriRiwayat");
@@ -753,6 +750,27 @@
 
             containerMobile.innerHTML = "";
             tbodyDesktop.innerHTML = "";
+
+            if (!tgl) {
+                alert("⚠️ Silakan pilih tanggal terlebih dahulu!");
+                return;
+            }
+
+            // Kunci Pencarian Utama & Alternatif
+            const keyPath = `${tgl}_${jenis}_${sesi}`;
+
+            let snapshot = await get(ref(db, `absensi/${keyPath}`));
+            let dataAbsen = snapshot.val();
+
+            // Jika tidak ditemukan dengan sesi pilihan, coba periksa sesi alternatif
+            if (!dataAbsen) {
+                const sesiAlt = (sesi === 'Malam') ? 'Sore' : 'Malam';
+                const keyAlt = `${tgl}_${jenis}_${sesiAlt}`;
+                const snapAlt = await get(ref(db, `absensi/${keyAlt}`));
+                if (snapAlt.exists()) {
+                    dataAbsen = snapAlt.val();
+                }
+            }
 
             if (!dataAbsen) {
                 boxMateri.classList.add("hidden");
