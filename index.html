@@ -20,7 +20,7 @@
     <!-- BACKDROP SIDEBAR -->
     <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
 
-    <!-- SIDEBAR NAVIGASI (ALA GEMINI) -->
+    <!-- SIDEBAR NAVIGASI -->
     <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
         <div>
             <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
@@ -44,6 +44,12 @@
                     <span class="text-base">📊</span>
                     <span>Dashboard Analytics</span>
                 </a>
+
+                <!-- MENU ABSENSI HARIAN YANG KITA TAMBAHKAN -->
+                <button onclick="bukaModalAbsenHarian()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
+                    <span class="text-base">📋</span>
+                    <span>Input Absensi Harian</span>
+                </button>
 
                 <a href="#sectionRiwayat" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📜</span>
@@ -93,15 +99,15 @@
                 </div>
             </div>
             
-            <button onclick="bukaModalPinAdmin()" class="hidden sm:flex bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition items-center gap-1.5">
-                ⚙️ <span>Admin</span>
+            <button onclick="bukaModalAbsenHarian()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+                📋 <span>Isi Absen</span>
             </button>
         </div>
 
         <!-- DASHBOARD PRESENTASI & 4 DIAGRAM LINGKARAN -->
         <div id="sectionDashboard" class="space-y-4">
             
-            <!-- 4 KARTU RINGKASAN STATISTIK UTAMA (STAT CARDS) -->
+            <!-- 4 KARTU RINGKASAN STATISTIK UTAMA -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                     <div>
@@ -138,8 +144,6 @@
 
             <!-- GRID 4 DIAGRAM LINGKARAN -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                <!-- DIAGRAM 1: KESELURUHAN GENERUS -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 1. Total Keseluruhan Generus</h3>
@@ -150,7 +154,6 @@
                     </div>
                 </div>
 
-                <!-- DIAGRAM 2: KELOMPOK APR S/D GPN-B -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 2. Kelompok APR s/d GPN-B</h3>
@@ -161,7 +164,6 @@
                     </div>
                 </div>
 
-                <!-- DIAGRAM 3: KELOMPOK AR INTENSIF -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 3. Kelompok AR Intensif</h3>
@@ -172,7 +174,6 @@
                     </div>
                 </div>
 
-                <!-- DIAGRAM 4: KELOMPOK ACR (SORE & MALAM) -->
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 4. Kelompok ACR (Sore & Malam)</h3>
@@ -182,12 +183,11 @@
                         <canvas id="chartACR"></canvas>
                     </div>
                 </div>
-
             </div>
 
         </div>
 
-        <!-- TABEL & LIST RIWAYAT ABSENSI / REKAP PENGAJIAN -->
+        <!-- TABEL & LIST RIWAYAT ABSENSI -->
         <div id="sectionRiwayat" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 sm:p-5 space-y-4">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
@@ -242,12 +242,75 @@
 
     </div>
 
+    <!-- MODAL FORM INPUT ABSENSI HARIAN -->
+    <div id="modalAbsenHarian" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 my-8 max-h-[90vh] flex flex-col justify-between">
+            
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        📋 <span>INPUT ABSENSI HARIAN</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Pilih kehadiran santri dan masukkan catatan materi pengajian hari ini.</p>
+                </div>
+                <button onclick="tutupModalAbsenHarian()" class="text-slate-400 hover:text-slate-600 font-bold p-1 text-lg">✕</button>
+            </div>
+
+            <div class="space-y-4 overflow-y-auto pr-1">
+                <!-- FILTER KATEGORI & SESI -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
+                            <select id="filterKategori" onchange="filterKategoriDiubah()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="ALL">Semua Kategori</option>
+                                <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
+                                <option value="APR">APR (Pra Remaja 13-15 thn)</option>
+                                <option value="AR">AR (Remaja 16-18 thn)</option>
+                                <option value="AR Intensif">AR Intensif</option>
+                                <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
+                                <option value="GPN-B">GPN-B (Pra Nikah B 23-30+ thn)</option>
+                            </select>
+                        </div>
+
+                        <div id="boxSesiACR" class="hidden">
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian (Khusus ACR):</label>
+                            <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Malam">🌙 Sesi Malam</option>
+                                <option value="Sore">☀️ Sesi Sore</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
+                        <input type="text" id="inputMateriPengajian" placeholder="Contoh: Jilid 2 Hal 15 / Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- DAFTAR NAMA GENERUS HARIAN -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Daftar Kehadiran Santri</h4>
+                        <span id="labelTanggalHariIni" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"></span>
+                    </div>
+
+                    <div id="containerDaftarAbsen" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex gap-2">
+                <button onclick="tutupModalAbsenHarian()" class="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Batal</button>
+                <button onclick="simpanAbsensiHariIni()" class="w-2/3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-2.5 rounded-xl shadow-md transition text-xs tracking-wide">💾 SIMPAN ABSENSI HARIAN</button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- MODAL POP-UP PIN ADMIN -->
     <div id="modalPinAdmin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4 text-center">
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-xl">
-                🔑
-            </div>
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-xl">🔑</div>
             <div>
                 <h3 class="font-bold text-slate-800 text-sm">Masuk Panel Admin</h3>
                 <p class="text-[11px] text-slate-500 mt-0.5">Masukkan PIN Akses Admin / Superadmin Anda.</p>
@@ -265,7 +328,7 @@
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
         Chart.register(ChartDataLabels);
 
@@ -283,9 +346,12 @@
         const db = getDatabase(app);
 
         let dataMasterGenerus = [];
+        let statusAbsenTemp = {}; 
+        let catatanIzinTemp = {};
         let chartInstances = {};
 
         const today = new Date().toISOString().split('T')[0];
+        document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputTanggalRiwayat").value = today;
 
         // FUNGSI SIDEBAR
@@ -303,6 +369,17 @@
             sidebar.classList.add("-translate-x-full");
             backdrop.classList.remove("opacity-100");
             setTimeout(() => backdrop.classList.add("hidden"), 300);
+        };
+
+        // FUNGSI MODAL ABSEN HARIAN
+        window.bukaModalAbsenHarian = function() {
+            tutupSidebar();
+            muatDaftarAbsen();
+            document.getElementById("modalAbsenHarian").classList.remove("hidden");
+        };
+
+        window.tutupModalAbsenHarian = function() {
+            document.getElementById("modalAbsenHarian").classList.add("hidden");
         };
 
         // FUNGSI MODAL PIN DUAL ACCESS
@@ -377,12 +454,10 @@
                 }
             });
 
-            // Update Stat Cards Atas (Bulan Ini)
             document.getElementById("statTotalHadir").innerText = stat.all.H;
             document.getElementById("statTotalIzin").innerText = stat.all.I;
             document.getElementById("statTotalAlpa").innerText = stat.all.A;
 
-            // Render 4 Diagram Donat
             buatDiagramDonat('chartAll', 'recTotal', stat.all);
             buatDiagramDonat('chartUtama', 'recUtama', stat.utama);
             buatDiagramDonat('chartIntensif', 'recIntensif', stat.intensif);
@@ -432,8 +507,7 @@
                             formatter: (value, ctx) => {
                                 let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
                                 if (sum === 0 || value === 0) return '';
-                                let percentage = Math.round((value / sum) * 100) + '%';
-                                return percentage;
+                                return Math.round((value / sum) * 100) + '%';
                             }
                         }
                     },
@@ -441,6 +515,118 @@
                 }
             });
         }
+
+        window.filterKategoriDiubah = function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const boxSesi = document.getElementById("boxSesiACR");
+
+            if (filterKat === "ACR") {
+                boxSesi.classList.remove("hidden");
+            } else {
+                boxSesi.classList.add("hidden");
+                document.getElementById("pilihanSesi").value = "Malam";
+            }
+            muatDaftarAbsen();
+        };
+
+        window.muatDaftarAbsen = function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const container = document.getElementById("containerDaftarAbsen");
+            container.innerHTML = "";
+
+            let listTampil = dataMasterGenerus;
+            if (filterKat !== "ALL") {
+                listTampil = dataMasterGenerus.filter(g => g.kategori === filterKat);
+            }
+
+            if (listTampil.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-300">Tidak ada generus pada kategori ini.</div>`;
+                return;
+            }
+
+            let no = 1;
+            listTampil.forEach(item => {
+                const st = statusAbsenTemp[item.id] || '';
+                const catatan = catatanIzinTemp[item.id] || '';
+
+                const btnHadir = st === 'Hadir' 
+                    ? 'bg-emerald-600 text-white font-bold border-emerald-600' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+                
+                const btnIzin = st === 'Izin' 
+                    ? 'bg-amber-500 text-white font-bold border-amber-500' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+
+                const btnAlpa = st === 'Alpa' 
+                    ? 'bg-red-600 text-white font-bold border-red-600' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-400 w-5">${no++}.</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-xs sm:text-sm">${item.nama}</h4>
+                                <span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span>
+                                ${catatan ? `<p class="text-[10px] text-amber-700 italic mt-0.5">Note: "${catatan}"</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-1.5 sm:pt-0 border-t sm:border-0 border-slate-100">
+                            <button onclick="pilihStatus('${item.id}', 'Hadir')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnHadir}">Hadir</button>
+                            <button onclick="pilihStatus('${item.id}', 'Izin')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnIzin}">Izin</button>
+                            <button onclick="pilihStatus('${item.id}', 'Alpa')" class="flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${btnAlpa}">Alpa</button>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.pilihStatus = function(id, status) {
+            statusAbsenTemp[id] = status;
+
+            if (status === 'Izin') {
+                const alasan = prompt("Masukkan Catatan / Alasan Izin:");
+                if (alasan && alasan.trim() !== "") {
+                    catatanIzinTemp[id] = alasan.trim();
+                } else {
+                    catatanIzinTemp[id] = "Izin";
+                }
+            } else {
+                delete catatanIzinTemp[id];
+            }
+
+            muatDaftarAbsen();
+        };
+
+        window.simpanAbsensiHariIni = async function() {
+            const filterKat = document.getElementById("filterKategori").value;
+            const sesi = (filterKat === "ACR") ? document.getElementById("pilihanSesi").value : "Malam";
+            const materi = document.getElementById("inputMateriPengajian").value.trim();
+            const keyPath = sesi === "Sore" ? `${today}_Sore` : `${today}_Malam`;
+
+            if (Object.keys(statusAbsenTemp).length === 0) {
+                alert("⚠️ Pilih status absen sekurang-kurangnya 1 generus sebelum menyimpan!");
+                return;
+            }
+
+            const payload = {
+                _materi: materi || "-",
+                _timestamp: new Date().toLocaleTimeString('id-ID')
+            };
+
+            for (let id in statusAbsenTemp) {
+                payload[id] = {
+                    status: statusAbsenTemp[id],
+                    catatan: catatanIzinTemp[id] || "-"
+                };
+            }
+
+            await set(ref(db, `absensi/${keyPath}`), payload);
+            alert("✅ Absensi hari ini berhasil disimpan ke database!");
+            tutupModalAbsenHarian();
+            hitungStatistikDashboard();
+        };
 
         window.tampilkanRiwayatAbsen = async function() {
             const tgl = document.getElementById("inputTanggalRiwayat").value;
