@@ -40,10 +40,10 @@
             <nav class="p-3 space-y-1 text-xs font-semibold overflow-y-auto max-h-[calc(100vh-140px)]">
                 <p class="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dashboard & Absensi</p>
                 
-                <a href="#sectionDashboard" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                <button onclick="pindahTab('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
                     <span class="text-base">📊</span>
                     <span>Dashboard Analytics</span>
-                </a>
+                </button>
 
                 <button onclick="bukaModalAbsen('Kelompok')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
                     <span class="text-base">📋</span>
@@ -60,10 +60,10 @@
                     <span>Pengajian Daerah</span>
                 </button>
 
-                <a href="#sectionRiwayat" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                <button onclick="pindahTab('riwayat')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
                     <span class="text-base">📜</span>
                     <span>Cek Riwayat Ngaji</span>
-                </a>
+                </button>
 
                 <hr class="my-2 border-slate-100">
 
@@ -161,7 +161,7 @@
                 
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 1. Total Keseluruhan Generus</h3>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 Total Keseluruhan Generus</h3>
                         <p id="recTotal" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
                     <div class="flex justify-center items-center relative py-1" style="height: 200px;">
@@ -171,7 +171,7 @@
 
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 2. Kelompok APR s/d GPN-B</h3>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 Kelompok APR s/d GPN-B</h3>
                         <p id="recUtama" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
                     <div class="flex justify-center items-center relative py-1" style="height: 200px;">
@@ -181,7 +181,7 @@
 
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 3. Kelompok AR Intensif</h3>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 Kelompok AR Intensif</h3>
                         <p id="recIntensif" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
                     <div class="flex justify-center items-center relative py-1" style="height: 200px;">
@@ -191,7 +191,7 @@
 
                 <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 4. Kelompok ACR (Sore & Malam)</h3>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 Kelompok ACR (Sore & Malam)</h3>
                         <p id="recACR" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
                     <div class="flex justify-center items-center relative py-1" style="height: 200px;">
@@ -203,10 +203,8 @@
 
         </div>
 
-        <hr class="border-slate-200 my-4">
-
-        <!-- SECTION 2: TERPISAH KHUSUS CEK RIWAYAT NGAJI & TABEL DATA -->
-        <div id="sectionRiwayat" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
+        <!-- SECTION 2: TERPISAH KHUSUS CEK RIWAYAT NGAJI & TABEL DATA (HIDDEN BY DEFAULT) -->
+        <div id="sectionRiwayat" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center gap-2">
@@ -214,6 +212,9 @@
                     </h3>
                     <p class="text-[11px] text-slate-500 mt-0.5">Pilih tanggal, jenis pengajian, dan sesi di bawah untuk melihat histori kehadiran.</p>
                 </div>
+                <button onclick="pindahTab('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                    ⬅️ Kembali
+                </button>
             </div>
 
             <!-- FILTER PENARIKAN RIWAYAT -->
@@ -409,6 +410,21 @@
             setTimeout(() => backdrop.classList.add("hidden"), 300);
         };
 
+        window.pindahTab = function(namaTab) {
+            tutupSidebar();
+            const secDashboard = document.getElementById("sectionDashboard");
+            const secRiwayat = document.getElementById("sectionRiwayat");
+
+            if (namaTab === 'riwayat') {
+                secDashboard.classList.add("hidden");
+                secRiwayat.classList.remove("hidden");
+                tampilkanRiwayatAbsen();
+            } else {
+                secRiwayat.classList.add("hidden");
+                secDashboard.classList.remove("hidden");
+            }
+        };
+
         window.bukaModalAbsen = function(jenis) {
             tutupSidebar();
             document.getElementById("pilihanJenisPengajian").value = jenis;
@@ -556,13 +572,17 @@
             const persenIzin = totalRec > 0 ? Math.round((dataObj.I / totalRec) * 100) : 0;
             const persenAlpa = totalRec > 0 ? Math.round((dataObj.A / totalRec) * 100) : 0;
 
+            const isDataKosong = totalRec === 0;
+            const chartData = isDataKosong ? [1] : [dataObj.H, dataObj.I, dataObj.A];
+            const chartColors = isDataKosong ? ['#e2e8f0'] : ['#10b981', '#f59e0b', '#ef4444'];
+
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: [`Hadir (${persenHadir}%)`, `Izin (${persenIzin}%)`, `Alpa (${persenAlpa}%)`],
+                    labels: isDataKosong ? ['Belum Ada Data'] : [`Hadir (${persenHadir}%)`, `Izin (${persenIzin}%)`, `Alpa (${persenAlpa}%)`],
                     datasets: [{
-                        data: [dataObj.H, dataObj.I, dataObj.A],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        data: chartData,
+                        backgroundColor: chartColors,
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -583,6 +603,7 @@
                             color: '#ffffff',
                             font: { weight: 'bold', size: 10 },
                             formatter: (value, ctx) => {
+                                if (isDataKosong) return '';
                                 let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
                                 if (sum === 0 || value === 0) return '';
                                 return Math.round((value / sum) * 100) + '%';
