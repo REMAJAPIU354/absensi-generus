@@ -8,8 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (XLSX) Library untuk Export Multi-Sheet Excel -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- ExcelJS Library untuk Mengolah & Menjaga Template Excel Asli -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+    <!-- FileSaver Library untuk Download File Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <style> 
         body { font-family: 'Inter', sans-serif; } 
     </style>
@@ -41,13 +43,13 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel (6 Sheet)
+                    📊 Export Laporan Rekapitulasi Excel (Sesuai Template Master)
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Menghasilkan 6 Sheet terpisah: APR-GPNB, AR Intensif, ACR, Pengajian Desa, Pengajian Daerah, dan Santri Baru (&lt; 6 Bln).</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Mengisi otomatis file template Excel master (6 Sheet) lengkap dengan tata letak, warna, dan rumus asli.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
-                <button onclick="exportKeExcel6Sheet()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
+                <button onclick="exportKeExcelSesuaiTemplate()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
                     <span>📑</span>
                     <span>Download Rekap Excel Master (6 Sheet)</span>
                 </button>
@@ -80,8 +82,8 @@
                         <option value="APR">APR (Pra Remaja)</option>
                         <option value="AR">AR (Remaja)</option>
                         <option value="AR Intensif">AR Intensif</option>
-                        <option value="GPN-A">GPN-A (Pra Nikah A)</option>
-                        <option value="GPN-B">GPN-B (Pra Nikah B)</option>
+                        <option value="GPN-A">GPNA (Pra Nikah A)</option>
+                        <option value="GPN-B">GPNB (Pra Nikah B)</option>
                     </select>
                 </div>
 
@@ -159,7 +161,6 @@
         let dataMaster = [];
         const roleAkses = sessionStorage.getItem("userRole") || "ADMIN";
 
-        // TAMPILKAN STATUS ROLE
         document.getElementById("labelRoleAkses").innerText = roleAkses;
         if (roleAkses === "SUPERADMIN") {
             document.getElementById("labelRoleAkses").className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-500 text-white";
@@ -169,7 +170,6 @@
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById("inputTglMasukGenerus").value = todayStr;
 
-        // BACA DATA MASTER GENERUS FROM FIREBASE
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
             dataMaster = Object.values(data).filter(item => item && typeof item === 'object');
@@ -301,90 +301,101 @@
             }
         };
 
-        // EXPORT REKAP MASTER EXCEL (6 SHEET UTUH)
-        window.exportKeExcel6Sheet = async function() {
-            const snapAbsen = await get(ref(db, 'absensi'));
-            const dataAbsen = snapAbsen.val() || {};
+        // INTEGRASI DENGAN FILE TEMPLATE MASTER EXCEL (EXCELJS)
+        window.exportKeExcelSesuaiTemplate = async function() {
+            try {
+                // 1. AMBIL FILE TEMPLATE
+                const response = await fetch('template_absensi.xlsx');
+                if (!response.ok) {
+                    alert("❌ File 'template_absensi.xlsx' tidak ditemukan di server! Pastikan file sudah di-upload ke GitHub.");
+                    return;
+                }
+                const arrayBuffer = await response.arrayBuffer();
 
-            if (dataMaster.length === 0) {
-                alert("⚠️ Tidak ada data master generus untuk diexport!");
-                return;
+                // 2. AMBIL DATA ABSENSI DARI FIREBASE
+                const snapAbsen = await get(ref(db, 'absensi'));
+                const dataAbsen = snapAbsen.val() || {};
+
+                // 3. LOAD WORKBOOK PAKAI EXCELJS
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(arrayBuffer);
+
+                // --- PROSES SHEET 1: Absensi APR - GPN B ---
+                const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
+                if (ws1) {
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'APR'), 3, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'AR'), 8, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'GPNA' || g.kategori === 'GPN-A'), 15, dataAbsen);
+                    isiSubKategoriSheet1(ws1, dataMaster.filter(g => (g.kategori || '').replace('-','') === 'GPNB' || g.kategori === 'GPN-B'), 30, dataAbsen);
+                }
+
+                // --- PROSES SHEET 2: Absensi AR Intensif ---
+                const ws2 = workbook.getWorksheet('Absensi AR Intensif');
+                if (ws2) {
+                    isiSheetStandar(ws2, dataMaster.filter(g => g.kategori === 'AR Intensif'), dataAbsen, 'Kelompok');
+                }
+
+                // --- PROSES SHEET 3: Absensi ACR ---
+                const ws3 = workbook.getWorksheet('Absensi ACR');
+                if (ws3) {
+                    isiSheetStandar(ws3, dataMaster.filter(g => g.kategori === 'ACR'), dataAbsen, 'Kelompok');
+                }
+
+                // --- PROSES SHEET 4: Pengajian Desa ---
+                const ws4 = workbook.getWorksheet('Pengajian Desa');
+                if (ws4) {
+                    isiSheetStandar(ws4, dataMaster, dataAbsen, 'Desa');
+                }
+
+                // --- PROSES SHEET 5: Pengajian Daerah ---
+                const ws5 = workbook.getWorksheet('Pengajian Daerah');
+                if (ws5) {
+                    isiSheetStandar(ws5, dataMaster, dataAbsen, 'Daerah');
+                }
+
+                // --- PROSES SHEET 6: Absen Generus Baru ---
+                const ws6 = workbook.getWorksheet('Absen Generus Baru');
+                if (ws6) {
+                    isiSheetStandar(ws6, dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)), dataAbsen, 'Kelompok');
+                }
+
+                // 4. DOWNLOAD FILE EXCEL HASIL ISIAN
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ Terjadi kesalahan saat memproses file Excel: " + err.message);
             }
-
-            const wb = XLSX.utils.book_new();
-
-            // SHEET 1: APR - GPNB
-            const rows1 = dataMaster.filter(g => ['APR', 'AR', 'GPN-A', 'GPN-B'].includes(g.kategori)).map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows1.length ? rows1 : [pesanKosongExcel()]), "APR - GPNB");
-
-            // SHEET 2: AR Intensif
-            const rows2 = dataMaster.filter(g => g.kategori === 'AR Intensif').map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows2.length ? rows2 : [pesanKosongExcel()]), "AR Intensif");
-
-            // SHEET 3: Absensi ACR
-            const rows3 = dataMaster.filter(g => g.kategori === 'ACR').map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows3.length ? rows3 : [pesanKosongExcel()]), "Absensi ACR");
-
-            // SHEET 4: Pengajian Desa
-            const rows4 = dataMaster.map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Desa');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows4), "Pengajian Desa");
-
-            // SHEET 5: Pengajian Daerah
-            const rows5 = dataMaster.map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Daerah');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows5), "Pengajian Daerah");
-
-            // SHEET 6: Santri Baru (< 6 Bln)
-            const rows6 = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk)).map((g, idx) => {
-                return hitungRecordSantri(g, idx + 1, dataAbsen, 'Kelompok');
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows6.length ? rows6 : [pesanKosongExcel()]), "Santri Baru (< 6 Bln)");
-
-            XLSX.writeFile(wb, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
         };
 
-        function hitungRecordSantri(g, no, dataAbsen, jenisFilter) {
-            let h = 0, i = 0, a = 0;
+        function isiSubKategoriSheet1(ws, listSantri, startRow, dataAbsen) {
+            listSantri.forEach((g, idx) => {
+                const row = ws.getRow(startRow + idx);
+                row.getCell(2).value = g.nama; // Kolom B: Nama
 
-            Object.keys(dataAbsen).forEach(keyPath => {
-                if (keyPath.includes(`_${jenisFilter}_`)) {
-                    const session = dataAbsen[keyPath];
-                    if (session[g.id] && session[g.id].status) {
-                        const st = session[g.id].status;
-                        if (st === 'Hadir') h++;
-                        if (st === 'Izin') i++;
-                        if (st === 'Alpa') a++;
-                    }
-                }
+                // Ambil 6 sesi terakhir untuk mengisi Tanggal Hadir (Kolom D s/d I)
+                let sessionKeys = Object.keys(dataAbsen).filter(k => k.includes('_Kelompok_')).slice(-6);
+                sessionKeys.forEach((key, colIdx) => {
+                    const st = dataAbsen[key] && dataAbsen[key][g.id] ? dataAbsen[key][g.id].status : '';
+                    if (st === 'Hadir') row.getCell(4 + colIdx).value = 1;
+                });
             });
-
-            const total = h + i + a;
-            const persen = total > 0 ? Math.round((h / total) * 100) + '%' : '0%';
-
-            return {
-                "No": no,
-                "Nama Lengkap": g.nama,
-                "Kategori": g.kategori || 'ACR',
-                "Tanggal Masuk": g.tglMasuk || '-',
-                "Hadir": h,
-                "Izin": i,
-                "Alpa": a,
-                "Total Pertemuan": total,
-                "Persentase Kehadiran": persen
-            };
         }
 
-        function pesanKosongExcel() {
-            return { "Info": "Belum ada data pada kategori/sheet ini." };
+        function isiSheetStandar(ws, listSantri, dataAbsen, jenisFilter) {
+            listSantri.forEach((g, idx) => {
+                const row = ws.getRow(3 + idx);
+                row.getCell(2).value = g.nama; // Kolom B: Nama
+
+                // Ambil 8 sesi terakhir untuk mengisi Tanggal Absen (Kolom C s/d J)
+                let sessionKeys = Object.keys(dataAbsen).filter(k => k.includes(`_${jenisFilter}_`)).slice(-8);
+                sessionKeys.forEach((key, colIdx) => {
+                    const st = dataAbsen[key] && dataAbsen[key][g.id] ? dataAbsen[key][g.id].status : '';
+                    if (st === 'Hadir') row.getCell(3 + colIdx).value = 1;
+                });
+            });
         }
     </script>
 </body>
