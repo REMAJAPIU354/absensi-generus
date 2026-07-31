@@ -19,8 +19,6 @@
 
     <!-- SIDEBAR NAVIGASI (ALA GEMINI) -->
     <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
-        
-        <!-- HEADER SIDEBAR -->
         <div>
             <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
                 <div class="flex items-center gap-2">
@@ -39,6 +37,11 @@
             <nav class="p-3 space-y-1 text-xs font-semibold">
                 <p class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Navigasi Utama</p>
                 
+                <a href="#sectionDashboard" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                    <span class="text-base">📊</span>
+                    <span>Dashboard Presentasi</span>
+                </a>
+
                 <a href="#sectionAbsen" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📋</span>
                     <span>Absensi Harian</span>
@@ -53,14 +56,13 @@
 
                 <p class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kelola Data</p>
 
-                <a href="admin.html" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
+                <button onclick="bukaModalPinAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
                     <span class="text-base">⚙️</span>
                     <span>Panel Admin (Master)</span>
-                </a>
+                </button>
             </nav>
         </div>
 
-        <!-- FOOTER SIDEBAR (SLOT PROFIL PENGURUS / LOGIN) -->
         <div class="p-3.5 border-t border-slate-100 bg-slate-50">
             <div class="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center">
@@ -68,7 +70,7 @@
                 </div>
                 <div class="flex-1 overflow-hidden">
                     <h4 class="text-xs font-bold text-slate-800 truncate">Pengurus PIU</h4>
-                    <p class="text-[10px] text-slate-400 truncate">Mode Pengurus Saja</p>
+                    <p class="text-[10px] text-slate-400 truncate">Mode Pengurus Harian</p>
                 </div>
             </div>
         </div>
@@ -77,7 +79,7 @@
     <!-- WRAPPER KONTEN UTAMA -->
     <div class="max-w-md sm:max-w-3xl mx-auto p-2 sm:p-6 space-y-4">
         
-        <!-- HEADER APLIKASI UTAMA (DENGAN TOMBOL HAMBURGER ☰) -->
+        <!-- HEADER APLIKASI -->
         <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl p-3.5 sm:p-5 text-white shadow-lg flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <button onclick="bukaSidebar()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white transition border border-white/20">
@@ -93,9 +95,48 @@
                 </div>
             </div>
             
-            <a href="admin.html" title="Buka Panel Admin" class="hidden sm:flex bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition items-center gap-1.5">
+            <button onclick="bukaModalPinAdmin()" class="hidden sm:flex bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-white/20 transition items-center gap-1.5">
                 ⚙️ <span>Admin</span>
-            </a>
+            </button>
+        </div>
+
+        <!-- DASHBOARD PRESENTASI KEHADIRAN GENERUS -->
+        <div id="sectionDashboard" class="bg-white rounded-2xl p-3.5 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
+                    📊 <span>Ringkasan Evaluasi Kehadiran Bulan Ini</span>
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <!-- CARD APR - GPNB -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
+                    <p class="text-[10px] font-bold text-emerald-700 uppercase">APR s/d GPN-B</p>
+                    <h4 id="statPersenUtama" class="text-lg sm:text-2xl font-black text-emerald-900 mt-1">0%</h4>
+                    <p class="text-[9px] text-emerald-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                </div>
+
+                <!-- CARD AR INTENSIF -->
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                    <p class="text-[10px] font-bold text-amber-700 uppercase">AR INTENSIF</p>
+                    <h4 id="statPersenIntensif" class="text-lg sm:text-2xl font-black text-amber-900 mt-1">0%</h4>
+                    <p class="text-[9px] text-amber-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                </div>
+
+                <!-- CARD ACR -->
+                <div class="bg-teal-50 border border-teal-200 rounded-xl p-3 text-center">
+                    <p class="text-[10px] font-bold text-teal-700 uppercase">ACR (SORE & MALAM)</p>
+                    <h4 id="statPersenACR" class="text-lg sm:text-2xl font-black text-teal-900 mt-1">0%</h4>
+                    <p class="text-[9px] text-teal-600 font-semibold mt-0.5">Rata-rata Hadir</p>
+                </div>
+
+                <!-- CARD SANTRI BARU < 6 BULAN -->
+                <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 text-center">
+                    <p class="text-[10px] font-bold text-indigo-700 uppercase">SANTRI BARU (&lt;6 BLN)</p>
+                    <h4 id="statTotalGenerusBaru" class="text-lg sm:text-2xl font-black text-indigo-900 mt-1">0 Orang</h4>
+                    <p class="text-[9px] text-indigo-600 font-semibold mt-0.5">Masa Adaptasi</p>
+                </div>
+            </div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden p-3.5 sm:p-6 space-y-5">
@@ -116,7 +157,6 @@
                         </select>
                     </div>
 
-                    <!-- SESI HANYA MUNCUL KHUSUS UNTUK ACR -->
                     <div id="boxSesiACR" class="hidden">
                         <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian (Khusus ACR):</label>
                         <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -126,7 +166,6 @@
                     </div>
                 </div>
 
-                <!-- CATATAN MATERI NGAJI -->
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
                     <input type="text" id="inputMateriPengajian" placeholder="Contoh: Jilid 2 Hal 15 / Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -140,19 +179,16 @@
                     <span id="labelTanggalHariIni" class="text-[11px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"></span>
                 </div>
 
-                <div id="containerDaftarAbsen" class="space-y-2.5">
-                    <!-- Direset via JS -->
-                </div>
+                <div id="containerDaftarAbsen" class="space-y-2.5"></div>
             </div>
 
-            <!-- TOMBOL SIMPAN -->
             <button onclick="simpanAbsensiHariIni()" class="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm tracking-wide">
                 💾 SIMPAN ABSENSI HARI INI
             </button>
 
             <hr class="border-slate-200 my-5">
 
-            <!-- TABEL & LIST RIWAYAT ABSENSI TANGGAL LAIN -->
+            <!-- TABEL & LIST RIWAYAT ABSENSI -->
             <div id="sectionRiwayat" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
                 <div>
                     <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
@@ -161,7 +197,6 @@
                     <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
                 </div>
 
-                <!-- FILTER TANGGAL & SESI -->
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
                     <input type="date" id="inputTanggalRiwayat" class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
                     <select id="pilihanSesiRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
@@ -173,20 +208,16 @@
                     </button>
                 </div>
 
-                <!-- KETERANGAN MATERI YANG TERSIMPAN -->
                 <div id="boxInfoMateriRiwayat" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900">
                     <span class="font-bold">📖 Materi Pengajian Tersimpan:</span>
                     <p id="teksMateriRiwayat" class="font-semibold text-emerald-800 mt-0.5">-</p>
                 </div>
 
-                <!-- KONTEN HASIL RIWAYAT -->
                 <div id="boxHasilRiwayat">
-                    <!-- Tampilan HP (Mobile List Cards) -->
                     <div id="listRiwayatMobile" class="block sm:hidden space-y-2">
                         <p class="text-center text-xs text-slate-400 py-4">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</p>
                     </div>
 
-                    <!-- Tampilan Laptop/Tablet (Desktop Table) -->
                     <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-lg bg-white">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
@@ -210,6 +241,26 @@
 
             </div>
 
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP PIN ADMIN -->
+    <div id="modalPinAdmin" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4 text-center">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-xl">
+                🔑
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-sm">Masuk Panel Admin</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Masukkan PIN Akses Admin / Superadmin Anda.</p>
+            </div>
+            
+            <input type="password" id="inputPinAkses" placeholder="Masukkan PIN..." class="w-full border border-slate-300 rounded-xl p-2.5 text-center text-sm font-bold tracking-widest bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+            
+            <div class="flex gap-2">
+                <button onclick="tutupModalPinAdmin()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">Batal</button>
+                <button onclick="prosesVerifikasiPin()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">Masuk</button>
+            </div>
         </div>
     </div>
 
@@ -239,11 +290,10 @@
         document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputTanggalRiwayat").value = today;
 
-        // FUNGSI BUAT SIDEBAR
+        // FUNGSI SIDEBAR
         window.bukaSidebar = function() {
             const sidebar = document.getElementById("sidebarMenu");
             const backdrop = document.getElementById("sidebarBackdrop");
-
             sidebar.classList.remove("-translate-x-full");
             backdrop.classList.remove("hidden");
             setTimeout(() => backdrop.classList.add("opacity-100"), 10);
@@ -252,20 +302,92 @@
         window.tutupSidebar = function() {
             const sidebar = document.getElementById("sidebarMenu");
             const backdrop = document.getElementById("sidebarBackdrop");
-
             sidebar.classList.add("-translate-x-full");
             backdrop.classList.remove("opacity-100");
             setTimeout(() => backdrop.classList.add("hidden"), 300);
         };
 
-        // Ambil Data Master Generus
+        // FUNGSI MODAL PIN DUAL ACCESS
+        window.bukaModalPinAdmin = function() {
+            tutupSidebar();
+            document.getElementById("inputPinAkses").value = "";
+            document.getElementById("modalPinAdmin").classList.remove("hidden");
+        };
+
+        window.tutupModalPinAdmin = function() {
+            document.getElementById("modalPinAdmin").classList.add("hidden");
+        };
+
+        window.prosesVerifikasiPin = function() {
+            const pin = document.getElementById("inputPinAkses").value.trim();
+            if (pin === "admin354") {
+                sessionStorage.setItem("userRole", "ADMIN");
+                window.location.href = "admin.html";
+            } else if (pin === "superadmin354") {
+                sessionStorage.setItem("userRole", "SUPERADMIN");
+                window.location.href = "admin.html";
+            } else {
+                alert("❌ PIN yang Anda masukkan salah!");
+            }
+        };
+
+        // Ambil Data Master Generus & Kalkulasi Dashboard
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
             dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
             muatDaftarAbsen();
+            hitungStatistikDashboard();
         });
 
-        // FUNGSI CEK LOGIKA TAMPIL/SEMBUNYI SESI
+        // KALKULASI DASHBOARD PRESENTASI
+        async function hitungStatistikDashboard() {
+            // Hitung Santri Baru < 6 Bulan
+            const totalBaru = dataMasterGenerus.filter(g => g.isGenerusBaru === true).length;
+            document.getElementById("statTotalGenerusBaru").innerText = `${totalBaru} Orang`;
+
+            // Ambil Seluruh Data Absen Bulan Ini
+            const snapAbsen = await get(ref(db, 'absensi'));
+            const dataAbsen = snapAbsen.val() || {};
+
+            let totalHadirUtama = 0, totalPeluangUtama = 0;
+            let totalHadirIntensif = 0, totalPeluangIntensif = 0;
+            let totalHadirACR = 0, totalPeluangACR = 0;
+
+            const currentMonth = today.substring(0, 7); // YYYY-MM
+
+            Object.keys(dataAbsen).forEach(keyPath => {
+                if (keyPath.startsWith(currentMonth)) {
+                    const sessionData = dataAbsen[keyPath];
+                    
+                    dataMasterGenerus.forEach(g => {
+                        const rec = sessionData[g.id];
+                        if (rec && rec.status) {
+                            const kat = g.kategori || 'ACR';
+
+                            if (kat === 'ACR') {
+                                totalPeluangACR++;
+                                if (rec.status === 'Hadir') totalHadirACR++;
+                            } else if (kat === 'AR Intensif') {
+                                totalPeluangIntensif++;
+                                if (rec.status === 'Hadir') totalHadirIntensif++;
+                            } else {
+                                totalPeluangUtama++;
+                                if (rec.status === 'Hadir') totalHadirUtama++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            const persenUtama = totalPeluangUtama > 0 ? Math.round((totalHadirUtama / totalPeluangUtama) * 100) : 0;
+            const persenIntensif = totalPeluangIntensif > 0 ? Math.round((totalHadirIntensif / totalPeluangIntensif) * 100) : 0;
+            const persenACR = totalPeluangACR > 0 ? Math.round((totalHadirACR / totalPeluangACR) * 100) : 0;
+
+            document.getElementById("statPersenUtama").innerText = `${persenUtama}%`;
+            document.getElementById("statPersenIntensif").innerText = `${persenIntensif}%`;
+            document.getElementById("statPersenACR").innerText = `${persenACR}%`;
+        }
+
         window.filterKategoriDiubah = function() {
             const filterKat = document.getElementById("filterKategori").value;
             const boxSesi = document.getElementById("boxSesiACR");
@@ -274,12 +396,11 @@
                 boxSesi.classList.remove("hidden");
             } else {
                 boxSesi.classList.add("hidden");
-                document.getElementById("pilihanSesi").value = "Malam"; // Reset ke Malam
+                document.getElementById("pilihanSesi").value = "Malam";
             }
             muatDaftarAbsen();
         };
 
-        // Tampilkan Form Absensi Harian
         window.muatDaftarAbsen = function() {
             const filterKat = document.getElementById("filterKategori").value;
             const container = document.getElementById("containerDaftarAbsen");
@@ -375,9 +496,9 @@
 
             await set(ref(db, `absensi/${keyPath}`), payload);
             alert("✅ Absensi hari ini berhasil disimpan ke database!");
+            hitungStatistikDashboard();
         };
 
-        // TAMPILKAN RIWAYAT RESPONSIF UNTUK HP & LAPTOP
         window.tampilkanRiwayatAbsen = async function() {
             const tgl = document.getElementById("inputTanggalRiwayat").value;
             const sesi = document.getElementById("pilihanSesiRiwayat").value;
@@ -402,7 +523,6 @@
                 return;
             }
 
-            // Tampilkan Catatan Materi
             if (dataAbsen._materi) {
                 teksMateri.innerText = dataAbsen._materi;
                 boxMateri.classList.remove("hidden");
@@ -426,7 +546,6 @@
                     if (st === 'Izin') badgeColor = 'bg-amber-100 text-amber-800 border-amber-200';
                     if (st === 'Alpa') badgeColor = 'bg-red-100 text-red-800 border-red-200';
 
-                    // 1. TAMPILAN KHUSUS MOBILE (KARTU RAPI HP)
                     containerMobile.innerHTML += `
                         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-1.5">
                             <div class="flex justify-between items-start">
@@ -440,12 +559,11 @@
                         </div>
                     `;
 
-                    // 2. TAMPILAN DESKTOP (TABEL)
                     tbodyDesktop.innerHTML += `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-2.5 text-center font-bold text-slate-400">${no}</td>
                             <td class="p-2.5 font-semibold text-slate-800">${item.nama}</td>
-                            <td class="p-2.5 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border">${item.kategori || 'ACR'}</span></td>
+                            <td class="p-2.5 text-center"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full border">${item.kategori || 'ACR'}</span></td>
                             <td class="p-2.5 text-center"><span class="${badgeColor} text-[10px] font-bold px-2.5 py-1 rounded-full border">${st}</span></td>
                             <td class="p-2.5 text-center text-slate-500">${jam}</td>
                             <td class="p-2.5 text-slate-600">${catatan}</td>
