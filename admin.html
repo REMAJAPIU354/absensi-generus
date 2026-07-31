@@ -31,18 +31,17 @@
                 </div>
             </div>
 
-            <a href="index.html" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 flex items-center gap-1">
+            <button onclick="kembaliKeDashboard()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition border border-white/20 flex items-center gap-1 active:scale-95">
                 ⬅️ <span>Ke Dashboard</span>
-            </a>
+            </button>
         </div>
 
         <!-- BOX FITUR EXPORT 6 SHEET EXCEL MASTER -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel (Fitur H, I, A)
+                    📊 Export Laporan Rekapitulasi Excel
                 </h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Menampilkan status H, I, A di tabel, dan hanya menghitung huruf "H" untuk akumulasi persentase kehadiran.</p>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
@@ -64,7 +63,7 @@
                 <input type="hidden" id="inputIdGenerus">
                 
                 <div class="sm:col-span-4">
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Lengkap Santri:</label>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Lengkap Generus:</label>
                     <input type="text" id="inputNamaGenerus" placeholder="Contoh: Ahmad Fauzi" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
                 </div>
 
@@ -96,10 +95,10 @@
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
                 <div>
                     <h3 class="font-bold text-slate-800 text-xs sm:text-sm">👥 Master Data Generus PIU</h3>
-                    <p class="text-[11px] text-slate-400">Total terdaftar: <span id="labelJumlahSantri" class="font-bold text-emerald-700">0</span> santri</p>
+                    <p class="text-[11px] text-slate-400">Total Generus: <span id="labelJumlahGenerus" class="font-bold text-emerald-700">0</span> orang</p>
                 </div>
 
-                <input type="text" id="inputCariMaster" onkeyup="filterMasterGenerus()" placeholder="🔍 Cari nama santri..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none sm:w-60">
+                <input type="text" id="inputCariMaster" onkeyup="filterMasterGenerus()" placeholder="🔍 Cari nama generus..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none sm:w-60">
             </div>
 
             <!-- TAMPILAN MOBILE LIST -->
@@ -113,7 +112,7 @@
                     <thead>
                         <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
                             <th class="p-3 text-center w-10">No</th>
-                            <th class="p-3">Nama Lengkap Santri</th>
+                            <th class="p-3">Nama Lengkap Generus</th>
                             <th class="p-3 text-center">Kategori</th>
                             <th class="p-3 text-center">Tanggal Masuk</th>
                             <th class="p-3 text-center">Status Keanggotaan</th>
@@ -130,6 +129,13 @@
         </div>
 
     </div>
+
+    <!-- SCRIPT NAVIGASI KEMBALI KE DASHBOARD -->
+    <script>
+        function kembaliKeDashboard() {
+            window.location.href = "index.html";
+        }
+    </script>
 
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
@@ -164,7 +170,7 @@
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
             dataMaster = Object.values(data).filter(item => item && typeof item === 'object');
-            document.getElementById("labelJumlahSantri").innerText = dataMaster.length;
+            document.getElementById("labelJumlahGenerus").innerText = dataMaster.length;
             tampilkanMasterTabel(dataMaster);
         });
 
@@ -174,7 +180,7 @@
             tampilkanMasterTabel(hasilFilter);
         };
 
-        function hitungApakahSantriBaru(tglMasuk) {
+        function hitungApakahGenerusBaru(tglMasuk) {
             if (!tglMasuk) return false;
             const tglAwal = new Date(tglMasuk);
             const skr = new Date();
@@ -197,9 +203,9 @@
 
             let no = 1;
             list.forEach(g => {
-                const isBaru = hitungApakahSantriBaru(g.tglMasuk);
+                const isBaru = hitungApakahGenerusBaru(g.tglMasuk);
                 const badgeBaru = isBaru 
-                    ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200">Santri Baru (&lt; 6 Bln)</span>`
+                    ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200">Generus Baru (&lt; 6 Bln)</span>`
                     : `<span class="bg-slate-100 text-slate-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-slate-200">Lama</span>`;
 
                 const btnHapusSuperadmin = roleAkses === "SUPERADMIN" 
@@ -252,7 +258,7 @@
             const tglMasuk = document.getElementById("inputTglMasukGenerus").value;
 
             if (!nama) {
-                alert("⚠️ Masukkan nama lengkap santri!");
+                alert("⚠️ Masukkan nama lengkap generus!");
                 return;
             }
 
@@ -289,7 +295,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT DENGAN HURUF STATUS H, I, A & RUMUS HANYA MENGHITUNG "H"
+        // EXPORT EXCEL
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const response = await fetch('template_absensi.xlsx');
@@ -305,13 +311,13 @@
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(arrayBuffer);
 
-                const santriLama = dataMaster.filter(g => !hitungApakahSantriBaru(g.tglMasuk));
-                const santriBaru = dataMaster.filter(g => hitungApakahSantriBaru(g.tglMasuk));
+                const generusLama = dataMaster.filter(g => !hitungApakahGenerusBaru(g.tglMasuk));
+                const generusBaru = dataMaster.filter(g => hitungApakahGenerusBaru(g.tglMasuk));
 
-                const listAPR = santriLama.filter(g => normKat(g.kategori) === 'APR');
-                const listAR = santriLama.filter(g => normKat(g.kategori) === 'AR' || normKat(g.kategori) === 'ARINTENSIF');
-                const listGPNA = santriLama.filter(g => normKat(g.kategori) === 'GPNA');
-                const listGPNB = santriLama.filter(g => normKat(g.kategori) === 'GPNB');
+                const listAPR = generusLama.filter(g => normKat(g.kategori) === 'APR');
+                const listAR = generusLama.filter(g => normKat(g.kategori) === 'AR' || normKat(g.kategori) === 'ARINTENSIF');
+                const listGPNA = generusLama.filter(g => normKat(g.kategori) === 'GPNA');
+                const listGPNB = generusLama.filter(g => normKat(g.kategori) === 'GPNB');
 
                 // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
@@ -328,7 +334,7 @@
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarHIA(ws3, santriLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarHIA(ws3, generusLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
                 }
 
                 // --- SHEET 4: Pengajian Desa ---
@@ -346,7 +352,7 @@
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarHIA(ws6, santriBaru, dataAbsen, 'Kelompok', null, 4);
+                    isiSheetStandarHIA(ws6, generusBaru, dataAbsen, 'Kelompok', null, 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -372,7 +378,6 @@
             let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilter);
             let displayKeys = sessionKeys.slice(-6);
 
-            // Tulis Header Tanggal di Baris 2
             displayKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
@@ -387,15 +392,15 @@
         }
 
         function isiBlokHIA(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen, colStartLetter, colEndLetter, colAkumulasi) {
-            listGroup.slice(0, maxRowsAllowed).forEach((santri, idx) => {
+            listGroup.slice(0, maxRowsAllowed).forEach((generus, idx) => {
                 const rowNum = startRow + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama;
+                row.getCell(2).value = generus.nama;
 
                 sessionKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
+                    const rec = sessionData[generus.id];
                     if (rec && rec.status) {
                         const st = rec.status.toString().toLowerCase();
                         let kode = '';
@@ -404,17 +409,16 @@
                         else if (st === 'alpa') kode = 'A';
 
                         if (kode !== '') {
-                            row.getCell(4 + colIdx).value = kode; // Tulis huruf H, I, atau A
+                            row.getCell(4 + colIdx).value = kode;
                         }
                     }
                 });
 
-                // PERBAIKAN RUMUS AKUMULASI: HANYA MENGHITUNG HURUF "H" SANA!
                 row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
             });
         }
 
-        function isiSheetStandarHIA(ws, listSantri, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
+        function isiSheetStandarHIA(ws, listGenerus, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
             let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterUtama);
 
             if (sessionKeys.length === 0 && jenisFilterFallback) {
@@ -434,15 +438,15 @@
                 ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
             });
 
-            listSantri.forEach((santri, idx) => {
+            listGenerus.forEach((generus, idx) => {
                 const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
 
-                row.getCell(2).value = santri.nama;
+                row.getCell(2).value = generus.nama;
 
                 displayKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[santri.id];
+                    const rec = sessionData[generus.id];
                     if (rec && rec.status) {
                         const st = rec.status.toString().toLowerCase();
                         let kode = '';
@@ -451,12 +455,11 @@
                         else if (st === 'alpa') kode = 'A';
 
                         if (kode !== '') {
-                            row.getCell(colStart + colIdx).value = kode; // Tulis huruf H, I, atau A
+                            row.getCell(colStart + colIdx).value = kode;
                         }
                     }
                 });
 
-                // PERBAIKAN RUMUS AKUMULASI: HANYA MENGHITUNG HURUF "H"
                 row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
             });
         }
