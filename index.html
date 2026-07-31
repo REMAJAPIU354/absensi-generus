@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Generus PIU</title>
+    <title>Dashboard Absensi Generus PIU</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js untuk Diagram Pie -->
+    <!-- Chart.js & Datalabels Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style> 
         body { font-family: 'Inter', sans-serif; } 
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 relative overflow-x-hidden">
 
-    <!-- BACKDROP SIDEBAR (GELAP / BLUR) -->
+    <!-- BACKDROP SIDEBAR -->
     <div id="sidebarBackdrop" onclick="tutupSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
 
-    <!-- SIDEBAR NAVIGASI (ALA GEMINI / ZLEEPING UI) -->
+    <!-- SIDEBAR NAVIGASI (ALA GEMINI) -->
     <aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between border-r border-slate-200">
         <div>
             <div class="p-4 bg-gradient-to-r from-emerald-800 to-teal-700 text-white flex justify-between items-center">
@@ -44,11 +45,6 @@
                     <span>Dashboard Analytics</span>
                 </a>
 
-                <a href="#sectionAbsen" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
-                    <span class="text-base">📋</span>
-                    <span>Absensi Harian</span>
-                </a>
-
                 <a href="#sectionRiwayat" onclick="tutupSidebar()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition">
                     <span class="text-base">📜</span>
                     <span>Cek Riwayat & Ngaji</span>
@@ -60,7 +56,7 @@
 
                 <button onclick="bukaModalPinAdmin()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left">
                     <span class="text-base">⚙️</span>
-                    <span>Panel Admin (Master)</span>
+                    <span>Panel Admin (Master Data)</span>
                 </button>
             </nav>
         </div>
@@ -79,7 +75,7 @@
     </aside>
 
     <!-- WRAPPER KONTEN UTAMA -->
-    <div class="max-w-md sm:max-w-3xl mx-auto p-2 sm:p-6 space-y-4">
+    <div class="max-w-md sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-4">
         
         <!-- HEADER APLIKASI -->
         <div class="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 rounded-2xl p-3.5 sm:p-5 text-white shadow-lg flex justify-between items-center">
@@ -102,174 +98,148 @@
             </button>
         </div>
 
-        <!-- DASHBOARD PRESENTASI & DIAGRAM PIE (SEPERTI REFERENSI GABUNGAN) -->
-        <div id="sectionDashboard" class="space-y-3">
+        <!-- DASHBOARD PRESENTASI & 4 DIAGRAM LINGKARAN -->
+        <div id="sectionDashboard" class="space-y-4">
             
-            <!-- 4 KARTU RINGKASAN STATISTIK (STAT CARDS) -->
+            <!-- 4 KARTU RINGKASAN STATISTIK UTAMA (STAT CARDS) -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <!-- CARD TOTAL GENERUS -->
                 <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Santri</p>
                         <h4 id="statTotalSantri" class="text-xl sm:text-2xl font-black text-slate-800 mt-0.5">0</h4>
                     </div>
-                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">
-                        👥
-                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-lg">👥</div>
                 </div>
 
-                <!-- CARD HADIR -->
                 <div class="bg-white border border-emerald-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Hadir</p>
+                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Hadir Bulan Ini</p>
                         <h4 id="statTotalHadir" class="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5">0</h4>
                     </div>
-                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">
-                        ✅
-                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">✅</div>
                 </div>
 
-                <!-- CARD IZIN -->
                 <div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Izin</p>
+                        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Izin Bulan Ini</p>
                         <h4 id="statTotalIzin" class="text-xl sm:text-2xl font-black text-amber-700 mt-0.5">0</h4>
                     </div>
-                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">
-                        📩
-                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center text-lg">📩</div>
                 </div>
 
-                <!-- CARD ALPA -->
                 <div class="bg-white border border-red-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Alpa</p>
+                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Alpa Bulan Ini</p>
                         <h4 id="statTotalAlpa" class="text-xl sm:text-2xl font-black text-red-700 mt-0.5">0</h4>
                     </div>
-                    <div class="w-9 h-9 rounded-xl bg-red-50 text-red-700 flex items-center justify-center text-lg">
-                        ❌
-                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-red-50 text-red-700 flex items-center justify-center text-lg">❌</div>
                 </div>
             </div>
 
-            <!-- DAHBOARD DIAGRAM PIE PERSENTASE -->
-            <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">Status Kehadiran Bulan Ini</h3>
-                    <p id="teksTotalRecord" class="text-xs text-slate-400 mt-0.5">Total : 0 Record Presensi</p>
-                </div>
-
-                <!-- CANVAS DIAGRAM LINGKARAN (PIE CHART) -->
-                <div class="flex justify-center items-center py-2 relative" style="max-height: 240px;">
-                    <canvas id="chartPresensiPie"></canvas>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden p-3.5 sm:p-6 space-y-5">
-
-            <!-- FILTER & PILIHAN SESI ABSENSI -->
-            <div id="sectionAbsen" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- GRID 4 DIAGRAM LINGKARAN -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- DIAGRAM 1: KESELURUHAN GENERUS -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Generus:</label>
-                        <select id="filterKategori" onchange="filterKategoriDiubah()" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="ALL">Semua Kategori</option>
-                            <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
-                            <option value="APR">APR (Pra Remaja 13-15 thn)</option>
-                            <option value="AR">AR (Remaja 16-18 thn)</option>
-                            <option value="AR Intensif">AR Intensif</option>
-                            <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
-                            <option value="GPN-B">GPN-B (Pra Nikah B 23-30+ thn)</option>
-                        </select>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📊 1. Total Keseluruhan Generus</h3>
+                        <p id="recTotal" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
-
-                    <div id="boxSesiACR" class="hidden">
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Waktu Sesi Pengajian (Khusus ACR):</label>
-                        <select id="pilihanSesi" onchange="muatDaftarAbsen()" class="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-bold rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
-                            <option value="Malam">🌙 Sesi Malam</option>
-                            <option value="Sore">☀️ Sesi Sore</option>
-                        </select>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartAll"></canvas>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">📖 Catatan Materi Pengajian Hari Ini:</label>
-                    <input type="text" id="inputMateriPengajian" placeholder="Contoh: Jilid 2 Hal 15 / Surat Al-Baqarah 1-20..." class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                </div>
-            </div>
-
-            <!-- DAFTAR NAMA ABSENSI HARIAN -->
-            <div class="space-y-3">
-                <div class="flex justify-between items-center px-1">
-                    <h2 class="font-bold text-slate-800 text-xs sm:text-sm uppercase tracking-wider">Daftar Kehadiran Santri</h2>
-                    <span id="labelTanggalHariIni" class="text-[11px] sm:text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200"></span>
-                </div>
-
-                <div id="containerDaftarAbsen" class="space-y-2.5"></div>
-            </div>
-
-            <button onclick="simpanAbsensiHariIni()" class="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-98 text-white font-extrabold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs sm:text-sm tracking-wide">
-                💾 SIMPAN ABSENSI HARI INI
-            </button>
-
-            <hr class="border-slate-200 my-5">
-
-            <!-- TABEL & LIST RIWAYAT ABSENSI -->
-            <div id="sectionRiwayat" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-5 space-y-4">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                        📋 Cek Riwayat Absensi Tanggal Lain
-                    </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                    <input type="date" id="inputTanggalRiwayat" class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <select id="pilihanSesiRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
-                        <option value="Malam">🌙 Sesi Malam</option>
-                        <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
-                    </select>
-                    <button onclick="tampilkanRiwayatAbsen()" class="sm:col-span-3 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm w-full">
-                        🔍 Tampilkan
-                    </button>
-                </div>
-
-                <div id="boxInfoMateriRiwayat" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900">
-                    <span class="font-bold">📖 Materi Pengajian Tersimpan:</span>
-                    <p id="teksMateriRiwayat" class="font-semibold text-emerald-800 mt-0.5">-</p>
-                </div>
-
-                <div id="boxHasilRiwayat">
-                    <div id="listRiwayatMobile" class="block sm:hidden space-y-2">
-                        <p class="text-center text-xs text-slate-400 py-4">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</p>
+                <!-- DIAGRAM 2: KELOMPOK APR S/D GPN-B -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟢 2. Kelompok APR s/d GPN-B</h3>
+                        <p id="recUtama" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
                     </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartUtama"></canvas>
+                    </div>
+                </div>
 
-                    <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-lg bg-white">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold uppercase">
-                                    <th class="p-3 text-center w-10">No</th>
-                                    <th class="p-3">Nama Lengkap</th>
-                                    <th class="p-3 text-center">Kategori</th>
-                                    <th class="p-3 text-center">Status Kehadiran</th>
-                                    <th class="p-3 text-center">Waktu Simpan</th>
-                                    <th class="p-3">Catatan / Alasan Izin</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelRiwayatAbsenDesktop" class="divide-y divide-slate-100">
-                                <tr>
-                                    <td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- DIAGRAM 3: KELOMPOK AR INTENSIF -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🟡 3. Kelompok AR Intensif</h3>
+                        <p id="recIntensif" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartIntensif"></canvas>
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 4: KELOMPOK ACR (SORE & MALAM) -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm">🔵 4. Kelompok ACR (Sore & Malam)</h3>
+                        <p id="recACR" class="text-[10px] text-slate-400 mt-0.5">0 Record Presensi</p>
+                    </div>
+                    <div class="flex justify-center items-center relative py-1" style="height: 200px;">
+                        <canvas id="chartACR"></canvas>
                     </div>
                 </div>
 
             </div>
 
         </div>
+
+        <!-- TABEL & LIST RIWAYAT ABSENSI / REKAP PENGAJIAN -->
+        <div id="sectionRiwayat" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 sm:p-5 space-y-4">
+            <div>
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                    📋 Cek Riwayat Absensi Tanggal Lain
+                </h3>
+                <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Pilih tanggal dan sesi untuk melihat riwayat kehadiran & catatan materi ngaji.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <input type="date" id="inputTanggalRiwayat" class="sm:col-span-5 border border-slate-300 rounded-lg p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <select id="pilihanSesiRiwayat" class="sm:col-span-4 border border-slate-300 rounded-lg p-2.5 text-xs bg-slate-50 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="Malam">🌙 Sesi Malam</option>
+                    <option value="Sore">☀️ Sesi Sore (Khusus ACR)</option>
+                </select>
+                <button onclick="tampilkanRiwayatAbsen()" class="sm:col-span-3 bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 px-3 rounded-lg text-xs transition shadow-sm w-full">
+                    🔍 Tampilkan
+                </button>
+            </div>
+
+            <div id="boxInfoMateriRiwayat" class="hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900">
+                <span class="font-bold">📖 Materi Pengajian Tersimpan:</span>
+                <p id="teksMateriRiwayat" class="font-semibold text-emerald-800 mt-0.5">-</p>
+            </div>
+
+            <div id="boxHasilRiwayat">
+                <div id="listRiwayatMobile" class="block sm:hidden space-y-2">
+                    <p class="text-center text-xs text-slate-400 py-4">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</p>
+                </div>
+
+                <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-lg bg-white">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold uppercase">
+                                <th class="p-3 text-center w-10">No</th>
+                                <th class="p-3">Nama Lengkap</th>
+                                <th class="p-3 text-center">Kategori</th>
+                                <th class="p-3 text-center">Status Kehadiran</th>
+                                <th class="p-3 text-center">Waktu Simpan</th>
+                                <th class="p-3">Catatan / Alasan Izin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayatAbsenDesktop" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="6" class="p-4 text-center text-slate-400">Pilih tanggal & sesi di atas lalu klik "Tampilkan".</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
     <!-- MODAL POP-UP PIN ADMIN -->
@@ -295,7 +265,9 @@
     <!-- FIREBASE SDK MODULAR -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        Chart.register(ChartDataLabels);
 
         const firebaseConfig = {
             apiKey: "AIzaSyDZLPT-hDqspOX4HIauNlw4ZpoMwR3zwls",
@@ -311,12 +283,9 @@
         const db = getDatabase(app);
 
         let dataMasterGenerus = [];
-        let statusAbsenTemp = {}; 
-        let catatanIzinTemp = {};
-        let myPieChart = null;
+        let chartInstances = {};
 
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputTanggalRiwayat").value = today;
 
         // FUNGSI SIDEBAR
@@ -366,20 +335,22 @@
             dataMasterGenerus = Object.values(data).filter(item => item && typeof item === 'object');
             document.getElementById("statTotalSantri").innerText = dataMasterGenerus.length;
             
-            muatDaftarAbsen();
             hitungStatistikDashboard();
         });
 
-        // KALKULASI DASHBOARD STAT CARDS & DIAGRAM PIE
+        // KALKULASI DASHBOARD DENGAN 4 DIAGRAM INDIVIDUAL
         async function hitungStatistikDashboard() {
             const snapAbsen = await get(ref(db, 'absensi'));
             const dataAbsen = snapAbsen.val() || {};
 
-            let totalHadir = 0;
-            let totalIzin = 0;
-            let totalAlpa = 0;
+            let stat = {
+                all: { H: 0, I: 0, A: 0 },
+                utama: { H: 0, I: 0, A: 0 },
+                intensif: { H: 0, I: 0, A: 0 },
+                acr: { H: 0, I: 0, A: 0 }
+            };
 
-            const currentMonth = today.substring(0, 7); // YYYY-MM
+            const currentMonth = today.substring(0, 7);
 
             Object.keys(dataAbsen).forEach(keyPath => {
                 if (keyPath.startsWith(currentMonth)) {
@@ -388,44 +359,57 @@
                     dataMasterGenerus.forEach(g => {
                         const rec = sessionData[g.id];
                         if (rec && rec.status) {
-                            if (rec.status === 'Hadir') totalHadir++;
-                            if (rec.status === 'Izin') totalIzin++;
-                            if (rec.status === 'Alpa') totalAlpa++;
+                            const st = rec.status;
+                            const kat = g.kategori || 'ACR';
+                            const mapKey = st === 'Hadir' ? 'H' : (st === 'Izin' ? 'I' : 'A');
+
+                            stat.all[mapKey]++;
+
+                            if (kat === 'ACR') {
+                                stat.acr[mapKey]++;
+                            } else if (kat === 'AR Intensif') {
+                                stat.intensif[mapKey]++;
+                            } else {
+                                stat.utama[mapKey]++;
+                            }
                         }
                     });
                 }
             });
 
-            // Update Kartu Angka
-            document.getElementById("statTotalHadir").innerText = totalHadir;
-            document.getElementById("statTotalIzin").innerText = totalIzin;
-            document.getElementById("statTotalAlpa").innerText = totalAlpa;
+            // Update Stat Cards Atas (Bulan Ini)
+            document.getElementById("statTotalHadir").innerText = stat.all.H;
+            document.getElementById("statTotalIzin").innerText = stat.all.I;
+            document.getElementById("statTotalAlpa").innerText = stat.all.A;
 
-            const totalRecord = totalHadir + totalIzin + totalAlpa;
-            document.getElementById("teksTotalRecord").innerText = `Total : ${totalRecord} Record Presensi Bulan Ini`;
-
-            // Render Diagram Pie
-            renderChartPie(totalHadir, totalIzin, totalAlpa);
+            // Render 4 Diagram Donat
+            buatDiagramDonat('chartAll', 'recTotal', stat.all);
+            buatDiagramDonat('chartUtama', 'recUtama', stat.utama);
+            buatDiagramDonat('chartIntensif', 'recIntensif', stat.intensif);
+            buatDiagramDonat('chartACR', 'recACR', stat.acr);
         }
 
-        function renderChartPie(hadir, izin, alpa) {
-            const ctx = document.getElementById('chartPresensiPie').getContext('2d');
+        function buatDiagramDonat(canvasId, elemTotalId, dataObj) {
+            const totalRec = dataObj.H + dataObj.I + dataObj.A;
+            document.getElementById(elemTotalId).innerText = `Total: ${totalRec} Record Bulan Ini`;
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
             
-            if (myPieChart) {
-                myPieChart.destroy();
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
             }
 
-            myPieChart = new Chart(ctx, {
+            const persenHadir = totalRec > 0 ? Math.round((dataObj.H / totalRec) * 100) : 0;
+            const persenIzin = totalRec > 0 ? Math.round((dataObj.I / totalRec) * 100) : 0;
+            const persenAlpa = totalRec > 0 ? Math.round((dataObj.A / totalRec) * 100) : 0;
+
+            chartInstances[canvasId] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Hadir', 'Izin', 'Alpa'],
+                    labels: [`Hadir (${persenHadir}%)`, `Izin (${persenIzin}%)`, `Alpa (${persenAlpa}%)`],
                     datasets: [{
-                        data: [hadir, izin, alpa],
-                        backgroundColor: [
-                            '#10b981', // Emerald 500
-                            '#f59e0b', // Amber 500
-                            '#ef4444'  // Red 500
-                        ],
+                        data: [dataObj.H, dataObj.I, dataObj.A],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -437,130 +421,26 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                font: {
-                                    size: 11,
-                                    weight: 'bold',
-                                    family: 'Inter'
-                                },
-                                padding: 15
+                                font: { size: 10, weight: 'bold', family: 'Inter' },
+                                boxWidth: 12,
+                                padding: 10
+                            }
+                        },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: (value, ctx) => {
+                                let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                if (sum === 0 || value === 0) return '';
+                                let percentage = Math.round((value / sum) * 100) + '%';
+                                return percentage;
                             }
                         }
                     },
-                    cutout: '65%'
+                    cutout: '60%'
                 }
             });
         }
-
-        window.filterKategoriDiubah = function() {
-            const filterKat = document.getElementById("filterKategori").value;
-            const boxSesi = document.getElementById("boxSesiACR");
-
-            if (filterKat === "ACR") {
-                boxSesi.classList.remove("hidden");
-            } else {
-                boxSesi.classList.add("hidden");
-                document.getElementById("pilihanSesi").value = "Malam";
-            }
-            muatDaftarAbsen();
-        };
-
-        window.muatDaftarAbsen = function() {
-            const filterKat = document.getElementById("filterKategori").value;
-            const container = document.getElementById("containerDaftarAbsen");
-            container.innerHTML = "";
-
-            let listTampil = dataMasterGenerus;
-            if (filterKat !== "ALL") {
-                listTampil = dataMasterGenerus.filter(g => g.kategori === filterKat);
-            }
-
-            if (listTampil.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-300">Tidak ada generus pada kategori ini.</div>`;
-                return;
-            }
-
-            let no = 1;
-            listTampil.forEach(item => {
-                const st = statusAbsenTemp[item.id] || '';
-                const catatan = catatanIzinTemp[item.id] || '';
-
-                const btnHadir = st === 'Hadir' 
-                    ? 'bg-emerald-600 text-white font-bold border-emerald-600' 
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-                
-                const btnIzin = st === 'Izin' 
-                    ? 'bg-amber-500 text-white font-bold border-amber-500' 
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-
-                const btnAlpa = st === 'Alpa' 
-                    ? 'bg-red-600 text-white font-bold border-red-600' 
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-
-                container.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-bold text-slate-400 w-5">${no++}.</span>
-                            <div>
-                                <h4 class="font-bold text-slate-800 text-sm">${item.nama}</h4>
-                                <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200">${item.kategori || 'ACR'}</span>
-                                ${catatan ? `<p class="text-[11px] text-amber-700 italic mt-0.5">Note: "${catatan}"</p>` : ''}
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-slate-100">
-                            <button onclick="pilihStatus('${item.id}', 'Hadir')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnHadir}">Hadir</button>
-                            <button onclick="pilihStatus('${item.id}', 'Izin')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnIzin}">Izin</button>
-                            <button onclick="pilihStatus('${item.id}', 'Alpa')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${btnAlpa}">Alpa</button>
-                        </div>
-                    </div>
-                `;
-            });
-        };
-
-        window.pilihStatus = function(id, status) {
-            statusAbsenTemp[id] = status;
-
-            if (status === 'Izin') {
-                const alasan = prompt("Masukkan Catatan / Alasan Izin:");
-                if (alasan && alasan.trim() !== "") {
-                    catatanIzinTemp[id] = alasan.trim();
-                } else {
-                    catatanIzinTemp[id] = "Izin";
-                }
-            } else {
-                delete catatanIzinTemp[id];
-            }
-
-            muatDaftarAbsen();
-        };
-
-        window.simpanAbsensiHariIni = async function() {
-            const filterKat = document.getElementById("filterKategori").value;
-            const sesi = (filterKat === "ACR") ? document.getElementById("pilihanSesi").value : "Malam";
-            const materi = document.getElementById("inputMateriPengajian").value.trim();
-            const keyPath = sesi === "Sore" ? `${today}_Sore` : `${today}_Malam`;
-
-            if (Object.keys(statusAbsenTemp).length === 0) {
-                alert("⚠️ Pilih status absen sekurang-kurangnya 1 generus sebelum menyimpan!");
-                return;
-            }
-
-            const payload = {
-                _materi: materi || "-",
-                _timestamp: new Date().toLocaleTimeString('id-ID')
-            };
-
-            for (let id in statusAbsenTemp) {
-                payload[id] = {
-                    status: statusAbsenTemp[id],
-                    catatan: catatanIzinTemp[id] || "-"
-                };
-            }
-
-            await set(ref(db, `absensi/${keyPath}`), payload);
-            alert("✅ Absensi hari ini berhasil disimpan ke database!");
-            hitungStatistikDashboard();
-        };
 
         window.tampilkanRiwayatAbsen = async function() {
             const tgl = document.getElementById("inputTanggalRiwayat").value;
