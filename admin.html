@@ -437,9 +437,9 @@
                 return matchJenis && matchDate;
             });
 
-            // Jika rules Sheet 1 butuh menyertakan tgl 28 Juli & hari Selasa
+            // GANTI BAGIAN INI: Paksa masukkan tanggal 28 Juli tanpa filter ketat
             if (allowForceIncludeJuly28 && jenisFilter === 'Kelompok') {
-                let july28Keys = allKeys.filter(k => k.startsWith('2026-07-28') && k.toLowerCase().includes('kelompok'));
+                let july28Keys = allKeys.filter(k => k.startsWith('2026-07-28'));
                 july28Keys.forEach(jk => {
                     if (!filtered.includes(jk)) filtered.push(jk);
                 });
@@ -447,7 +447,6 @@
 
             return filtered.sort();
         }
-
         // Khusus Sheet 2 AR Intensif: Saring ketat HANYA hari Senin (1) dan Jumat (5)
         function ambilKunciARIntensifMurni(dataAbsen, startDate, endDate) {
             let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
