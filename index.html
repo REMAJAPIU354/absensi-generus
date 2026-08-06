@@ -193,8 +193,7 @@
             </div>
         </div>
 
-        <!-- SECTION 2: CEK RIWAYAT -->
-        <!-- SECTION 2: CEK RIWAYAT DENGAN RENTANG TANGGAL -->
+        <!-- SECTION 2: CEK RIWAYAT (RENTANG TANGGAL) -->
         <div id="sectionRiwayat" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
@@ -241,9 +240,8 @@
                 </div>
             </div>
 
-            <!-- Kotak Hasil Riwayat -->
             <div id="boxHasilRiwayat">
-                <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-sm mt-3">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
@@ -263,6 +261,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
     <!-- MODAL FORM INPUT ABSENSI -->
     <div id="modalAbsenHarian" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -309,7 +308,6 @@
                         </select>
                     </div>
 
-                    <!-- 2 INPUT KHUSUS BUKU MONITORING MATERI -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         <div>
                             <label class="block text-xs font-bold text-emerald-800 mb-1">📖 Materi Al-Qur'an / Juz:</label>
@@ -384,6 +382,7 @@
         let roleAksesTarget = "ADMIN";
 
         const today = new Date().toISOString().split('T')[0];
+        document.getElementById("labelTanggalHariIni").innerText = today;
         document.getElementById("inputStartRiwayat").value = today;
         document.getElementById("inputEndRiwayat").value = today;
 
@@ -724,7 +723,7 @@
             hitungStatistikDashboard();
         };
 
-window.tampilkanRiwayatAbsen = async function() {
+        window.tampilkanRiwayatAbsen = async function() {
             let startDate = document.getElementById("inputStartRiwayat").value;
             let endDate = document.getElementById("inputEndRiwayat").value;
             const jenis = document.getElementById("pilihanJenisRiwayat").value;
@@ -747,7 +746,6 @@ window.tampilkanRiwayatAbsen = async function() {
             const snapAllAbsen = await get(ref(db, 'absensi'));
             const allAbsenData = snapAllAbsen.val() || {};
 
-            // Ambil semua kunci sesi yang masuk dalam rentang tanggal & jenis/sesi yang dipilih
             let matchedKeys = Object.keys(allAbsenData).filter(k => {
                 let tgl = k.substring(0, 10);
                 let matchTgl = (tgl >= startDate && tgl <= endDate);
@@ -761,15 +759,17 @@ window.tampilkanRiwayatAbsen = async function() {
             }
 
             let no = 1;
+            let adaData = false;
             matchedKeys.forEach(key => {
                 let sessionData = allAbsenData[key] || {};
                 let tglSesi = key.split('_')[0];
-                let materiQ = sessionData._materiQuran || "-";
+                let materiQ = sessionData._materiQuran || sessionData._materi || "-";
                 let materiH = sessionData._materiHadist || "-";
 
                 dataMasterGenerus.forEach(item => {
                     const rec = sessionData[item.id];
                     if (rec && rec.status) {
+                        adaData = true;
                         const st = rec.status;
                         const catatan = rec.catatan || '-';
 
@@ -796,12 +796,9 @@ window.tampilkanRiwayatAbsen = async function() {
                     }
                 });
             });
-        };
 
             if (!adaData) {
-                const pesanKosong = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">Tidak ada rincian generus tersimpan pada ${targetKey.replaceAll('_', ' ')}.</div>`;
-                containerMobile.innerHTML = pesanKosong;
-                tbodyDesktop.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada ${targetKey.replaceAll('_', ' ')}.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada rentang tanggal tersebut.</td></tr>`;
             }
         };
     </script>
