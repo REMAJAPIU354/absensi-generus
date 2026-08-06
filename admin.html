@@ -383,9 +383,24 @@
                 const listGPNB = generusLama.filter(g => normKat(g.kategori) === 'GPNB');
 
                 // --- SHEET 1: Absensi APR - GPN B (Kelompok - termasuk tgl 28 Juli & Selasa) ---
+               // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiBertingkatHIA(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok', startDate, endDate, true);
+                    let semuaGenerusSheet1 = [...listAPR, ...listAR, ...listGPNA, ...listGPNB];
+                    let sessionKeys = ambilKunciSesiRentang(dataAbsen, 'Kelompok', startDate, endDate, true, true, semuaGenerusSheet1);
+                    let displayKeys = sessionKeys.slice(-6);
+
+                    displayKeys.forEach((key, colIdx) => {
+                        const tglString = key.split('_')[0];
+                        const parts = tglString.split('-');
+                        const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                        ws1.getRow(2).getCell(4 + colIdx).value = labelTgl;
+                    });
+
+                    isiBlokHIA(ws1, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws1, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws1, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws1, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
                 }
 
                 // --- SHEET 2: Absensi AR Intensif (Khusus Senin & Jumat saja) ---
