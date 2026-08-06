@@ -27,7 +27,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wide flex items-center gap-2">
                         PANEL MANAGEMENT <span id="labelRoleAkses" class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500 text-white">ADMIN</span>
                     </h1>
-                    <p class="text-slate-300 text-[10px] sm:text-xs">Kelola Data Master Generus & Download Laporan 6 Sheet Excel</p>
+                    <p class="text-slate-300 text-[10px] sm:text-xs">Kelola Data Master Generus, Rentang Laporan & Download Excel</p>
                 </div>
             </div>
 
@@ -36,18 +36,44 @@
             </button>
         </div>
 
+        <!-- BOX TRANSACTION REPORT & REFRESH FILTER -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                    📅 Filter Periode Laporan (Transaction Report)
+                </h3>
+                <button onclick="resetFilterPeriode()" title="Reset / Refresh Periode ke Default" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1 text-xs font-bold">
+                    🔄 <span>Refresh Periode</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end pt-1">
+                <div class="sm:col-span-5">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Awal (Start Date):</label>
+                    <input type="date" id="filterStartDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold">
+                </div>
+                <div class="sm:col-span-5">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Tanggal Akhir (End Date):</label>
+                    <input type="date" id="filterEndDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none font-semibold">
+                </div>
+                <div class="sm:col-span-2">
+                    <button onclick="terapkanFilterPeriode()" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">Terapkan</button>
+                </div>
+            </div>
+        </div>
+
         <!-- BOX FITUR EXPORT 6 SHEET EXCEL MASTER -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
             <div>
                 <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                    📊 Export Laporan Rekapitulasi Excel
+                    📊 Export Laporan Rekapitulasi Excel (Sesuai Rentang Tanggal)
                 </h3>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 pt-1">
                 <button onclick="exportKeExcelSesuaiTemplate()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition text-xs flex items-center justify-center gap-2">
                     <span>📑</span>
-                    <span>Export file</span>
+                    <span>Export File Excel</span>
                 </button>
             </div>
         </div>
@@ -101,12 +127,10 @@
                 <input type="text" id="inputCariMaster" onkeyup="filterMasterGenerus()" placeholder="🔍 Cari nama generus..." class="border border-slate-300 rounded-xl px-3 py-1.5 text-xs bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none sm:w-60">
             </div>
 
-            <!-- TAMPILAN MOBILE LIST -->
             <div id="listMasterMobile" class="block sm:hidden space-y-2">
                 <p class="text-center text-xs text-slate-400 py-4">Memuat data...</p>
             </div>
 
-            <!-- TAMPILAN DESKTOP TABEL -->
             <div class="hidden sm:block overflow-x-auto border border-slate-200 rounded-xl bg-white">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
@@ -130,7 +154,6 @@
 
     </div>
 
-    <!-- SCRIPT NAVIGASI KEMBALI KE DASHBOARD -->
     <script>
         function kembaliKeDashboard() {
             window.location.href = "index.html";
@@ -166,6 +189,43 @@
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById("inputTglMasukGenerus").value = todayStr;
+
+        // Set default filter tanggal (misal dari tanggal 21 bulan lalu atau tgl 28 Juli)
+        function setdefaultFilterTanggal() {
+            const skr = new Date();
+            const thn = skr.getFullYear();
+            const bln = skr.getMonth();
+            const tgl = skr.getDate();
+
+            let awal, akhir;
+            if (tgl >= 21) {
+                awal = new Date(thn, bln, 21);
+                akhir = new Date(thn, bln + 1, 20);
+            } else {
+                awal = new Date(thn, bln - 1, 21);
+                akhir = new Date(thn, bln, 20);
+            }
+
+            document.getElementById("filterStartDate").value = awal.toISOString().split('T')[0];
+            document.getElementById("filterEndDate").value = todayStr;
+        }
+
+        setdefaultFilterTanggal();
+
+        window.resetFilterPeriode = function() {
+            setdefaultFilterTanggal();
+            alert("🔄 Periode laporan berhasil di-refresh ke rentang aktif saat ini!");
+        };
+
+        window.terapkanFilterPeriode = function() {
+            const start = document.getElementById("filterStartDate").value;
+            const end = document.getElementById("filterEndDate").value;
+            if (!start || !end) {
+                alert("⚠️ Silakan pilih tanggal awal dan akhir terlebih dahulu!");
+                return;
+            }
+            alert(`✅ Rentang laporan diset dari ${start} s.d ${end}. Siap di-export.`);
+        };
 
         onValue(ref(db, 'master'), (snap) => {
             const data = snap.val() || {};
@@ -295,9 +355,12 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT EXCEL
+        // EXPORT EXCEL BERDASARKAN RENTANG TANGGAL & ATURAN SHEET
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
+                const startDate = document.getElementById("filterStartDate").value;
+                const endDate = document.getElementById("filterEndDate").value;
+
                 const response = await fetch('template_absensi.xlsx');
                 if (!response.ok) {
                     alert("❌ File 'template_absensi.xlsx' tidak ditemukan!");
@@ -319,45 +382,45 @@
                 const listGPNA = generusLama.filter(g => normKat(g.kategori) === 'GPNA');
                 const listGPNB = generusLama.filter(g => normKat(g.kategori) === 'GPNB');
 
-                // --- SHEET 1: Absensi APR - GPN B ---
+                // --- SHEET 1: Absensi APR - GPN B (Kelompok - termasuk tgl 28 Juli & Selasa) ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    isiBertingkatHIA(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok');
+                    isiBertingkatHIA(ws1, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Kelompok', startDate, endDate, true);
                 }
 
-                // --- SHEET 2: Absensi AR Intensif ---
+                // --- SHEET 2: Absensi AR Intensif (Khusus Senin & Jumat saja) ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetStandarHIA(ws2, listAR, dataAbsen, 'ARIntensif', 'Kelompok');
+                    isiSheetARIntensif(ws2, listAR, dataAbsen, startDate, endDate);
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarHIA(ws3, generusLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok');
+                    isiSheetStandarHIA(ws3, generusLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok', startDate, endDate);
                 }
 
-                // --- SHEET 4: Pengajian Desa ---
+                // --- SHEET 4: Pengajian Desa (Kosong/Bersih jika belum ada jadwal) ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiBertingkatHIA(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa');
+                    isiBertingkatHIA(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa', startDate, endDate, false);
                 }
 
-                // --- SHEET 5: Pengajian Daerah ---
+                // --- SHEET 5: Pengajian Daerah (Kosong/Bersih jika belum ada jadwal) ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiBertingkatHIA(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah');
+                    isiBertingkatHIA(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah', startDate, endDate, false);
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarHIA(ws6, generusBaru, dataAbsen, 'Kelompok', null, 4);
+                    isiSheetStandarHIA(ws6, generusBaru, dataAbsen, 'Kelompok', startDate, endDate, 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                saveAs(blob, `Laporan_Absensi_Generus_PIU_${todayStr}.xlsx`);
+                saveAs(blob, `Laporan_Absensi_Generus_PIU_${startDate}_to_${endDate}.xlsx`);
 
             } catch (err) {
                 console.error(err);
@@ -365,17 +428,46 @@
             }
         };
 
-        function ambilSemuaKunciSesiValid(dataAbsen, jenisFilter) {
-            let allKeys = Object.keys(dataAbsen);
-            let filtered = allKeys.filter(k => k.toLowerCase().includes(jenisFilter.toLowerCase()));
-            if (filtered.length === 0) {
-                filtered = allKeys.filter(k => !k.startsWith('_'));
+        function ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false) {
+            let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
+            let filtered = allKeys.filter(k => {
+                let tgl = k.substring(0, 10);
+                let matchJenis = k.toLowerCase().includes(jenisFilter.toLowerCase());
+                let matchDate = (tgl >= startDate && tgl <= endDate);
+                return matchJenis && matchDate;
+            });
+
+            // Jika rules Sheet 1 butuh menyertakan tgl 28 Juli & hari Selasa
+            if (allowForceIncludeJuly28 && jenisFilter === 'Kelompok') {
+                let july28Keys = allKeys.filter(k => k.startsWith('2026-07-28') && k.toLowerCase().includes('kelompok'));
+                july28Keys.forEach(jk => {
+                    if (!filtered.includes(jk)) filtered.push(jk);
+                });
             }
+
             return filtered.sort();
         }
 
-        function isiBertingkatHIA(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter) {
-            let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilter);
+        // Khusus Sheet 2 AR Intensif: Saring ketat HANYA hari Senin (1) dan Jumat (5)
+        function ambilKunciARIntensifMurni(dataAbsen, startDate, endDate) {
+            let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
+            let filtered = allKeys.filter(k => {
+                let tglStr = k.substring(0, 10);
+                let matchJenis = k.toLowerCase().includes('arintensif');
+                let matchDate = (tglStr >= startDate && tglStr <= endDate);
+                
+                if (matchJenis && matchDate) {
+                    let d = new Date(tglStr);
+                    let day = d.getDay(); // 1 = Senin, 5 = Jumat
+                    return (day === 1 || day === 5);
+                }
+                return false;
+            });
+            return filtered.sort();
+        }
+
+        function isiBertingkatHIA(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter, startDate, endDate, allowJuly28) {
+            let sessionKeys = ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowJuly28);
             let displayKeys = sessionKeys.slice(-6);
 
             displayKeys.forEach((key, colIdx) => {
@@ -418,14 +510,47 @@
             });
         }
 
-        function isiSheetStandarHIA(ws, listGenerus, dataAbsen, jenisFilterUtama, jenisFilterFallback = null, colStartOverride = null) {
-            let sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterUtama);
-
-            if (sessionKeys.length === 0 && jenisFilterFallback) {
-                sessionKeys = ambilSemuaKunciSesiValid(dataAbsen, jenisFilterFallback);
-            }
-
+        function isiSheetARIntensif(ws, listGenerus, dataAbsen, startDate, endDate) {
+            let sessionKeys = ambilKunciARIntensifMurni(dataAbsen, startDate, endDate);
             let displayKeys = sessionKeys.slice(-8);
+
+            displayKeys.forEach((key, colIdx) => {
+                const tglString = key.split('_')[0];
+                const parts = tglString.split('-');
+                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
+            });
+
+            listGenerus.forEach((generus, idx) => {
+                const rowNum = 3 + idx;
+                const row = ws.getRow(rowNum);
+
+                row.getCell(2).value = generus.nama;
+
+                displayKeys.forEach((key, colIdx) => {
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[generus.id];
+                    if (rec && rec.status) {
+                        const st = rec.status.toString().toLowerCase();
+                        let kode = '';
+                        if (st === 'hadir') kode = 'H';
+                        else if (st === 'izin') kode = 'I';
+                        else if (st === 'alpa') kode = 'A';
+
+                        if (kode !== '') {
+                            row.getCell(3 + colIdx).value = kode;
+                        }
+                    }
+                });
+
+                row.getCell(11).value = { formula: `=COUNTIF(C${rowNum}:J${rowNum}, "H")` };
+            });
+        }
+
+        function isiSheetStandarHIA(ws, listGenerus, dataAbsen, jenisFilterUtama, startDate, endDate, colStartOverride = null) {
+            let sessionKeys = ambilKunciSesiRentang(dataAbsen, jenisFilterUtama, startDate, endDate, false);
+            let displayKeys = sessionKeys.slice(-8);
+
             const colStart = colStartOverride || 3;
             const colStartLetter = colStart === 4 ? 'D' : 'C';
             const colEndLetter = colStart === 4 ? 'K' : 'J';
