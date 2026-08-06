@@ -246,10 +246,10 @@
                         <thead>
                             <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
                                 <th class="p-3 text-center w-12">No</th>
-                                <th class="p-3">Tanggal Sesi</th>
+                                <th class="p-3">Tanggal & Sesi</th>
                                 <th class="p-3">Nama Lengkap Generus</th>
                                 <th class="p-3 text-center">Status</th>
-                                <th class="p-3">Materi & Catatan</th>
+                                <th class="p-3">Materi Per Kategori & Catatan</th>
                             </tr>
                         </thead>
                         <tbody id="tabelRiwayatAbsenDesktop" class="divide-y divide-slate-100">
@@ -726,7 +726,7 @@
         window.tampilkanRiwayatAbsen = async function() {
             let startDate = document.getElementById("inputStartRiwayat").value;
             let endDate = document.getElementById("inputEndRiwayat").value;
-            const jenis = document.getElementById("pilihanJenisRiwayat").value;
+            const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
             const sesi = document.getElementById("pilihanSesiRiwayat").value;
             
             const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
@@ -749,7 +749,7 @@
             let matchedKeys = Object.keys(allAbsenData).filter(k => {
                 let tgl = k.substring(0, 10);
                 let matchTgl = (tgl >= startDate && tgl <= endDate);
-                let matchJenisSesi = k.toLowerCase().includes(jenis.toLowerCase()) && k.toLowerCase().includes(sesi.toLowerCase());
+                let matchJenisSesi = k.toLowerCase().includes(jenisDipilih.toLowerCase()) && k.toLowerCase().includes(sesi.toLowerCase());
                 return matchTgl && matchJenisSesi && !k.startsWith('_');
             }).sort();
 
@@ -763,6 +763,8 @@
             matchedKeys.forEach(key => {
                 let sessionData = allAbsenData[key] || {};
                 let tglSesi = key.split('_')[0];
+                let jenisPengajianAktif = sessionData._jenis || jenisDipilih;
+                let targetKat = sessionData._targetKat || 'ALL';
                 let materiQ = sessionData._materiQuran || sessionData._materi || "-";
                 let materiH = sessionData._materiHadist || "-";
 
@@ -781,14 +783,20 @@
                         tbodyDesktop.innerHTML += `
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="p-3 text-center font-bold text-slate-400">${no++}</td>
-                                <td class="p-3 font-semibold text-slate-600">${tglSesi}</td>
-                                <td class="p-3 font-bold text-slate-800">${item.nama} <span class="text-[9px] font-normal text-slate-500">(${item.kategori || ''})</span></td>
+                                <td class="p-3">
+                                    <div class="font-semibold text-slate-700">${tglSesi}</div>
+                                    <span class="inline-block mt-0.5 bg-teal-50 text-teal-800 text-[9px] font-bold px-1.5 py-0.5 rounded border border-teal-200">${jenisPengajianAktif}</span>
+                                </td>
+                                <td class="p-3 font-bold text-slate-800">
+                                    ${item.nama} 
+                                    <span class="block text-[10px] font-semibold text-emerald-700">Kategori: ${item.kategori || '-'}</span>
+                                </td>
                                 <td class="p-3 text-center"><span class="${badgeColor} text-[10px] font-bold px-2.5 py-1 rounded-full border">${st}</span></td>
                                 <td class="p-3 text-slate-600">
-                                    <div class="space-y-0.5">
-                                        <p>📖 <b>Quran:</b> ${materiQ}</p>
-                                        <p>📜 <b>Hadist:</b> ${materiH}</p>
-                                        ${catatan !== '-' ? `<p class="text-amber-700 italic">📌 ${catatan}</p>` : ''}
+                                    <div class="space-y-1 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                        <p class="text-[11px]">📖 <b class="text-slate-700">Quran:</b> ${materiQ}</p>
+                                        <p class="text-[11px]">📜 <b class="text-slate-700">Hadist:</b> ${materiH}</p>
+                                        ${catatan !== '-' ? `<p class="text-[10px] text-amber-700 italic">📌 Catatan: ${catatan}</p>` : ''}
                                     </div>
                                 </td>
                             </tr>
