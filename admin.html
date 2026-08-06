@@ -190,7 +190,6 @@
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById("inputTglMasukGenerus").value = todayStr;
 
-        // Set default filter tanggal (misal dari tanggal 21 bulan lalu atau tgl 28 Juli)
         function setdefaultFilterTanggal() {
             const skr = new Date();
             const thn = skr.getFullYear();
@@ -355,8 +354,7 @@
             return (k || '').toString().replaceAll('-', '').replace(/\s+/g, '').toUpperCase();
         }
 
-        // EXPORT EXCEL BERDASARKAN RENTANG TANGGAL & ATURAN SHEET
-        // EXPORT EXCEL BERDASARKAN RENTANG TANGGAL & ATURAN SEMUA SHEET BERSIH
+        // --- EXPORT EXCEL LENGKAP SEMUA SHEET BERSIH ---
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const startDate = document.getElementById("filterStartDate").value;
@@ -404,7 +402,7 @@
                     isiBlokHIA(ws1, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
                 }
 
-                // --- SHEET 2: Absensi AR Intensif (Khusus Senin & Jumat yang ada isinya) ---
+                // --- SHEET 2: Absensi AR Intensif ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
                     isiSheetARIntensifRapi(ws2, listAR, dataAbsen, startDate, endDate);
@@ -472,7 +470,7 @@
             }
         };
 
-        // FUNGSI PENYARING CERDAS: Hanya ambil tanggal yang ada isinya untuk kelompok terkait
+        // --- FUNGSI PENDUKUNG (HELPER FUNCTIONS LENGKAP) ---
         function ambilKunciSesiRentangAktif(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false, listGroup = []) {
             let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
             let filtered = allKeys.filter(k => {
@@ -499,6 +497,33 @@
             }
 
             return filtered.sort();
+        }
+
+        function isiBlokHIA(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen, colStartLetter, colEndLetter, colAkumulasi) {
+            listGroup.slice(0, maxRowsAllowed).forEach((generus, idx) => {
+                const rowNum = startRow + idx;
+                const row = ws.getRow(rowNum);
+
+                row.getCell(2).value = generus.nama;
+
+                sessionKeys.forEach((key, colIdx) => {
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[generus.id];
+                    if (rec && rec.status) {
+                        const st = rec.status.toString().toLowerCase();
+                        let kode = '';
+                        if (st === 'hadir') kode = 'H';
+                        else if (st === 'izin') kode = 'I';
+                        else if (st === 'alpa') kode = 'A';
+
+                        if (kode !== '') {
+                            row.getCell(4 + colIdx).value = kode;
+                        }
+                    }
+                });
+
+                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
+            });
         }
 
         function isiSheetARIntensifRapi(ws, listGenerus, dataAbsen, startDate, endDate) {
@@ -559,84 +584,6 @@
             let sessionKeys = ambilKunciSesiRentangAktif(dataAbsen, jenisFilterUtama, startDate, endDate, false, listGenerus);
             let displayKeys = sessionKeys.slice(-8);
 
-            const colStartLetter = colStart === 4 ? 'D' : 'C';
-            const colEndLetter = colStart === 4 ? 'K' : 'J';
-            const colAkumulasi = colStart === 4 ? 12 : 11;
-
-            displayKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
-                const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
-            });
-
-            listGenerus.forEach((generus, idx) => {
-                const rowNum = 3 + idx;
-                const row = ws.getRow(rowNum);
-
-                row.getCell(2).value = generus.nama;
-
-                displayKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[generus.id];
-                    if (rec && rec.status) {
-                        const st = rec.status.toString().toLowerCase();
-                        let kode = '';
-                        if (st === 'hadir') kode = 'H';
-                        else if (st === 'izin') kode = 'I';
-                        else if (st === 'alpa') kode = 'A';
-
-                        if (kode !== '') {
-                            row.getCell(colStart + colIdx).value = kode;
-                        }
-                    }
-                });
-
-                row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
-            });
-        }
-        function isiSheetARIntensif(ws, listGenerus, dataAbsen, startDate, endDate) {
-            let sessionKeys = ambilKunciARIntensifMurni(dataAbsen, startDate, endDate);
-            let displayKeys = sessionKeys.slice(-8);
-
-            displayKeys.forEach((key, colIdx) => {
-                const tglString = key.split('_')[0];
-                const parts = tglString.split('-');
-                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
-            });
-
-            listGenerus.forEach((generus, idx) => {
-                const rowNum = 3 + idx;
-                const row = ws.getRow(rowNum);
-
-                row.getCell(2).value = generus.nama;
-
-                displayKeys.forEach((key, colIdx) => {
-                    const sessionData = dataAbsen[key] || {};
-                    const rec = sessionData[generus.id];
-                    if (rec && rec.status) {
-                        const st = rec.status.toString().toLowerCase();
-                        let kode = '';
-                        if (st === 'hadir') kode = 'H';
-                        else if (st === 'izin') kode = 'I';
-                        else if (st === 'alpa') kode = 'A';
-
-                        if (kode !== '') {
-                            row.getCell(3 + colIdx).value = kode;
-                        }
-                    }
-                });
-
-                row.getCell(11).value = { formula: `=COUNTIF(C${rowNum}:J${rowNum}, "H")` };
-            });
-        }
-
-        function isiSheetStandarHIA(ws, listGenerus, dataAbsen, jenisFilterUtama, startDate, endDate, colStartOverride = null) {
-            let sessionKeys = ambilKunciSesiRentang(dataAbsen, jenisFilterUtama, startDate, endDate, false);
-            let displayKeys = sessionKeys.slice(-8);
-
-            const colStart = colStartOverride || 3;
             const colStartLetter = colStart === 4 ? 'D' : 'C';
             const colEndLetter = colStart === 4 ? 'K' : 'J';
             const colAkumulasi = colStart === 4 ? 12 : 11;
