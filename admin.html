@@ -356,6 +356,7 @@
         }
 
         // EXPORT EXCEL BERDASARKAN RENTANG TANGGAL & ATURAN SHEET
+        // EXPORT EXCEL BERDASARKAN RENTANG TANGGAL & ATURAN SEMUA SHEET BERSIH
         window.exportKeExcelSesuaiTemplate = async function() {
             try {
                 const startDate = document.getElementById("filterStartDate").value;
@@ -381,13 +382,13 @@
                 const listAR = generusLama.filter(g => normKat(g.kategori) === 'AR' || normKat(g.kategori) === 'ARINTENSIF');
                 const listGPNA = generusLama.filter(g => normKat(g.kategori) === 'GPNA');
                 const listGPNB = generusLama.filter(g => normKat(g.kategori) === 'GPNB');
+                const listACR = generusLama.filter(g => normKat(g.kategori) === 'ACR');
 
-                // --- SHEET 1: Absensi APR - GPN B (Kelompok - termasuk tgl 28 Juli & Selasa) ---
-               // --- SHEET 1: Absensi APR - GPN B ---
+                // --- SHEET 1: Absensi APR - GPN B ---
                 const ws1 = workbook.getWorksheet('Absensi APR - GPN B ');
                 if (ws1) {
-                    let semuaGenerusSheet1 = [...listAPR, ...listAR, ...listGPNA, ...listGPNB];
-                    let sessionKeys = ambilKunciSesiRentang(dataAbsen, 'Kelompok', startDate, endDate, true, true, semuaGenerusSheet1);
+                    let semuaSheet1 = [...listAPR, ...listAR, ...listGPNA, ...listGPNB];
+                    let sessionKeys = ambilKunciSesiRentangAktif(dataAbsen, 'Kelompok', startDate, endDate, true, semuaSheet1);
                     let displayKeys = sessionKeys.slice(-6);
 
                     displayKeys.forEach((key, colIdx) => {
@@ -403,34 +404,62 @@
                     isiBlokHIA(ws1, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
                 }
 
-                // --- SHEET 2: Absensi AR Intensif (Khusus Senin & Jumat saja) ---
+                // --- SHEET 2: Absensi AR Intensif (Khusus Senin & Jumat yang ada isinya) ---
                 const ws2 = workbook.getWorksheet('Absensi AR Intensif');
                 if (ws2) {
-                    isiSheetARIntensif(ws2, listAR, dataAbsen, startDate, endDate);
+                    isiSheetARIntensifRapi(ws2, listAR, dataAbsen, startDate, endDate);
                 }
 
                 // --- SHEET 3: Absensi ACR ---
                 const ws3 = workbook.getWorksheet('Absensi ACR');
                 if (ws3) {
-                    isiSheetStandarHIA(ws3, generusLama.filter(g => normKat(g.kategori) === 'ACR'), dataAbsen, 'Kelompok', startDate, endDate);
+                    isiSheetStandarHIA_Rapi(ws3, listACR, dataAbsen, 'Kelompok', startDate, endDate, 3);
                 }
 
-                // --- SHEET 4: Pengajian Desa (Kosong/Bersih jika belum ada jadwal) ---
+                // --- SHEET 4: Pengajian Desa ---
                 const ws4 = workbook.getWorksheet('Pengajian Desa');
                 if (ws4) {
-                    isiBertingkatHIA(ws4, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Desa', startDate, endDate, false);
+                    let semuaSheet4 = [...listAPR, ...listAR, ...listGPNA, ...listGPNB];
+                    let sessionKeys = ambilKunciSesiRentangAktif(dataAbsen, 'Desa', startDate, endDate, false, semuaSheet4);
+                    let displayKeys = sessionKeys.slice(-6);
+
+                    displayKeys.forEach((key, colIdx) => {
+                        const tglString = key.split('_')[0];
+                        const parts = tglString.split('-');
+                        const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                        ws4.getRow(2).getCell(4 + colIdx).value = labelTgl;
+                    });
+
+                    isiBlokHIA(ws4, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws4, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws4, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws4, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
                 }
 
-                // --- SHEET 5: Pengajian Daerah (Kosong/Bersih jika belum ada jadwal) ---
+                // --- SHEET 5: Pengajian Daerah ---
                 const ws5 = workbook.getWorksheet('Pengajian Daerah');
                 if (ws5) {
-                    isiBertingkatHIA(ws5, listAPR, listAR, listGPNA, listGPNB, dataAbsen, 'Daerah', startDate, endDate, false);
+                    let semuaSheet5 = [...listAPR, ...listAR, ...listGPNA, ...listGPNB];
+                    let sessionKeys = ambilKunciSesiRentangAktif(dataAbsen, 'Daerah', startDate, endDate, false, semuaSheet5);
+                    let displayKeys = sessionKeys.slice(-6);
+
+                    displayKeys.forEach((key, colIdx) => {
+                        const tglString = key.split('_')[0];
+                        const parts = tglString.split('-');
+                        const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                        ws5.getRow(2).getCell(4 + colIdx).value = labelTgl;
+                    });
+
+                    isiBlokHIA(ws5, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws5, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws5, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
+                    isiBlokHIA(ws5, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
                 }
 
                 // --- SHEET 6: Absen Generus Baru ---
                 const ws6 = workbook.getWorksheet('Absen Generus Baru');
                 if (ws6) {
-                    isiSheetStandarHIA(ws6, generusBaru, dataAbsen, 'Kelompok', startDate, endDate, 4);
+                    isiSheetStandarHIA_Rapi(ws6, generusBaru, dataAbsen, 'Kelompok', startDate, endDate, 4);
                 }
 
                 const buffer = await workbook.xlsx.writeBuffer();
@@ -443,23 +472,25 @@
             }
         };
 
-        function ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false, cekIsiData = false, listGenerusGroup = []) {
+        // FUNGSI PENYARING CERDAS: Hanya ambil tanggal yang ada isinya untuk kelompok terkait
+        function ambilKunciSesiRentangAktif(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false, listGroup = []) {
             let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
             let filtered = allKeys.filter(k => {
                 let tgl = k.substring(0, 10);
                 let matchJenis = k.toLowerCase().includes(jenisFilter.toLowerCase());
                 let matchDate = (tgl >= startDate && tgl <= endDate);
-                
-                if (matchJenis && matchDate && cekIsiData && listGenerusGroup.length > 0) {
-                    let sessionData = dataAbsen[k] || {};
-                    let adaYangAbsen = listGenerusGroup.some(g => sessionData[g.id] && sessionData[g.id].status);
-                    return adaYangAbsen;
+
+                if (matchJenis && matchDate) {
+                    if (listGroup.length > 0) {
+                        let sessionData = dataAbsen[k] || {};
+                        let adaIsi = listGroup.some(g => sessionData[g.id] && sessionData[g.id].status);
+                        return adaIsi;
+                    }
+                    return true;
                 }
-                
-                return matchJenis && matchDate;
+                return false;
             });
 
-            // Paksa sertakan tanggal 28 Juli jika diperlukan
             if (allowForceIncludeJuly28 && jenisFilter === 'Kelompok') {
                 let july28Keys = allKeys.filter(k => k.startsWith('2026-07-28'));
                 july28Keys.forEach(jk => {
@@ -469,49 +500,42 @@
 
             return filtered.sort();
         }
-        // Khusus Sheet 2 AR Intensif: Saring ketat HANYA hari Senin (1) dan Jumat (5)
-        function ambilKunciARIntensifMurni(dataAbsen, startDate, endDate) {
+
+        function isiSheetARIntensifRapi(ws, listGenerus, dataAbsen, startDate, endDate) {
             let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
-            let filtered = allKeys.filter(k => {
+            let sessionKeys = allKeys.filter(k => {
                 let tglStr = k.substring(0, 10);
                 let matchJenis = k.toLowerCase().includes('arintensif');
                 let matchDate = (tglStr >= startDate && tglStr <= endDate);
-                
+
                 if (matchJenis && matchDate) {
                     let d = new Date(tglStr);
-                    let day = d.getDay(); // 1 = Senin, 5 = Jumat
-                    return (day === 1 || day === 5);
+                    let day = d.getDay(); // Senin (1) & Jumat (5)
+                    if (day === 1 || day === 5) {
+                        let sessionData = dataAbsen[k] || {};
+                        let adaIsi = listGenerus.some(g => sessionData[g.id] && sessionData[g.id].status);
+                        return adaIsi;
+                    }
                 }
                 return false;
             });
-            return filtered.sort();
-        }
 
-        function isiBertingkatHIA(ws, listAPR, listAR, listGPNA, listGPNB, dataAbsen, jenisFilter, startDate, endDate, allowJuly28) {
-            let sessionKeys = ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowJuly28);
-            let displayKeys = sessionKeys.slice(-6);
+            let displayKeys = sessionKeys.slice(-8);
 
             displayKeys.forEach((key, colIdx) => {
                 const tglString = key.split('_')[0];
                 const parts = tglString.split('-');
                 const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
-                ws.getRow(2).getCell(4 + colIdx).value = labelTgl;
+                ws.getRow(2).getCell(3 + colIdx).value = labelTgl;
             });
 
-            isiBlokHIA(ws, listAPR, 3, 15, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listAR, 20, 10, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listGPNA, 32, 16, displayKeys, dataAbsen, 'D', 'I', 10);
-            isiBlokHIA(ws, listGPNB, 50, 15, displayKeys, dataAbsen, 'D', 'I', 10);
-        }
-
-        function isiBlokHIA(ws, listGroup, startRow, maxRowsAllowed, sessionKeys, dataAbsen, colStartLetter, colEndLetter, colAkumulasi) {
-            listGroup.slice(0, maxRowsAllowed).forEach((generus, idx) => {
-                const rowNum = startRow + idx;
+            listGenerus.forEach((generus, idx) => {
+                const rowNum = 3 + idx;
                 const row = ws.getRow(rowNum);
 
                 row.getCell(2).value = generus.nama;
 
-                sessionKeys.forEach((key, colIdx) => {
+                displayKeys.forEach((key, colIdx) => {
                     const sessionData = dataAbsen[key] || {};
                     const rec = sessionData[generus.id];
                     if (rec && rec.status) {
@@ -522,7 +546,48 @@
                         else if (st === 'alpa') kode = 'A';
 
                         if (kode !== '') {
-                            row.getCell(4 + colIdx).value = kode;
+                            row.getCell(3 + colIdx).value = kode;
+                        }
+                    }
+                });
+
+                row.getCell(11).value = { formula: `=COUNTIF(C${rowNum}:J${rowNum}, "H")` };
+            });
+        }
+
+        function isiSheetStandarHIA_Rapi(ws, listGenerus, dataAbsen, jenisFilterUtama, startDate, endDate, colStart = 3) {
+            let sessionKeys = ambilKunciSesiRentangAktif(dataAbsen, jenisFilterUtama, startDate, endDate, false, listGenerus);
+            let displayKeys = sessionKeys.slice(-8);
+
+            const colStartLetter = colStart === 4 ? 'D' : 'C';
+            const colEndLetter = colStart === 4 ? 'K' : 'J';
+            const colAkumulasi = colStart === 4 ? 12 : 11;
+
+            displayKeys.forEach((key, colIdx) => {
+                const tglString = key.split('_')[0];
+                const parts = tglString.split('-');
+                const labelTgl = parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : tglString;
+                ws.getRow(2).getCell(colStart + colIdx).value = labelTgl;
+            });
+
+            listGenerus.forEach((generus, idx) => {
+                const rowNum = 3 + idx;
+                const row = ws.getRow(rowNum);
+
+                row.getCell(2).value = generus.nama;
+
+                displayKeys.forEach((key, colIdx) => {
+                    const sessionData = dataAbsen[key] || {};
+                    const rec = sessionData[generus.id];
+                    if (rec && rec.status) {
+                        const st = rec.status.toString().toLowerCase();
+                        let kode = '';
+                        if (st === 'hadir') kode = 'H';
+                        else if (st === 'izin') kode = 'I';
+                        else if (st === 'alpa') kode = 'A';
+
+                        if (kode !== '') {
+                            row.getCell(colStart + colIdx).value = kode;
                         }
                     }
                 });
@@ -530,7 +595,6 @@
                 row.getCell(colAkumulasi).value = { formula: `=COUNTIF(${colStartLetter}${rowNum}:${colEndLetter}${rowNum}, "H")` };
             });
         }
-
         function isiSheetARIntensif(ws, listGenerus, dataAbsen, startDate, endDate) {
             let sessionKeys = ambilKunciARIntensifMurni(dataAbsen, startDate, endDate);
             let displayKeys = sessionKeys.slice(-8);
