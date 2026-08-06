@@ -428,16 +428,23 @@
             }
         };
 
-        function ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false) {
+        function ambilKunciSesiRentang(dataAbsen, jenisFilter, startDate, endDate, allowForceIncludeJuly28 = false, cekIsiData = false, listGenerusGroup = []) {
             let allKeys = Object.keys(dataAbsen).filter(k => !k.startsWith('_'));
             let filtered = allKeys.filter(k => {
                 let tgl = k.substring(0, 10);
                 let matchJenis = k.toLowerCase().includes(jenisFilter.toLowerCase());
                 let matchDate = (tgl >= startDate && tgl <= endDate);
+                
+                if (matchJenis && matchDate && cekIsiData && listGenerusGroup.length > 0) {
+                    let sessionData = dataAbsen[k] || {};
+                    let adaYangAbsen = listGenerusGroup.some(g => sessionData[g.id] && sessionData[g.id].status);
+                    return adaYangAbsen;
+                }
+                
                 return matchJenis && matchDate;
             });
 
-            // GANTI BAGIAN INI: Paksa masukkan tanggal 28 Juli tanpa filter ketat
+            // Paksa sertakan tanggal 28 Juli jika diperlukan
             if (allowForceIncludeJuly28 && jenisFilter === 'Kelompok') {
                 let july28Keys = allKeys.filter(k => k.startsWith('2026-07-28'));
                 july28Keys.forEach(jk => {
