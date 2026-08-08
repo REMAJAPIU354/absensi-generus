@@ -42,15 +42,31 @@
                     <span>Dashboard Analytics</span>
                 </button>
 
-                <button onclick="bukaModalAbsen('Kelompok')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
-                    <span class="text-base">📋</span>
-                    <span>Input Absen Kelompok</span>
-                </button>
+                <!-- DROPDOWN MENU INPUT ABSEN (DIPISAH SESUAI PERMINTAAN) -->
+                <div>
+                    <button onclick="toggleDropdownAbsen()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
+                        <div class="flex items-center gap-3">
+                            <span class="text-base">📋</span>
+                            <span>Input Absen</span>
+                        </div>
+                        <span id="ikonPanahDropdown" class="transition-transform duration-200 text-xs">▼</span>
+                    </button>
 
-                <button onclick="bukaModalAbsen('ARIntensif')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-800 bg-amber-50 hover:bg-amber-100 transition font-bold text-left">
-                    <span class="text-base">📖</span>
-                    <span>Input Absen AR Intensif</span>
-                </button>
+                    <div id="dropdownSubMenu" class="hidden pl-4 pr-1 py-1.5 space-y-1 border-l-2 border-emerald-500 ml-3 my-1">
+                        <button onclick="bukaModalAbsen('RemajaKelompok')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left font-medium">
+                            <span>🕌</span>
+                            <span>Absen Remaja Kelompok</span>
+                        </button>
+                        <button onclick="bukaModalAbsen('ACR')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left font-medium">
+                            <span>👶</span>
+                            <span>Absen ACR</span>
+                        </button>
+                        <button onclick="bukaModalAbsen('ARIntensif')" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition text-left font-medium">
+                            <span>📖</span>
+                            <span>Absen AR Intensif</span>
+                        </button>
+                    </div>
+                </div>
 
                 <button onclick="bukaModalAbsen('Desa')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-teal-800 hover:bg-teal-50 transition text-left">
                     <span class="text-base">🏡</span>
@@ -109,7 +125,7 @@
                 </div>
             </div>
             
-            <button onclick="bukaModalAbsen('Kelompok')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+            <button onclick="toggleDropdownAbsen()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
                 📋 <span>Isi Absen</span>
             </button>
         </div>
@@ -402,6 +418,17 @@
             setTimeout(() => backdrop.classList.add("hidden"), 300);
         };
 
+        window.toggleDropdownAbsen = function() {
+            const submenu = document.getElementById("dropdownSubMenu");
+            const panah = document.getElementById("ikonPanahDropdown");
+            submenu.classList.toggle("hidden");
+            if (submenu.classList.contains("hidden")) {
+                panah.style.transform = "rotate(0deg)";
+            } else {
+                panah.style.transform = "rotate(180deg)";
+            }
+        };
+
         window.pindahTab = function(namaTab) {
             tutupSidebar();
             const secDashboard = document.getElementById("sectionDashboard");
@@ -417,19 +444,36 @@
             }
         };
 
+        // PENYESUAIAN FUNGSI MODAL ABSEN UNTUK TOMBOL TERPISAH
         window.bukaModalAbsen = function(jenis) {
             tutupSidebar();
-            document.getElementById("pilihanJenisPengajian").value = jenis;
-            
             const judul = document.getElementById("judulModalAbsen");
-            if (jenis === 'Kelompok') judul.innerHTML = "📋 <span>INPUT ABSEN KELOMPOK (GABUNGAN)</span>";
-            if (jenis === 'ARIntensif') {
-                judul.innerHTML = "📖 <span>INPUT ABSEN AR INTENSIF</span>";
-                document.getElementById("filterKategori").value = "AR";
-            }
-            if (jenis === 'Desa') judul.innerHTML = "🏡 <span>INPUT ABSEN PENGAJIAN DESA</span>";
-            if (jenis === 'Daerah') judul.innerHTML = "🏛️ <span>INPUT ABSEN PENGAJIAN DAERAH</span>";
+            const filterKat = document.getElementById("filterKategori");
+            const jenisPengajian = document.getElementById("pilihanJenisPengajian");
 
+            if (jenis === 'RemajaKelompok') {
+                jenisPengajian.value = 'Kelompok';
+                filterKat.value = 'ALL'; // atau bisa diset default gabungan remaja APR-GPN
+                judul.innerHTML = "📋 <span>INPUT ABSEN REMAJA KELOMPOK</span>";
+            } else if (jenis === 'ACR') {
+                jenisPengajian.value = 'Kelompok';
+                filterKat.value = 'ACR'; // otomatis fokus ke ACR
+                judul.innerHTML = "👶 <span>INPUT ABSEN ACR (ANAK CABERAWIT)</span>";
+            } else if (jenis === 'ARIntensif') {
+                jenisPengajian.value = 'ARIntensif';
+                filterKat.value = 'AR';
+                judul.innerHTML = "📖 <span>INPUT ABSEN AR INTENSIF</span>";
+            } else if (jenis === 'Desa') {
+                jenisPengajian.value = 'Desa';
+                filterKat.value = 'ALL';
+                judul.innerHTML = "🏡 <span>INPUT ABSEN PENGAJIAN DESA</span>";
+            } else if (jenis === 'Daerah') {
+                jenisPengajian.value = 'Daerah';
+                filterKat.value = 'ALL';
+                judul.innerHTML = "🏛️ <span>INPUT ABSEN PENGAJIAN DAERAH</span>";
+            }
+
+            filterKategoriDiubah();
             muatDaftarAbsen();
             document.getElementById("modalAbsenHarian").classList.remove("hidden");
         };
