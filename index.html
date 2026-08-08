@@ -679,7 +679,12 @@
             const container = document.getElementById("containerDaftarAbsen");
             container.innerHTML = "";
 
-            let listTampil = dataMasterGenerus.filter(g => g.kategori !== 'ACR');
+            let listTampil = dataMasterGenerus;
+
+            // Jika sedang bukan mode spesifik ACR, saring agar ACR tidak muncul di kelompok remaja
+            if (filterKat !== 'ACR') {
+                listTampil = listTampil.filter(g => g.kategori !== 'ACR');
+            }
 
             if (filterKat !== "ALL") {
                 listTampil = listTampil.filter(g => g.kategori === filterKat);
