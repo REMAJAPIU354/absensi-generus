@@ -42,7 +42,7 @@
                     <span>Dashboard Analytics</span>
                 </button>
 
-                <!-- DROPDOWN MENU INPUT ABSEN (DIPISAH SESUAI PERMINTAAN) -->
+                <!-- DROPDOWN MENU INPUT ABSEN (DIPISAH) -->
                 <div>
                     <button onclick="toggleDropdownAbsen()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
                         <div class="flex items-center gap-3">
@@ -307,7 +307,6 @@
                             <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori Target:</label>
                             <select id="filterKategori" onchange="filterKategoriDiubah()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-semibold focus:ring-2 focus:ring-emerald-500 outline-none">
                                 <option value="ALL">Semua Kategori</option>
-                                <option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>
                                 <option value="APR">APR (Pra Remaja 13-15 thn)</option>
                                 <option value="AR">AR (Remaja 16-18 thn)</option>
                                 <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
@@ -444,32 +443,42 @@
             }
         };
 
-        // PENYESUAIAN FUNGSI MODAL ABSEN UNTUK TOMBOL TERPISAH
         window.bukaModalAbsen = function(jenis) {
             tutupSidebar();
             const judul = document.getElementById("judulModalAbsen");
             const filterKat = document.getElementById("filterKategori");
             const jenisPengajian = document.getElementById("pilihanJenisPengajian");
 
+            filterKat.disabled = false;
+            filterKat.classList.remove("bg-slate-100", "cursor-not-allowed");
+            filterKat.innerHTML = `
+                <option value="ALL">Semua Kategori</option>
+                <option value="APR">APR (Pra Remaja 13-15 thn)</option>
+                <option value="AR">AR (Remaja 16-18 thn)</option>
+                <option value="GPN-A">GPN-A (Pra Nikah A 19-22 thn)</option>
+                <option value="GPN-B">GPN-B (Pra Nikah B 23-30+ thn)</option>
+            `;
+
             if (jenis === 'RemajaKelompok') {
                 jenisPengajian.value = 'Kelompok';
-                filterKat.value = 'ALL'; // atau bisa diset default gabungan remaja APR-GPN
                 judul.innerHTML = "📋 <span>INPUT ABSEN REMAJA KELOMPOK</span>";
             } else if (jenis === 'ACR') {
                 jenisPengajian.value = 'Kelompok';
-                filterKat.value = 'ACR'; // otomatis fokus ke ACR
+                filterKat.innerHTML = '<option value="ACR">ACR (Anak Caberawit 6-12 thn)</option>';
+                filterKat.disabled = true;
+                filterKat.classList.add("bg-slate-100", "cursor-not-allowed");
                 judul.innerHTML = "👶 <span>INPUT ABSEN ACR (ANAK CABERAWIT)</span>";
             } else if (jenis === 'ARIntensif') {
                 jenisPengajian.value = 'ARIntensif';
-                filterKat.value = 'AR';
+                filterKat.innerHTML = '<option value="AR">AR (Remaja 16-18 thn)</option>';
+                filterKat.disabled = true;
+                filterKat.classList.add("bg-slate-100", "cursor-not-allowed");
                 judul.innerHTML = "📖 <span>INPUT ABSEN AR INTENSIF</span>";
             } else if (jenis === 'Desa') {
                 jenisPengajian.value = 'Desa';
-                filterKat.value = 'ALL';
                 judul.innerHTML = "🏡 <span>INPUT ABSEN PENGAJIAN DESA</span>";
             } else if (jenis === 'Daerah') {
                 jenisPengajian.value = 'Daerah';
-                filterKat.value = 'ALL';
                 judul.innerHTML = "🏛️ <span>INPUT ABSEN PENGAJIAN DAERAH</span>";
             }
 
@@ -670,9 +679,10 @@
             const container = document.getElementById("containerDaftarAbsen");
             container.innerHTML = "";
 
-            let listTampil = dataMasterGenerus;
+            let listTampil = dataMasterGenerus.filter(g => g.kategori !== 'ACR');
+
             if (filterKat !== "ALL") {
-                listTampil = dataMasterGenerus.filter(g => g.kategori === filterKat);
+                listTampil = listTampil.filter(g => g.kategori === filterKat);
             }
 
             if (listTampil.length === 0) {
