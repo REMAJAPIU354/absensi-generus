@@ -42,7 +42,7 @@
                     <span>Dashboard Analytics</span>
                 </button>
 
-                <!-- DROPDOWN MENU INPUT ABSEN (DIPISAH) -->
+                <!-- DROPDOWN MENU INPUT ABSEN -->
                 <div>
                     <button onclick="toggleDropdownAbsen()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-800 bg-emerald-50 hover:bg-emerald-100 transition font-bold text-left">
                         <div class="flex items-center gap-3">
@@ -679,12 +679,7 @@
             const container = document.getElementById("containerDaftarAbsen");
             container.innerHTML = "";
 
-            let listTampil = dataMasterGenerus;
-
-            // Jika sedang bukan mode spesifik ACR, saring agar ACR tidak muncul di kelompok remaja
-            if (filterKat !== 'ACR') {
-                listTampil = listTampil.filter(g => g.kategori !== 'ACR');
-            }
+            let listTampil = dataMasterGenerus.filter(g => g.kategori !== 'ACR');
 
             if (filterKat !== "ALL") {
                 listTampil = listTampil.filter(g => g.kategori === filterKat);
@@ -783,18 +778,32 @@
         };
 
         window.tampilkanRiwayatAbsen = async function() {
-            let startDate = document.getElementById("inputStartRiwayat").value;
-            let endDate = document.getElementById("inputEndRiwayat").value;
+            let rawStart = document.getElementById("inputStartRiwayat").value;
+            let rawEnd = document.getElementById("inputEndRiwayat").value;
             const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
             const sesi = document.getElementById("pilihanSesiRiwayat").value;
             
             const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
             tbodyDesktop.innerHTML = "";
 
-            if (!startDate || !endDate) {
+            if (!rawStart || !rawEnd) {
                 alert("⚠️ Silakan pilih tanggal awal dan akhir terlebih dahulu!");
                 return;
             }
+
+            function normalisasiTanggal(tglStr) {
+                if (!tglStr) return "";
+                if (tglStr.includes('/')) {
+                    let parts = tglStr.split('/');
+                    if (parts.length === 3) {
+                        return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return tglStr;
+            }
+
+            let startDate = normalisasiTanggal(rawStart);
+            let endDate = normalisasiTanggal(rawEnd);
 
             if (!dataMasterGenerus || dataMasterGenerus.length === 0) {
                 const snapMaster = await get(ref(db, 'master'));
@@ -806,10 +815,11 @@
             const allAbsenData = snapAllAbsen.val() || {};
 
             let matchedKeys = Object.keys(allAbsenData).filter(k => {
-                let tgl = k.substring(0, 10);
-                let matchTgl = (tgl >= startDate && tgl <= endDate);
-                let matchJenisSesi = k.toLowerCase().includes(jenisDipilih.toLowerCase()) && k.toLowerCase().includes(sesi.toLowerCase());
-                return matchTgl && matchJenisSesi && !k.startsWith('_');
+                let tglAbsen = k.substring(0, 10);
+                let matchTgl = (tglAbsen >= startDate && tglAbsen <= endDate);
+                let matchJenis = k.toLowerCase().includes(jenisDipilih.toLowerCase());
+                let matchSesi = k.toLowerCase().includes(sesi.toLowerCase());
+                return matchTgl && matchJenis && matchSesi && !k.startsWith('_');
             }).sort();
 
             if (matchedKeys.length === 0) {
@@ -823,7 +833,6 @@
                 let sessionData = allAbsenData[key] || {};
                 let tglSesi = key.split('_')[0];
                 let jenisPengajianAktif = sessionData._jenis || jenisDipilih;
-                let targetKat = sessionData._targetKat || 'ALL';
                 let materiQ = sessionData._materiQuran || sessionData._materi || "-";
                 let materiH = sessionData._materiHadist || "-";
 
