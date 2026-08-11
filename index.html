@@ -778,26 +778,32 @@
         };
 
         // FUNGSI RIWAYAT DIPERBAIKI UNTUK CROSS-MONTH (LINTAS BULAN)
-       window.tampilkanRiwayatAbsen = async function() {
-            const snapAllAbsen = await get(ref(db, 'absensi'));
-            const allAbsenData = snapAllAbsen.val() || {};
+window.tampilkanRiwayatAbsen = async function() {
+            let rawStart = document.getElementById("inputStartRiwayat").value;
+            let rawEnd = document.getElementById("inputEndRiwayat").value;
+            const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
+            const sesi = document.getElementById("pilihanSesiRiwayat").value;
+            
+            const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
+            tbodyDesktop.innerHTML = "";
 
-            // 👉 TAMBAHKAN BARIS INI UNTUK MELIHAT SEMUA DATA DI CONSOLE BROWSER
-            console.log("DAFTAR SEMUA ABSEN DI FIREBASE:", allAbsenData);
+            if (!rawStart || !rawEnd) {
+                alert("⚠️ Silakan pilih tanggal awal dan akhir terlebih dahulu!");
+                return;
+            }
 
-            // PENGUBAH FORMAT TANGGAL PALING AMAN (MENANGANI APAPUN FORMAT BROWSER)
             function bersihkanTanggal(tglInput) {
                 if (!tglInput) return "";
                 let parts;
                 if (tglInput.includes('/')) {
-                    parts = tglInput.split('/'); // Dari MM/DD/YYYY
+                    parts = tglInput.split('/');
                     if (parts.length === 3) {
                         return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
                     }
                 } else if (tglInput.includes('-')) {
-                    parts = tglInput.split('-'); // Dari YYYY-MM-DD atau DD-MM-YYYY
+                    parts = tglInput.split('-');
                     if (parts[0].length === 4) {
-                        return tglInput; // Sudah YYYY-MM-DD
+                        return tglInput;
                     } else if (parts[2].length === 4) {
                         return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                     }
@@ -817,9 +823,12 @@
             const snapAllAbsen = await get(ref(db, 'absensi'));
             const allAbsenData = snapAllAbsen.val() || {};
 
-            let matchedKeys = Object.keys(allAbsenData).filter(k => {
-                let tglAbsenStr = k.substring(0, 10); // Format di DB: YYYY-MM-DD
-                
+            // AMBIL SEMUA KEY YANG ADA DI DATABASE UNTUK DITAMPILKAN SEBAGAI INFO
+            let semuaKeyDatabase = Object.keys(allAbsenData);
+            console.log("Semua Key di Firebase:", semuaKeyDatabase);
+
+            let matchedKeys = semuaKeyDatabase.filter(k => {
+                let tglAbsenStr = k.substring(0, 10);
                 let dAbsen = new Date(tglAbsenStr).getTime();
                 let dStart = new Date(startDate).getTime();
                 let dEnd = new Date(endDate).getTime();
@@ -832,7 +841,17 @@
             }).sort();
 
             if (matchedKeys.length === 0) {
-                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada riwayat absensi antara tanggal ${startDate} s/d ${endDate}.</td></tr>`;
+                // TAMPILKAN INFO MENTAH DI TABEL AGAR KITA TAHU ISI DATABASE YANG SEBENARNYA
+                tbodyDesktop.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-4 text-center text-red-600 font-semibold bg-red-50">
+                            ❌ Tidak ada kecocokan untuk rentang [${startDate} s/d ${endDate}] & Jenis [${jenisDipilih}] & Sesi [${sesi}].<br>
+                            <span class="text-xs text-slate-600 font-normal mt-1 block">
+                                💡 Daftar key tanggal yang tersedia di database saat ini: <br>
+                                <b>${semuaKeyDatabase.length > 0 ? semuaKeyDatabase.join(', ') : 'Belum ada data sama sekali di database absensi!'}</b>
+                            </span>
+                        </td>
+                    </tr>`;
                 return;
             }
 
@@ -883,7 +902,7 @@
             });
 
             if (!adaData) {
-                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada tanggal tersebut.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Key tanggal ditemukan di database, tapi rincian data generus di dalamnya kosong.</td></tr>`;
             }
         };
     </script>
