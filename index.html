@@ -778,7 +778,7 @@
         };
 
         // FUNGSI RIWAYAT DIPERBAIKI UNTUK CROSS-MONTH (LINTAS BULAN)
-        window.tampilkanRiwayatAbsen = async function() {
+       window.tampilkanRiwayatAbsen = async function() {
             let rawStart = document.getElementById("inputStartRiwayat").value;
             let rawEnd = document.getElementById("inputEndRiwayat").value;
             const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
@@ -792,19 +792,28 @@
                 return;
             }
 
-            function normalisasiTanggal(tglStr) {
-                if (!tglStr) return "";
-                if (tglStr.includes('/')) {
-                    let parts = tglStr.split('/');
+            // PENGUBAH FORMAT TANGGAL PALING AMAN (MENANGANI APAPUN FORMAT BROWSER)
+            function bersihkanTanggal(tglInput) {
+                if (!tglInput) return "";
+                let parts;
+                if (tglInput.includes('/')) {
+                    parts = tglInput.split('/'); // Dari MM/DD/YYYY
                     if (parts.length === 3) {
                         return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
                     }
+                } else if (tglInput.includes('-')) {
+                    parts = tglInput.split('-'); // Dari YYYY-MM-DD atau DD-MM-YYYY
+                    if (parts[0].length === 4) {
+                        return tglInput; // Sudah YYYY-MM-DD
+                    } else if (parts[2].length === 4) {
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    }
                 }
-                return tglStr;
+                return tglInput;
             }
 
-            let startDate = normalisasiTanggal(rawStart);
-            let endDate = normalisasiTanggal(rawEnd);
+            let startDate = bersihkanTanggal(rawStart);
+            let endDate = bersihkanTanggal(rawEnd);
 
             if (!dataMasterGenerus || dataMasterGenerus.length === 0) {
                 const snapMaster = await get(ref(db, 'master'));
@@ -816,9 +825,8 @@
             const allAbsenData = snapAllAbsen.val() || {};
 
             let matchedKeys = Object.keys(allAbsenData).filter(k => {
-                let tglAbsenStr = k.substring(0, 10);
+                let tglAbsenStr = k.substring(0, 10); // Format di DB: YYYY-MM-DD
                 
-                // Konversi tanggal ke objek waktu murni agar rentang antar bulan terbaca tepat
                 let dAbsen = new Date(tglAbsenStr).getTime();
                 let dStart = new Date(startDate).getTime();
                 let dEnd = new Date(endDate).getTime();
@@ -831,7 +839,7 @@
             }).sort();
 
             if (matchedKeys.length === 0) {
-                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada riwayat absensi pada rentang tanggal tersebut. (Pastikan ada data tersimpan di bulan Juli tersebut).</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada riwayat absensi antara tanggal ${startDate} s/d ${endDate}.</td></tr>`;
                 return;
             }
 
@@ -882,7 +890,7 @@
             });
 
             if (!adaData) {
-                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada rentang tanggal tersebut.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada tanggal tersebut.</td></tr>`;
             }
         };
     </script>
