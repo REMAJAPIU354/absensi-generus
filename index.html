@@ -823,35 +823,31 @@ window.tampilkanRiwayatAbsen = async function() {
             const snapAllAbsen = await get(ref(db, 'absensi'));
             const allAbsenData = snapAllAbsen.val() || {};
 
-            // AMBIL SEMUA KEY YANG ADA DI DATABASE UNTUK DITAMPILKAN SEBAGAI INFO
-            let semuaKeyDatabase = Object.keys(allAbsenData);
-            console.log("Semua Key di Firebase:", semuaKeyDatabase);
-
-            let matchedKeys = semuaKeyDatabase.filter(k => {
+            let matchedKeys = Object.keys(allAbsenData).filter(k => {
                 let tglAbsenStr = k.substring(0, 10);
                 let dAbsen = new Date(tglAbsenStr).getTime();
                 let dStart = new Date(startDate).getTime();
                 let dEnd = new Date(endDate).getTime();
 
                 let matchTgl = (dAbsen >= dStart && dAbsen <= dEnd);
-                let matchJenis = k.toLowerCase().includes(jenisDipilih.toLowerCase());
+                
+                // FILTER FLEKSIBEL: Jika mencari Kelompok, izinkan juga key yang hanya ada sesinya (misal: 2026-07-28_Malam)
                 let matchSesi = k.toLowerCase().includes(sesi.toLowerCase());
+                let matchJenis = false;
+                
+                if (jenisDipilih.toLowerCase() === 'kelompok') {
+                    // Lolos jika ada kata 'kelompok' ATAU jika key-nya murni tanggal & sesi saja (seperti 2026-07-28_Malam)
+                    let tanpaTanggal = k.substring(11).toLowerCase();
+                    matchJenis = tanpaTanggal.includes('kelompok') || tanpaTanggal === sesi.toLowerCase() || tanpaTanggal.startsWith(sesi.toLowerCase());
+                } else {
+                    matchJenis = k.toLowerCase().includes(jenisDipilih.toLowerCase());
+                }
 
                 return matchTgl && matchJenis && matchSesi && !k.startsWith('_');
             }).sort();
 
             if (matchedKeys.length === 0) {
-                // TAMPILKAN INFO MENTAH DI TABEL AGAR KITA TAHU ISI DATABASE YANG SEBENARNYA
-                tbodyDesktop.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="p-4 text-center text-red-600 font-semibold bg-red-50">
-                            ❌ Tidak ada kecocokan untuk rentang [${startDate} s/d ${endDate}] & Jenis [${jenisDipilih}] & Sesi [${sesi}].<br>
-                            <span class="text-xs text-slate-600 font-normal mt-1 block">
-                                💡 Daftar key tanggal yang tersedia di database saat ini: <br>
-                                <b>${semuaKeyDatabase.length > 0 ? semuaKeyDatabase.join(', ') : 'Belum ada data sama sekali di database absensi!'}</b>
-                            </span>
-                        </td>
-                    </tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada riwayat absensi pada rentang tanggal tersebut.</td></tr>`;
                 return;
             }
 
@@ -902,7 +898,7 @@ window.tampilkanRiwayatAbsen = async function() {
             });
 
             if (!adaData) {
-                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Key tanggal ditemukan di database, tapi rincian data generus di dalamnya kosong.</td></tr>`;
+                tbodyDesktop.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Tidak ada rincian generus tersimpan pada rentang tanggal tersebut.</td></tr>`;
             }
         };
     </script>
