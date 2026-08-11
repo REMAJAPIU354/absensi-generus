@@ -830,13 +830,10 @@ window.tampilkanRiwayatAbsen = async function() {
                 let dEnd = new Date(endDate).getTime();
 
                 let matchTgl = (dAbsen >= dStart && dAbsen <= dEnd);
-                
-                // FILTER FLEKSIBEL: Jika mencari Kelompok, izinkan juga key yang hanya ada sesinya (misal: 2026-07-28_Malam)
                 let matchSesi = k.toLowerCase().includes(sesi.toLowerCase());
                 let matchJenis = false;
                 
                 if (jenisDipilih.toLowerCase() === 'kelompok') {
-                    // Lolos jika ada kata 'kelompok' ATAU jika key-nya murni tanggal & sesi saja (seperti 2026-07-28_Malam)
                     let tanpaTanggal = k.substring(11).toLowerCase();
                     matchJenis = tanpaTanggal.includes('kelompok') || tanpaTanggal === sesi.toLowerCase() || tanpaTanggal.startsWith(sesi.toLowerCase());
                 } else {
@@ -857,8 +854,10 @@ window.tampilkanRiwayatAbsen = async function() {
                 let sessionData = allAbsenData[key] || {};
                 let tglSesi = key.split('_')[0];
                 let jenisPengajianAktif = sessionData._jenis || jenisDipilih;
-                let materiQ = sessionData._materiQuran || sessionData._materi || "-";
-                let materiH = sessionData._materiHadist || "-";
+                
+                // Perbaikan mapping materi supaya Kitab/Hadist masuk ke tempat hadist
+                let materiQ = sessionData._materiQuran && sessionData._materiQuran !== "-" ? sessionData._materiQuran : "-";
+                let materiH = sessionData._materiHadist && sessionData._materiHadist !== "-" ? sessionData._materiHadist : (sessionData._materi || "-");
 
                 dataMasterGenerus.forEach(item => {
                     const rec = sessionData[item.id];
