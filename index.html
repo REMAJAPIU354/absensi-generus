@@ -777,7 +777,7 @@
             hitungStatistikDashboard();
         };
 
-        window.tampilkanRiwayatAbsen = async function() {
+       window.tampilkanRiwayatAbsen = async function() {
             let rawStart = document.getElementById("inputStartRiwayat").value;
             let rawEnd = document.getElementById("inputEndRiwayat").value;
             const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
@@ -815,10 +815,16 @@
             const allAbsenData = snapAllAbsen.val() || {};
 
             let matchedKeys = Object.keys(allAbsenData).filter(k => {
-                let tglAbsen = k.substring(0, 10);
-                let matchTgl = (tglAbsen >= startDate && tglAbsen <= endDate);
+                let tglAbsenStr = k.substring(0, 10);
+                
+                let dAbsen = new Date(tglAbsenStr).setHours(0,0,0,0);
+                let dStart = new Date(startDate).setHours(0,0,0,0);
+                let dEnd = new Date(endDate).setHours(0,0,0,0);
+
+                let matchTgl = (dAbsen >= dStart && dAbsen <= dEnd);
                 let matchJenis = k.toLowerCase().includes(jenisDipilih.toLowerCase());
                 let matchSesi = k.toLowerCase().includes(sesi.toLowerCase());
+
                 return matchTgl && matchJenis && matchSesi && !k.startsWith('_');
             }).sort();
 
