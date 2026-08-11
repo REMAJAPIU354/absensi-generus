@@ -855,29 +855,9 @@ window.tampilkanRiwayatAbsen = async function() {
                 let tglSesi = key.split('_')[0];
                 let jenisPengajianAktif = sessionData._jenis || jenisDipilih;
                 
-                let rawQ = sessionData._materiQuran || "";
-                let rawH = sessionData._materiHadist || "";
-                let rawUniv = sessionData._materi || "";
-                
-                let materiQ = "-";
-                let materiH = "-";
-                let targetCek = rawQ !== "-" && rawQ !== "" ? rawQ : rawUniv;
-
-                if (targetCek && targetCek !== "-") {
-                    let isQuran = /surat|alquran|quran|juz|ayat|al-/i.test(targetCek) && !/hadist|kitab|bab|haji|himpunan|sholat|puasa/i.test(targetCek);
-                    
-                    if (rawQ && rawQ !== "-") {
-                        materiQ = rawQ;
-                    } else if (isQuran) {
-                        materiQ = targetCek;
-                    }
-
-                    if (rawH && rawH !== "-") {
-                        materiH = rawH;
-                    } else if (!isQuran) {
-                        materiH = targetCek;
-                    }
-                }
+                // AMBIL DATA APA ADANYA SECARA LANGSUNG & AMAN
+                let materiQ = sessionData._materiQuran && sessionData._materiQuran !== "-" ? sessionData._materiQuran : "-";
+                let materiH = sessionData._materiHadist && sessionData._materiHadist !== "-" ? sessionData._materiHadist : (sessionData._materi || "-");
 
                 dataMasterGenerus.forEach(item => {
                     const rec = sessionData[item.id];
