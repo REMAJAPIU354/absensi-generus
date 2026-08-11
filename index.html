@@ -779,18 +779,11 @@
 
         // FUNGSI RIWAYAT DIPERBAIKI UNTUK CROSS-MONTH (LINTAS BULAN)
        window.tampilkanRiwayatAbsen = async function() {
-            let rawStart = document.getElementById("inputStartRiwayat").value;
-            let rawEnd = document.getElementById("inputEndRiwayat").value;
-            const jenisDipilih = document.getElementById("pilihanJenisRiwayat").value;
-            const sesi = document.getElementById("pilihanSesiRiwayat").value;
-            
-            const tbodyDesktop = document.getElementById("tabelRiwayatAbsenDesktop");
-            tbodyDesktop.innerHTML = "";
+            const snapAllAbsen = await get(ref(db, 'absensi'));
+            const allAbsenData = snapAllAbsen.val() || {};
 
-            if (!rawStart || !rawEnd) {
-                alert("⚠️ Silakan pilih tanggal awal dan akhir terlebih dahulu!");
-                return;
-            }
+            // 👉 TAMBAHKAN BARIS INI UNTUK MELIHAT SEMUA DATA DI CONSOLE BROWSER
+            console.log("DAFTAR SEMUA ABSEN DI FIREBASE:", allAbsenData);
 
             // PENGUBAH FORMAT TANGGAL PALING AMAN (MENANGANI APAPUN FORMAT BROWSER)
             function bersihkanTanggal(tglInput) {
