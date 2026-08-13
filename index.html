@@ -166,11 +166,11 @@
                 </div>
             </div>
 
-            <!-- GRAFIK TREN KEHADIRAN BULANAN (JAN - DES) -->
+            <!-- GRAFIK TREN KEHADIRAN BULANAN (JAN - DES) DENGAN SIKLUS LUPG -->
             <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
                 <div>
                     <h3 class="font-bold text-slate-800 text-xs sm:text-sm">📈 Statistik Persentase Kehadiran Bulanan (Jan - Des)</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Rekap persentase kehadiran seluruh generus per bulan untuk laporan LUPG.</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Rekap persentase kehadiran seluruh generus per bulan sesuai siklus LUPG (tgl 21 - 20).</p>
                 </div>
                 <div class="flex justify-center items-center relative py-1" style="height: 250px;">
                     <canvas id="chartBulananLupg"></canvas>
@@ -618,33 +618,27 @@
             buatDiagramDonat('chartACR', 'recACR', stat.acr);
         }
 
-        // GRAFIK BULANAN (JAN - DES) UNTUK LAPORAN LUPG
         // FUNGSI GRAFIK BULANAN DENGAN SIKLUS CUT-OFF LUPG (TGL 21 BLN LALU S.D. 20 BLN BERJALAN)
         function buatGrafikBulananLupg(dataAbsen) {
             const ctx = document.getElementById('chartBulananLupg').getContext('2d');
             if (chartInstances['chartBulananLupg']) chartInstances['chartBulananLupg'].destroy();
 
             let namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-            
-            // Inisialisasi array untuk 12 bulan (Index 0 = Jan, dst.)
             let dataHadirPerBulan = new Array(12).fill(0);
             let dataTotalPerBulan = new Array(12).fill(0);
 
             Object.keys(dataAbsen).forEach(keyPath => {
-                let tglStr = keyPath.substring(0, 10); // Format YYYY-MM-DD
+                let tglStr = keyPath.substring(0, 10);
                 let parts = tglStr.split('-');
                 
                 if (parts.length === 3) {
-                    let thnAbsen = parseInt(parts[0], 10);
-                    let blnAbsen = parseInt(parts[1], 10) - 1; // 0-11
+                    let blnAbsen = parseInt(parts[1], 10) - 1; 
                     let tglAbsen = parseInt(parts[2], 10);
 
-                    // TENTUKAN MASUK KE PERIODE BULAN APA BERDASARKAN CUT-OFF TGL 20
                     let targetBulanIndex = blnAbsen;
                     if (tglAbsen >= 21) {
-                        // Jika tanggal 21 atau lebih, masuk ke rekap bulan berikutnya
                         targetBulanIndex = blnAbsen + 1;
-                        if (targetBulanIndex > 11) targetBulanIndex = 0; // Jika Desember akhir, masuk ke Januari tahun depan
+                        if (targetBulanIndex > 11) targetBulanIndex = 0;
                     }
 
                     if (!keyPath.startsWith('_')) {
@@ -662,46 +656,6 @@
                 }
             });
 
-            // Hitung persentase kehadiran per periode bulan LUPG
-            let persentasePerBulan = dataHadirPerBulan.map((hadir, i) => {
-                let total = dataTotalPerBulan[i];
-                return total > 0 ? Math.round((hadir / total) * 100) : 0;
-            });
-
-            chartInstances['chartBulananLupg'] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: namaBulan,
-                    datasets: [{
-                        label: 'Persentase Kehadiran (%)',
-                        data: persentasePerBulan,
-                        backgroundColor: '#0d9488',
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { callback: (val) => val + '%' }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            color: '#1e293b',
-                            anchor: 'end',
-                            align: 'top',
-                            font: { weight: 'bold', size: 10 },
-                            formatter: (val) => val > 0 ? val + '%' : ''
-                        }
-                    }
-                }
-            });
-        }
             let persentasePerBulan = dataHadirPerBulan.map((hadir, i) => {
                 let total = dataTotalPerBulan[i];
                 return total > 0 ? Math.round((hadir / total) * 100) : 0;
