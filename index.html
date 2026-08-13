@@ -619,27 +619,42 @@
         }
 
         // GRAFIK BULANAN (JAN - DES) UNTUK LAPORAN LUPG
+        // FUNGSI GRAFIK BULANAN DENGAN SIKLUS CUT-OFF LUPG (TGL 21 BLN LALU S.D. 20 BLN BERJALAN)
         function buatGrafikBulananLupg(dataAbsen) {
             const ctx = document.getElementById('chartBulananLupg').getContext('2d');
             if (chartInstances['chartBulananLupg']) chartInstances['chartBulananLupg'].destroy();
 
             let namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            
+            // Inisialisasi array untuk 12 bulan (Index 0 = Jan, dst.)
             let dataHadirPerBulan = new Array(12).fill(0);
             let dataTotalPerBulan = new Array(12).fill(0);
 
             Object.keys(dataAbsen).forEach(keyPath => {
-                let tglStr = keyPath.substring(0, 10);
+                let tglStr = keyPath.substring(0, 10); // Format YYYY-MM-DD
                 let parts = tglStr.split('-');
+                
                 if (parts.length === 3) {
-                    let bulanIdx = parseInt(parts[1], 10) - 1;
-                    if (bulanIdx >= 0 && bulanIdx < 12 && !keyPath.startsWith('_')) {
+                    let thnAbsen = parseInt(parts[0], 10);
+                    let blnAbsen = parseInt(parts[1], 10) - 1; // 0-11
+                    let tglAbsen = parseInt(parts[2], 10);
+
+                    // TENTUKAN MASUK KE PERIODE BULAN APA BERDASARKAN CUT-OFF TGL 20
+                    let targetBulanIndex = blnAbsen;
+                    if (tglAbsen >= 21) {
+                        // Jika tanggal 21 atau lebih, masuk ke rekap bulan berikutnya
+                        targetBulanIndex = blnAbsen + 1;
+                        if (targetBulanIndex > 11) targetBulanIndex = 0; // Jika Desember akhir, masuk ke Januari tahun depan
+                    }
+
+                    if (!keyPath.startsWith('_')) {
                         let sessionData = dataAbsen[keyPath];
                         dataMasterGenerus.forEach(g => {
                             let rec = sessionData[g.id];
                             if (rec && rec.status) {
-                                dataTotalPerBulan[bulanIdx]++;
+                                dataTotalPerBulan[targetBulanIndex]++;
                                 if (rec.status === 'Hadir') {
-                                    dataHadirPerBulan[bulanIdx]++;
+                                    dataHadirPerBulan[targetBulanIndex]++;
                                 }
                             }
                         });
@@ -647,6 +662,46 @@
                 }
             });
 
+            // Hitung persentase kehadiran per periode bulan LUPG
+            let persentasePerBulan = dataHadirPerBulan.map((hadir, i) => {
+                let total = dataTotalPerBulan[i];
+                return total > 0 ? Math.round((hadir / total) * 100) : 0;
+            });
+
+            chartInstances['chartBulananLupg'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: namaBulan,
+                    datasets: [{
+                        label: 'Persentase Kehadiran (%)',
+                        data: persentasePerBulan,
+                        backgroundColor: '#0d9488',
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: (val) => val + '%' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#1e293b',
+                            anchor: 'end',
+                            align: 'top',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: (val) => val > 0 ? val + '%' : ''
+                        }
+                    }
+                }
+            });
+        }
             let persentasePerBulan = dataHadirPerBulan.map((hadir, i) => {
                 let total = dataTotalPerBulan[i];
                 return total > 0 ? Math.round((hadir / total) * 100) : 0;
