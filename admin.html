@@ -208,7 +208,31 @@
             document.getElementById("filterStartDate").value = awal.toISOString().split('T')[0];
             document.getElementById("filterEndDate").value = todayStr;
         }
+let dataMaster = [];
+        const roleAkses = sessionStorage.getItem("userRole") || "ADMIN";
 
+        document.getElementById("labelRoleAkses").innerText = roleAkses;
+        if (roleAkses === "SUPERADMIN") {
+            document.getElementById("labelRoleAkses").className = "text-xs font-bold px-2 py-0.5 rounded bg-amber-500 text-white";
+            document.getElementById("badgeRoleIcon").innerText = "👑";
+        }
+
+        // --- TAMBAHKAN FUNGSI HAPUS GENERUS DI SINI ---
+        window.hapusGenerus = async function(idGenerus) {
+            if (confirm("⚠️ Apakah Anda yakin ingin menghapus data generus ini dari database?")) {
+                try {
+                    await remove(ref(db, `master/${idGenerus}`));
+                    alert("✅ Data generus berhasil dihapus!");
+                } catch (error) {
+                    console.error("Gagal menghapus:", error);
+                    alert("❌ Terjadi kesalahan saat menghapus data.");
+                }
+            }
+        };
+        // ---------------------------------------------
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById("inputTglMasukGenerus").value = todayStr;
         setdefaultFilterTanggal();
 
         window.resetFilterPeriode = function() {
